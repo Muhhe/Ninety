@@ -1,0 +1,14 @@
+Number of held stock:3
+Held stock;CELG; actValue;113.47; purchases;2
+Stock purchase - priceForOne;116.5; position;42; portions;1; date;Sun Dec 11 16:16:20 CET 2016
+Stock purchase - priceForOne;112.56; position;88; portions;2; date;Sun Dec 11 16:16:20 CET 2016
+
+Held stock;RTN; actValue;146.3; purchases;1
+Stock purchase - priceForOne;146.1; position;34; portions;1; date;Sun Dec 11 16:16:20 CET 2016
+
+Held stock;BIIB; actValue;287.77; purchases;4
+Stock purchase - priceForOne;305.45; position;16; portions;1; date;Sun Dec 11 16:16:20 CET 2016
+Stock purchase - priceForOne;304.2; position;32; portions;2; date;Sun Dec 11 16:16:20 CET 2016
+Stock purchase - priceForOne;303.01; position;48; portions;3; date;Sun Dec 11 16:16:20 CET 2016
+Stock purchase - priceForOne;294.42; position;64; portions;4; date;Sun Dec 11 16:16:20 CET 2016
+

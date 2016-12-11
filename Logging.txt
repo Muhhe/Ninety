@@ -1,0 +1,10 @@
+Dec 11, 2016 5:47:03 PM tradingapp.MainWindow comp90ButtonActionPerformed
+INFO: It's SUNDAY!
+Dec 11, 2016 5:47:03 PM tradingapp.MainWindow comp90ButtonActionPerformed
+INFO: Nothing to trade during weekend
+Dec 11, 2016 5:47:03 PM strategies.Ninety PrintStatus
+INFO: Status report: number of held stock: 0
+Dec 11, 2016 5:47:03 PM strategies.Ninety PrintStatus
+INFO: Held portions: 0/20
+Dec 11, 2016 5:47:08 PM tradingapp.MainWindow startButtonActionPerformed
+INFO: Start in 15:59:00 US time.
