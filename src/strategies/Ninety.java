@@ -118,7 +118,7 @@ public class Ninety {
 
         heldStocks.put(held.tickerSymbol, held);
 
-        held = new HeldStock();
+        /*held = new HeldStock();
         held.tickerSymbol = "MRK";
         held.boughtPortions = 1;
 
@@ -128,7 +128,7 @@ public class Ninety {
         purchase.position = (int) (onePortionPrice / purchase.priceForOne) * purchase.portions;
         held.purchases.add(purchase);
 
-        heldStocks.put(held.tickerSymbol, held);
+        heldStocks.put(held.tickerSymbol, held);*/
 
         /*held = new HeldStock();
         held.tickerSymbol = "AMZN";
@@ -428,6 +428,8 @@ public class Ninety {
             m_comm.PlaceOrder(tradeOrder);
         }
         tradeOrders.clear();
+        
+        // TODO: musej se vypocitat rsi pro drzeny akcie
 
         List<HeldStock> stocksToBuyMore = computeStocksToBuyMore();
         Collections.sort(stocksToBuyMore, new Comparator<HeldStock>() {
