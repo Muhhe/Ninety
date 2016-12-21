@@ -298,8 +298,8 @@ public class MainWindow extends javax.swing.JFrame {
                 comp90ButtonActionPerformed(null);
             }
         });
-        t.startExecutionAt(15, 59, 00);
-        logger.info( "Start in 15:59:00 US time." );
+        t.startExecutionAt(15, 58, 00);
+        logger.info( "Start in 15:58:00 US time." );
         
     }//GEN-LAST:event_startButtonActionPerformed
 

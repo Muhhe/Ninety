@@ -50,7 +50,7 @@ public class IBCommunication implements ApiController.IConnectionHandler {
         NewContract contract = new NewContract();
         contract.symbol(tradeOrder.tickerSymbol);
         contract.exchange("SMART");
-        contract.secType(Types.SecType.STK);
+        contract.secType(Types.SecType.CFD);
         contract.currency("USD");
         
         NewOrder order = new NewOrder();

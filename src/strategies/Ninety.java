@@ -42,7 +42,7 @@ public class Ninety {
 
     DataCalculatorForNinety calculatedStockData;
     public Map<String, HeldStock> heldStocks = new HashMap<>();
-    public double moneyToInvest = 100000;
+    public double moneyToInvest = 40000;
 
     public int GetBoughtPortions() {
         int boughtPortions = 0;
@@ -77,7 +77,7 @@ public class Ninety {
         heldStocks.clear();
 
         HeldStock held = new HeldStock();
-        held.tickerSymbol = "BIIB";
+        /*held.tickerSymbol = "BIIB";
         held.boughtPortions = 10;
 
         StockPurchase purchase = new StockPurchase();
@@ -104,13 +104,13 @@ public class Ninety {
         purchase.position = (int) (onePortionPrice / purchase.priceForOne) * purchase.portions;
         held.purchases.add(purchase);
 
-        heldStocks.put(held.tickerSymbol, held);
+        heldStocks.put(held.tickerSymbol, held);*/
 
         held = new HeldStock();
         held.tickerSymbol = "RTN";
         held.boughtPortions = 1;
 
-        purchase = new StockPurchase();
+        StockPurchase purchase = new StockPurchase();
         purchase.portions = 1;
         purchase.priceForOne = 146.1;
         purchase.position = (int) (onePortionPrice / purchase.priceForOne);
@@ -153,7 +153,7 @@ public class Ninety {
         held.purchases.add(purchase);
 
         heldStocks.add(held);*/
-        held = new HeldStock();
+        /*held = new HeldStock();
         held.tickerSymbol = "CELG";
         held.boughtPortions = 3;
 
@@ -169,7 +169,7 @@ public class Ninety {
         purchase.position = (int) (onePortionPrice / purchase.priceForOne) * purchase.portions;
         held.purchases.add(purchase);
 
-        heldStocks.put(held.tickerSymbol, held);
+        heldStocks.put(held.tickerSymbol, held);*/
     }
 
     public void PrintStatus() {
