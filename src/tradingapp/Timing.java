@@ -22,16 +22,6 @@ public class Timing {
 
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
-    public static class MyTask {
-
-        public MyTask() {
-        }
-
-        private void execute() {
-            logger.info("Executing");
-        }
-    }
-
     ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
     Runnable myTask;
     volatile boolean isStopIssued;
@@ -47,15 +37,15 @@ public class Timing {
             @Override
             public void run() {
                 myTask.run();
-                //startExecutionAt(targetHour, targetMin, targetSec);
             }
 
         };
-        long delay = computeNextDelay(targetHour, targetMin, targetSec);
+        
+        long delay = computeTimeFromNowTo(targetHour, targetMin, targetSec);
         executorService.schedule(taskWrapper, delay, TimeUnit.SECONDS);
     }
 
-    private long computeNextDelay(int targetHour, int targetMin, int targetSec) {
+    public long computeTimeFromNowTo(int targetHour, int targetMin, int targetSec) {
         LocalDateTime localNow = LocalDateTime.now();
         ZoneId currentZone = ZoneId.systemDefault();
         ZonedDateTime zonedNow = ZonedDateTime.of(localNow, currentZone);

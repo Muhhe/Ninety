@@ -29,10 +29,9 @@ public class IndicatorCalculator {
         return total / count;
     }
     
-    //TODO predelat pocita to pravdepodobne obracene !!!!
-    public double RSI(double[] closeArr) {
+    public double RSI(double[] values) {
 
-        if (closeArr.length < 14) {
+        if (values.length < 14) {
             logger.log(Level.SEVERE, "RSI - not enough data: 14");
         }
         
@@ -43,8 +42,8 @@ public class IndicatorCalculator {
 
         int k = 1;
         for (int i = 12; i >= 0; i--) {
-            if (closeArr[i] > closeArr[i + 1]) {
-                ups[k] = closeArr[i] - closeArr[i + 1];
+            if (values[i] > values[i + 1]) {
+                ups[k] = values[i] - values[i + 1];
             } else {
                 ups[k] = 0;
             }
@@ -53,14 +52,13 @@ public class IndicatorCalculator {
 
         avgUps[1] = ups[1];
         for (int i = 2; i < 14; i++) {
-            double a = (avgUps[i - 1] + ups[i]);
             avgUps[i] = (avgUps[i - 1] + ups[i]) / 2.0f;
         }
 
         k = 1;
         for (int i = 12; i >= 0; i--) {
-            if (closeArr[i] < closeArr[i + 1]) {
-                downs[k] = closeArr[i + 1] - closeArr[i];
+            if (values[i] < values[i + 1]) {
+                downs[k] = values[i + 1] - values[i];
             } else {
                 downs[k] = 0;
             }

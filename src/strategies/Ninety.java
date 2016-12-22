@@ -465,6 +465,7 @@ public class Ninety {
 
                 if (GetBoughtPortions() + newPortions > 20) {
                     logger.info("Cannot buy " + newPortions + " more portions of '" + heldStock.tickerSymbol + "' because we currently hold " + GetBoughtPortions() + "/20 portions.");
+                    continue;
                 }
 
                 order.limitTotalMoney = onePieceOfMoney * newPortions;

@@ -6,13 +6,10 @@
 package data;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,23 +17,16 @@ import java.util.logging.Logger;
  *
  * @author Muhe
  */
-public class YahooDataGetter {
-
+public class HistDataGetterYahoo {
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
-    public HistoricData data;
-
-    public void readData(Date lastDate, int daysToRead, String tickerSymbol, double actValue) {
+    public CloseData readData(LocalDate lastDate, int daysToRead, String tickerSymbol) {
         
-        data = new HistoricData(daysToRead);
+        CloseData data = new CloseData(daysToRead);
         
-        data.tickerSymbol = tickerSymbol;
-        
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(lastDate);
-        int year = cal.get(Calendar.YEAR);
-        int month = cal.get(Calendar.MONTH);
-        int day = cal.get(Calendar.DAY_OF_MONTH);
+        int year = lastDate.getYear();
+        int month = lastDate.getMonth().getValue();
+        int day = lastDate.getDayOfMonth();
 
         StringBuilder urlBuilder = new StringBuilder();
 
@@ -66,9 +56,6 @@ public class YahooDataGetter {
                     new InputStreamReader(urlYahoo.openStream()));
 
             line = br.readLine(); // skip first line
-            
-            data.adjClose[0] = actValue;
-            data.date[0] = lastDate;
                 
             int totalCount = 1;
             
@@ -76,29 +63,27 @@ public class YahooDataGetter {
 
                 String[] dateLine = line.split(cvsSplitBy);
 
-                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-                Date date = new Date();
-                try {
-                    date = formatter.parse(dateLine[0]);
-                } catch (ParseException ex) {
-                    logger.log(Level.SEVERE, "Failed to parse date from Yahoo: {0}", dateLine[0]);
-                }
+                LocalDate parsedDate = LocalDate.parse(dateLine[0], formatter);
                 
                 double adjClose = Double.parseDouble(dateLine[6]);
-                
 
-                data.adjClose[totalCount] = adjClose;
-                data.date[totalCount++] = date;
+                data.values[totalCount].adjClose = adjClose;
+                data.values[totalCount].date = parsedDate;
+                totalCount++;
                 if (totalCount == daysToRead) {
                     break;
                 }
             }
 
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             logger.log(Level.SEVERE, "Failed to read data from Yahoo.");
             logger.log(Level.SEVERE, null, ex);
+            
+            return null;
         }
-
+        
+        return data;
     }
 }

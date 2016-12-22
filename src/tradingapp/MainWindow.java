@@ -9,22 +9,16 @@ import communication.IBCommunication;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.logging.FileHandler;
-import java.util.logging.Handler;
 import java.util.logging.Level;
-import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import strategies.Ninety;
-import tradingapp.Timing.MyTask;
 import data.GoogleActDataGetter;
 import data.IndicatorCalculator;
 import data.YahooDataGetter;
-import java.io.PrintStream;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.Calendar;
 
 /**
  *
@@ -292,7 +286,7 @@ public class MainWindow extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void startButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startButtonActionPerformed
-        Timing t= new Timing(new Runnable() {
+        Timing t = new Timing(new Runnable() {
             @Override
             public void run() {
                 comp90ButtonActionPerformed(null);

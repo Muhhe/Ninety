@@ -36,9 +36,7 @@ public class DataCalculatorForNinety {
             "PCLN", "PEP", "PFE", "PG", "PM", "PYPL", "QCOM", "RTN", "SBUX", "SLB",
             "SO", "SPG", "T", "TGT", "TWX", "TXN", "UNH", "UNP", "UPS", "USB",
             "UTX", "V", "VZ", "WBA", "WFC", "WMT", "XOM"};
-        // TODO: PCLN je moc draha ~ 1500$
 
-        //String[] tickers = { "LMT", "AAPL" };
         return tickers;
     }
 
@@ -46,14 +44,11 @@ public class DataCalculatorForNinety {
         YahooDataGetter yah = new YahooDataGetter();
         String[] tickers = getSP100();
 
-        //data = new HistoricData[tickers.length];
-        //int count = 0;
         logger.info("Starting to load historic data");
 
         for (String ticker : tickers) {
             yah.readData(date, 200, ticker, 0);
             stockMap.put(ticker, yah.data);
-            //data[count++] = yah.data;
         }
 
         logger.info("Finished to load historic data");
