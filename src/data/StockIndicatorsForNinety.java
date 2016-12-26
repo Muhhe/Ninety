@@ -3,14 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package tradingapp;
+package data;
 
 /**
  *
  * @author Muhe
  */
-public class Stock {
-    public String tickerSymbol;
-    public double value = -1;
-    public double rsi2 = 100;
+public class StockIndicatorsForNinety {
+    public double actValue = 0;
+    public double sma200 = 0;
+    public double sma5 = 0;
+    public double rsi2 = 0;
 }

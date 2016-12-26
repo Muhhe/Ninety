@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 public class IndicatorCalculator {
     private final static Logger logger = Logger.getLogger( Logger.GLOBAL_LOGGER_NAME );
     
-    public double SMA(int count, double[] data) {
+    public static double SMA(int count, double[] data) {
         
         if (data.length < count) {
             logger.log(Level.SEVERE, "SMA - not enough data: " + count + " vs " + data.length);
@@ -29,10 +29,10 @@ public class IndicatorCalculator {
         return total / count;
     }
     
-    public double RSI(double[] values) {
+    public static double RSI(double[] values) {
 
         if (values.length < 14) {
-            logger.log(Level.SEVERE, "RSI - not enough data: 14");
+            logger.log(Level.SEVERE, "RSI - not enough data: " + values.length + "/14");
         }
         
         double[] ups = new double[14];

@@ -22,7 +22,7 @@ import java.util.logging.Logger;
  *
  * @author Muhe
  */
-public class GoogleActDataGetter {
+public class DataGetterActGoogle {
     
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     
@@ -36,7 +36,7 @@ public class GoogleActDataGetter {
         public double value;
     }*/
     
-    public double readActualData(String tickerSymbol) throws IOException, NumberFormatException {
+    public static double readActualData(String tickerSymbol) throws IOException, NumberFormatException {
         StringBuilder urlBuilder = new StringBuilder();
 
         urlBuilder.append("http://finance.google.com/finance/info?client=ig&q=");
@@ -59,7 +59,7 @@ public class GoogleActDataGetter {
         return Double.parseDouble(p[0].l.replaceAll(",", ""));
     }
     
-    public Map<String, Double> readActualData(String[] tickerSymbols) throws IOException, NumberFormatException {
+    public static  Map<String, Double> readActualData(String[] tickerSymbols) throws IOException, NumberFormatException {
         StringBuilder urlBuilder = new StringBuilder();
 
         urlBuilder.append("http://finance.google.com/finance/info?client=ig&q=");

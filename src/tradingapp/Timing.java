@@ -26,9 +26,35 @@ public class Timing {
     Runnable myTask;
     volatile boolean isStopIssued;
 
+    public final static ZoneId zoneNY = ZoneId.of("America/New_York");
+    
+    public static ZonedDateTime GetNYTimeNow() {
+        return ZonedDateTime.now(zoneNY);
+    }
+
     public Timing(Runnable myTask_) {
         myTask = myTask_;
 
+    }
+
+    public void startExecutionAt(final ZonedDateTime time) {
+        Runnable taskWrapper = new Runnable() {
+
+            @Override
+            public void run() {
+                myTask.run();
+            }
+
+        };
+
+        long delay = computeTimeFromNowTo(time);
+        
+        if (delay < 0) {
+            logger.severe("Execution start time is set to past!!!");
+            return;
+        }
+        
+        executorService.schedule(taskWrapper, delay, TimeUnit.SECONDS);
     }
 
     public void startExecutionAt(int targetHour, int targetMin, int targetSec) {
@@ -40,17 +66,20 @@ public class Timing {
             }
 
         };
-        
+
         long delay = computeTimeFromNowTo(targetHour, targetMin, targetSec);
         executorService.schedule(taskWrapper, delay, TimeUnit.SECONDS);
     }
 
+    public long computeTimeFromNowTo(ZonedDateTime time) {        
+        ZonedDateTime zonedNowNY = GetNYTimeNow();
+
+        Duration duration = Duration.between(zonedNowNY, time);
+        return duration.getSeconds();
+    }
+
     public long computeTimeFromNowTo(int targetHour, int targetMin, int targetSec) {
-        LocalDateTime localNow = LocalDateTime.now();
-        ZoneId currentZone = ZoneId.systemDefault();
-        ZonedDateTime zonedNow = ZonedDateTime.of(localNow, currentZone);
-        ZoneId zoneNY = ZoneId.of("America/New_York");
-        ZonedDateTime zonedNowNY = zonedNow.withZoneSameInstant(zoneNY);
+        ZonedDateTime zonedNowNY = GetNYTimeNow();
         ZonedDateTime zonedNextTargetNY = zonedNowNY.withHour(targetHour).withMinute(targetMin).withSecond(targetSec).withNano(0);
         if (zonedNowNY.compareTo(zonedNextTargetNY) > 0) {
             zonedNextTargetNY = zonedNextTargetNY.plusDays(1);
@@ -61,7 +90,7 @@ public class Timing {
     }
 
     public void stop() {
-        executorService.shutdown();
+        executorService.shutdownNow();
         try {
             executorService.awaitTermination(1, TimeUnit.DAYS);
         } catch (InterruptedException ex) {

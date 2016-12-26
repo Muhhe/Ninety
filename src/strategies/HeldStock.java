@@ -8,23 +8,31 @@ package strategies;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import tradingapp.Stock;
+import org.jdom2.Attribute;
+import org.jdom2.Element;
 
 /**
  *
  * @author Muhe
  */
-public class HeldStock extends Stock {
-    public int boughtPortions = 0;
+public class HeldStock {
     public List<StockPurchase> purchases = new ArrayList<StockPurchase>();
-    public double actValue = 0;
-
+    public String tickerSymbol;
+    
     int GetPosition() {
         int positions = 0;
         for (StockPurchase purchase : purchases) {
             positions += purchase.position;
         }
         return positions;
+    }
+    
+    int GetPortions() {
+        int portions = 0;
+        for (StockPurchase purchase : purchases) {
+            portions += purchase.portions;
+        }
+        return portions;
     }
     
     public void LoadFromString(List<String> allLines) {
@@ -41,8 +49,7 @@ public class HeldStock extends Stock {
             
             if ( lineCounter == 0) {
                 tickerSymbol = strs[1];
-                actValue = Double.parseDouble(strs[3]);
-                purchCount = Integer.parseInt(strs[5]);
+                purchCount = Integer.parseInt(strs[3]);
             }
             else
             {
@@ -60,11 +67,6 @@ public class HeldStock extends Stock {
                 break;
             }
         }
-        
-        boughtPortions = 0;
-        for (StockPurchase purchase : purchases) {
-            boughtPortions += purchase.portions;
-        }
     }
 
     double GetAvgPrice() {
@@ -79,13 +81,34 @@ public class HeldStock extends Stock {
     public String toString() {
         StringBuilder str = new StringBuilder();
         str.append("Held stock;").append(tickerSymbol);
-        str.append("; actValue;").append(actValue);
         str.append("; purchases;").append(purchases.size()).append("\r\n");
         
         for (StockPurchase purchase : purchases) {
             str.append(purchase.toString());
         }
-        
+
         return str.toString();
+    }
+
+    void AddToXml(Element rootElement) {
+        Element heldElement = new Element("heldStock");
+        heldElement.setAttribute(new Attribute("ticker", tickerSymbol));
+        
+        for (StockPurchase purchase : purchases) {
+            purchase.AddToXml(heldElement);
+            rootElement.addContent(heldElement);
+        }
+    }
+
+    void LoadFromXml(Element heldElement) {
+        Attribute attribute = heldElement.getAttribute("ticker");
+        tickerSymbol = attribute.getValue();
+        
+        List<Element> purchaseElements = heldElement.getChildren();
+        for (Element purchaseElement : purchaseElements) {
+            StockPurchase purchase = new StockPurchase();
+            purchase.LoadFromXml(purchaseElement);
+            purchases.add(purchase);
+        }
     }
 }

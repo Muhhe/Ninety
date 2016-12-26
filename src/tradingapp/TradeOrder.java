@@ -13,15 +13,15 @@ public class TradeOrder {
     public enum OrderType {BUY, SELL};
     
     public OrderType orderType = OrderType.SELL;
-    public double limitTotalMoney = 0;
-    public int stocksToTrade = 0;
+    //public double limitTotalMoney = 0;
+    public int position = 0;
     public String tickerSymbol;
 
     @Override
     public String toString() {
         String str = new String();
         
-        str += "Order '" + orderType + "' '" + tickerSymbol + "' for max '" + limitTotalMoney + "'";
+        str += "Order '" + orderType + "' '" + tickerSymbol + "' position: " + position;
         return str;
     }
     

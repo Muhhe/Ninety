@@ -7,18 +7,11 @@ package tradingapp;
 
 import communication.IBCommunication;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
-import strategies.Ninety;
-import data.GoogleActDataGetter;
-import data.IndicatorCalculator;
-import data.YahooDataGetter;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
+import strategies.RunnerNinety;
 
 /**
  *
@@ -30,7 +23,7 @@ public class MainWindow extends javax.swing.JFrame {
     
     private final IBCommunication m_comm;
     
-    Ninety nine = new Ninety();
+    RunnerNinety ninetyRunner = new RunnerNinety(4001);
     private boolean m_connected = false;
     
     /**
@@ -71,11 +64,7 @@ public class MainWindow extends javax.swing.JFrame {
         startButton = new javax.swing.JButton();
         logScrollPane = new javax.swing.JScrollPane();
         logArea = new javax.swing.JTextArea();
-        readYahooButton = new javax.swing.JButton();
-        readGoogleButton = new javax.swing.JButton();
-        indCalcButton = new javax.swing.JButton();
         tickSymbolTextField = new javax.swing.JTextField();
-        comp90Button = new javax.swing.JButton();
         connectButton = new javax.swing.JButton();
         portTextField = new javax.swing.JTextField();
         buyButton = new javax.swing.JButton();
@@ -86,6 +75,7 @@ public class MainWindow extends javax.swing.JFrame {
         saveStatusButton = new javax.swing.JButton();
         LoadStatusFileButton = new javax.swing.JButton();
         printStatusButton = new javax.swing.JButton();
+        isOnCheckbox = new javax.swing.JCheckBox();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setMinimumSize(new java.awt.Dimension(300, 300));
@@ -102,38 +92,10 @@ public class MainWindow extends javax.swing.JFrame {
         logArea.setRows(5);
         logScrollPane.setViewportView(logArea);
 
-        readYahooButton.setText("ReadYahoo");
-        readYahooButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                readYahooButtonActionPerformed(evt);
-            }
-        });
-
-        readGoogleButton.setText("ReadGoogle");
-        readGoogleButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                readGoogleButtonActionPerformed(evt);
-            }
-        });
-
-        indCalcButton.setText("IndCalc");
-        indCalcButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                indCalcButtonActionPerformed(evt);
-            }
-        });
-
         tickSymbolTextField.setText("AAPL");
         tickSymbolTextField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 tickSymbolTextFieldActionPerformed(evt);
-            }
-        });
-
-        comp90Button.setText("Compute 90");
-        comp90Button.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                comp90ButtonActionPerformed(evt);
             }
         });
 
@@ -207,6 +169,10 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
 
+        isOnCheckbox.setText("on");
+        isOnCheckbox.setEnabled(false);
+        isOnCheckbox.setFocusable(false);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -229,13 +195,7 @@ public class MainWindow extends javax.swing.JFrame {
                                 .addComponent(connectButton)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(portTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(comp90Button)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(readYahooButton)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(readGoogleButton)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(indCalcButton)))
+                            .addComponent(isOnCheckbox))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
@@ -268,15 +228,11 @@ public class MainWindow extends javax.swing.JFrame {
                     .addComponent(sellButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(readYahooButton)
-                    .addComponent(readGoogleButton)
-                    .addComponent(indCalcButton)
                     .addComponent(saveStatusButton)
-                    .addComponent(LoadStatusFileButton))
+                    .addComponent(LoadStatusFileButton)
+                    .addComponent(isOnCheckbox))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(comp90Button)
-                    .addComponent(printStatusButton))
+                .addComponent(printStatusButton)
                 .addGap(18, 18, 18)
                 .addComponent(logScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 528, Short.MAX_VALUE)
                 .addContainerGap())
@@ -286,157 +242,26 @@ public class MainWindow extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void startButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startButtonActionPerformed
-        Timing t = new Timing(new Runnable() {
-            @Override
-            public void run() {
-                comp90ButtonActionPerformed(null);
-            }
-        });
-        t.startExecutionAt(15, 58, 00);
-        logger.info( "Start in 15:58:00 US time." );
+        if (!ninetyRunner.isRunning) {
+            ninetyRunner.Start();
+            isOnCheckbox.setSelected(true);
+        } else {
+            ninetyRunner.Stop();
+            isOnCheckbox.setSelected(false);
+        }
         
     }//GEN-LAST:event_startButtonActionPerformed
-
-    private void readYahooButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_readYahooButtonActionPerformed
-        try {
-            GoogleActDataGetter goog = new GoogleActDataGetter();
-            double value = goog.readActualData(tickSymbolTextField.getText());
-            YahooDataGetter yah = new YahooDataGetter();
-            yah.readData(new Date(), 14, tickSymbolTextField.getText(), value);
-            
-            for (int i = 0; i < 14; i++) {
-                Date date = yah.data.date[i];
-                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-                logArea.append( formatter.format(date) );
-                logArea.append( " AdjClose: " );
-                logArea.append( Double.toString(yah.data.adjClose[i]) );
-                logArea.append( "\r\n" );
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (NumberFormatException ex) {
-            Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }//GEN-LAST:event_readYahooButtonActionPerformed
-
-    private void readGoogleButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_readGoogleButtonActionPerformed
-        try {
-            GoogleActDataGetter goog = new GoogleActDataGetter();
-            double value = goog.readActualData(tickSymbolTextField.getText());
-            
-            logger.info(Double.toString(value));
-        } catch (IOException ex) {
-            Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (NumberFormatException ex) {
-            Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }//GEN-LAST:event_readGoogleButtonActionPerformed
-
-    private void indCalcButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_indCalcButtonActionPerformed
-        try {
-            YahooDataGetter yah = new YahooDataGetter();
-            GoogleActDataGetter goog = new GoogleActDataGetter();
-            double value = goog.readActualData(tickSymbolTextField.getText());
-            yah.readData(new Date(), 200, tickSymbolTextField.getText(), value);
-            
-            IndicatorCalculator ind = new IndicatorCalculator();
-            double sma5 = ind.SMA(5, yah.data.adjClose);
-            double sma200 = ind.SMA(200, yah.data.adjClose);
-            double rsi = ind.RSI(yah.data.adjClose);
-            
-            logger.log(Level.INFO, "SMA5: " + Double.toString(sma5));
-            logger.log(Level.INFO, "SMA200: " + Double.toString(sma200));
-            logger.log(Level.INFO, "RSI2: " + Double.toString(rsi));
-            
-            double[] forRSI = {122.15, 121.48, 122.06,
-                120.73, 120.87, 120.26, 119.47,
-                118.38, 118.64, 118.83, 117.54,
-                117.78, 117.09, 116.85};
-            double[] forRSIrev = new double[forRSI.length];
-            
-            for (int i = 0; i < forRSIrev.length; i++) {
-                forRSIrev[forRSIrev.length - 1 - i] = forRSI[i];
-            }
-            
-            double rsi2 = ind.RSI(forRSIrev);
-            logger.log(Level.INFO, "RSI TEST: " + Double.toString(rsi2));
-        } catch (IOException ex) {
-            Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (NumberFormatException ex) {
-            Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-    }//GEN-LAST:event_indCalcButtonActionPerformed
 
     private void tickSymbolTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tickSymbolTextFieldActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_tickSymbolTextFieldActionPerformed
-
-    private void comp90ButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comp90ButtonActionPerformed
-        try {
-            
-            LocalDate date = LocalDate.now();
-            DayOfWeek dow = date.getDayOfWeek();
-
-            logger.info("It's " + dow + "!");
-
-            if (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY) {
-                logger.info("Nothing to trade during weekend");
-
-                nine.PrintStatus();
-
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                }
-
-                startButtonActionPerformed(null);
-                return;
-            }
-
-            logger.info("Let's start trading.");
-
-            nine.PrintStatus();
-
-            if (!m_connected) {
-                nine.Connect(Integer.parseInt(portTextField.getText()));
-                m_connected = true;
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-
-            nine.RunStrategy();
-
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-            }
-
-            logger.info("Trading is finished.");
-
-            nine.PrintStatus();
-
-            startButtonActionPerformed(null);
-        
-        } catch (Exception e) {
-            //logger.severe("Exception in Ninety: " + e.getMessage());
-            logger.log(Level.SEVERE, e.getMessage(), e);
-            //e.printStackTrace(new PrintStream(logger.));
-            
-        }
-    }//GEN-LAST:event_comp90ButtonActionPerformed
 
     private void portTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_portTextFieldActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_portTextFieldActionPerformed
 
     private void connectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_connectButtonActionPerformed
-        nine.Connect(Integer.parseInt(portTextField.getText()));
+        m_comm.connect(Integer.parseInt(portTextField.getText()));
         m_connected = true;
     }//GEN-LAST:event_connectButtonActionPerformed
 
@@ -457,13 +282,13 @@ public class MainWindow extends javax.swing.JFrame {
     }//GEN-LAST:event_sellButtonActionPerformed
 
     private void loadStatusButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadStatusButtonActionPerformed
-        nine.LoadStatus();
-        nine.PrintStatus();
+        //ninetyRunner.m_statusDataFor90.LoadStatus();
+        ninetyRunner.m_statusDataFor90.PrintStatus();
     }//GEN-LAST:event_loadStatusButtonActionPerformed
 
     private void buyStatusButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buyStatusButtonActionPerformed
         if (!m_connected) {
-            nine.Connect(Integer.parseInt(portTextField.getText()));
+            m_comm.connect(Integer.parseInt(portTextField.getText()));
             m_connected = true;
             try {
                 Thread.sleep(5000);
@@ -471,34 +296,25 @@ public class MainWindow extends javax.swing.JFrame {
                 Thread.currentThread().interrupt();
             }
         }
-        nine.BuyLoadedStatus();
+        ninetyRunner.BuyLoadedStatus();
     }//GEN-LAST:event_buyStatusButtonActionPerformed
 
     private void SellAllButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SellAllButtonActionPerformed
-        if (!m_connected) {
-            nine.Connect(Integer.parseInt(portTextField.getText()));
-            m_connected = true;
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-            }
-        }
-        nine.SellAllPositions();
+        ninetyRunner.SellAllPositions();
     }//GEN-LAST:event_SellAllButtonActionPerformed
 
     private void saveStatusButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveStatusButtonActionPerformed
-        nine.SaveHeldPositionsToFile();
+        ninetyRunner.m_statusDataFor90.SaveHeldPositionsToFile();
         logger.info("Status saved.");
     }//GEN-LAST:event_saveStatusButtonActionPerformed
 
     private void LoadStatusFileButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_LoadStatusFileButtonActionPerformed
-        nine.ReadHeldPositions();
-        nine.PrintStatus();
+        ninetyRunner.m_statusDataFor90.ReadHeldPositions();
+        ninetyRunner.m_statusDataFor90.PrintStatus();
     }//GEN-LAST:event_LoadStatusFileButtonActionPerformed
 
     private void printStatusButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_printStatusButtonActionPerformed
-        nine.PrintStatus();
+        ninetyRunner.m_statusDataFor90.PrintStatus();
     }//GEN-LAST:event_printStatusButtonActionPerformed
 
     /**
@@ -541,16 +357,13 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JButton SellAllButton;
     private javax.swing.JButton buyButton;
     private javax.swing.JButton buyStatusButton;
-    private javax.swing.JButton comp90Button;
     private javax.swing.JButton connectButton;
-    private javax.swing.JButton indCalcButton;
+    private javax.swing.JCheckBox isOnCheckbox;
     private javax.swing.JButton loadStatusButton;
     private javax.swing.JTextArea logArea;
     private javax.swing.JScrollPane logScrollPane;
     private javax.swing.JTextField portTextField;
     private javax.swing.JButton printStatusButton;
-    private javax.swing.JButton readGoogleButton;
-    private javax.swing.JButton readYahooButton;
     private javax.swing.JButton saveStatusButton;
     private javax.swing.JButton sellButton;
     private javax.swing.JButton startButton;

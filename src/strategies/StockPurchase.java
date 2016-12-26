@@ -5,11 +5,13 @@
  */
 package strategies;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.ZonedDateTime;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jdom2.Attribute;
+import org.jdom2.DataConversionException;
+import org.jdom2.Element;
+import tradingapp.Timing;
 
 /**
  *
@@ -22,7 +24,7 @@ public class StockPurchase {
     public double priceForOne = 0;
     public int position = 0;
     public int portions = 0;
-    public Date date = new Date();
+    public ZonedDateTime date = Timing.GetNYTimeNow();
     
     @Override
     public String toString() {
@@ -46,5 +48,33 @@ public class StockPurchase {
         } catch (ParseException ex) {
             logger.severe("Failed to load StockPurchase date from string: " + ex);
         }*/
+    }
+
+    void AddToXml(Element heldElement) {
+        Element purchaseElement = new Element("purchase");
+        purchaseElement.setAttribute(new Attribute("priceForOne", Double.toString(priceForOne)));
+        purchaseElement.setAttribute(new Attribute("position", Integer.toString(position)));
+        purchaseElement.setAttribute(new Attribute("portions", Integer.toString(portions)));
+        purchaseElement.setAttribute(new Attribute("date", date.toString()));
+        heldElement.addContent(purchaseElement);
+    }
+
+    void LoadFromXml(Element purchaseElement) {
+        try {
+            Attribute attribute = purchaseElement.getAttribute("priceForOne");
+            priceForOne = attribute.getDoubleValue();
+            
+            attribute = purchaseElement.getAttribute("position");
+            position = attribute.getIntValue();
+
+            attribute = purchaseElement.getAttribute("portions");
+            portions = attribute.getIntValue();
+                    
+            attribute = purchaseElement.getAttribute("date");
+            date = ZonedDateTime.parse(attribute.getValue());
+            
+        } catch (DataConversionException ex) {
+            logger.severe("Error in loading from XML: Failed to convert values in purchases.");
+        }
     }
 }

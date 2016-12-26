@@ -32,7 +32,7 @@
                   <Component id="logScrollPane" max="32767" attributes="0"/>
                   <Group type="102" alignment="0" attributes="0">
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" alignment="0" attributes="0">
+                          <Group type="102" attributes="0">
                               <Component id="startButton" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="tickSymbolTextField" min="-2" pref="51" max="-2" attributes="0"/>
@@ -45,14 +45,7 @@
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="portTextField" min="-2" max="-2" attributes="0"/>
                           </Group>
-                          <Component id="comp90Button" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Group type="102" alignment="0" attributes="0">
-                              <Component id="readYahooButton" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                              <Component id="readGoogleButton" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="indCalcButton" min="-2" max="-2" attributes="0"/>
-                          </Group>
+                          <Component id="isOnCheckbox" alignment="0" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace type="unrelated" max="32767" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
@@ -94,17 +87,12 @@
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
-                  <Component id="readYahooButton" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="readGoogleButton" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="indCalcButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="saveStatusButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="LoadStatusFileButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="isOnCheckbox" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
-              <Group type="103" groupAlignment="3" attributes="0">
-                  <Component id="comp90Button" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="printStatusButton" alignment="3" min="-2" max="-2" attributes="0"/>
-              </Group>
+              <Component id="printStatusButton" min="-2" max="-2" attributes="0"/>
               <EmptySpace min="-2" pref="18" max="-2" attributes="0"/>
               <Component id="logScrollPane" pref="528" max="32767" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
@@ -137,44 +125,12 @@
         </Component>
       </SubComponents>
     </Container>
-    <Component class="javax.swing.JButton" name="readYahooButton">
-      <Properties>
-        <Property name="text" type="java.lang.String" value="ReadYahoo"/>
-      </Properties>
-      <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="readYahooButtonActionPerformed"/>
-      </Events>
-    </Component>
-    <Component class="javax.swing.JButton" name="readGoogleButton">
-      <Properties>
-        <Property name="text" type="java.lang.String" value="ReadGoogle"/>
-      </Properties>
-      <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="readGoogleButtonActionPerformed"/>
-      </Events>
-    </Component>
-    <Component class="javax.swing.JButton" name="indCalcButton">
-      <Properties>
-        <Property name="text" type="java.lang.String" value="IndCalc"/>
-      </Properties>
-      <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="indCalcButtonActionPerformed"/>
-      </Events>
-    </Component>
     <Component class="javax.swing.JTextField" name="tickSymbolTextField">
       <Properties>
         <Property name="text" type="java.lang.String" value="AAPL"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="tickSymbolTextFieldActionPerformed"/>
-      </Events>
-    </Component>
-    <Component class="javax.swing.JButton" name="comp90Button">
-      <Properties>
-        <Property name="text" type="java.lang.String" value="Compute 90"/>
-      </Properties>
-      <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="comp90ButtonActionPerformed"/>
       </Events>
     </Component>
     <Component class="javax.swing.JButton" name="connectButton">
@@ -256,6 +212,13 @@
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="printStatusButtonActionPerformed"/>
       </Events>
+    </Component>
+    <Component class="javax.swing.JCheckBox" name="isOnCheckbox">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="on"/>
+        <Property name="enabled" type="boolean" value="false"/>
+        <Property name="focusable" type="boolean" value="false"/>
+      </Properties>
     </Component>
   </SubComponents>
 </Form>

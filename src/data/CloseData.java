@@ -12,15 +12,16 @@ import java.time.LocalDate;
  * @author Muhe
  */
 public class CloseData {
-    class SingleDayEntry
-    {
-        LocalDate date = LocalDate.MIN;
-        double adjClose = 0;
-    }
     
     public CloseData(int count) {
-        values = new SingleDayEntry[count];
+        dates = new LocalDate[count];
+        adjCloses = new double[count];
+        
+        for (int i = 0; i < count; i++) {
+            dates[i] = LocalDate.MIN;
+        }
     }
     
-    SingleDayEntry[] values;
+    public LocalDate[] dates;
+    public double[] adjCloses;
 }

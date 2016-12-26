@@ -62,7 +62,7 @@ public class IBCommunication implements ApiController.IConnectionHandler {
         } else {
             order.action(Types.Action.SELL);
         }
-        order.totalQuantity(tradeOrder.stocksToTrade);
+        order.totalQuantity(tradeOrder.position);
         order.orderType(OrderType.MKT);
         order.tif(Types.TimeInForce.DAY);
         
