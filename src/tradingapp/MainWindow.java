@@ -33,7 +33,7 @@ public class MainWindow extends javax.swing.JFrame {
         initComponents();
          
         try {
-            logger.setLevel(Level.INFO);
+            logger.setLevel(Level.FINEST);
             
             FileHandler fileTxt = new FileHandler("Logging.txt");
             TextAreaLogHandler textHandler = new TextAreaLogHandler(logArea);
@@ -242,8 +242,8 @@ public class MainWindow extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void startButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startButtonActionPerformed
-        if (!ninetyRunner.isRunning) {
-            ninetyRunner.Start();
+        if (!ninetyRunner.isStrategyRunning) {
+            ninetyRunner.ScheduleFirstCheck();
             isOnCheckbox.setSelected(true);
         } else {
             ninetyRunner.Stop();
@@ -283,7 +283,7 @@ public class MainWindow extends javax.swing.JFrame {
 
     private void loadStatusButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadStatusButtonActionPerformed
         //ninetyRunner.m_statusDataFor90.LoadStatus();
-        ninetyRunner.m_statusDataFor90.PrintStatus();
+        ninetyRunner.statusData.PrintStatus();
     }//GEN-LAST:event_loadStatusButtonActionPerformed
 
     private void buyStatusButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buyStatusButtonActionPerformed
@@ -304,17 +304,17 @@ public class MainWindow extends javax.swing.JFrame {
     }//GEN-LAST:event_SellAllButtonActionPerformed
 
     private void saveStatusButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveStatusButtonActionPerformed
-        ninetyRunner.m_statusDataFor90.SaveHeldPositionsToFile();
+        ninetyRunner.statusData.SaveHeldPositionsToFile();
         logger.info("Status saved.");
     }//GEN-LAST:event_saveStatusButtonActionPerformed
 
     private void LoadStatusFileButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_LoadStatusFileButtonActionPerformed
-        ninetyRunner.m_statusDataFor90.ReadHeldPositions();
-        ninetyRunner.m_statusDataFor90.PrintStatus();
+        ninetyRunner.statusData.ReadHeldPositions();
+        ninetyRunner.statusData.PrintStatus();
     }//GEN-LAST:event_LoadStatusFileButtonActionPerformed
 
     private void printStatusButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_printStatusButtonActionPerformed
-        ninetyRunner.m_statusDataFor90.PrintStatus();
+        ninetyRunner.statusData.PrintStatus();
     }//GEN-LAST:event_printStatusButtonActionPerformed
 
     /**

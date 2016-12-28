@@ -34,40 +34,6 @@ public class HeldStock {
         }
         return portions;
     }
-    
-    public void LoadFromString(List<String> allLines) {
-        int lineCounter = 0;
-        int purchCount = 0;
-        for (Iterator<String> iterator = allLines.iterator(); iterator.hasNext();) {
-            String next = iterator.next();
-            
-            if (next.isEmpty()) {
-                continue;
-            }
-            
-            String[] strs = next.split(";");
-            
-            if ( lineCounter == 0) {
-                tickerSymbol = strs[1];
-                purchCount = Integer.parseInt(strs[3]);
-            }
-            else
-            {
-                StockPurchase pur = new StockPurchase();
-                pur.LoadFromStrings(strs);
-                purchases.add(pur);
-                purchCount--;
-            }
-
-            lineCounter++;
-            
-            iterator.remove();
-            
-            if (purchCount == 0) {
-                break;
-            }
-        }
-    }
 
     double GetAvgPrice() {
         double avgPrice = 0;
@@ -80,8 +46,8 @@ public class HeldStock {
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder();
-        str.append("Held stock;").append(tickerSymbol);
-        str.append("; purchases;").append(purchases.size()).append("\r\n");
+        str.append("Held stock: ").append(tickerSymbol);
+        str.append(", purchases ").append(purchases.size()).append("\r\n");
         
         for (StockPurchase purchase : purchases) {
             str.append(purchase.toString());
@@ -96,8 +62,8 @@ public class HeldStock {
         
         for (StockPurchase purchase : purchases) {
             purchase.AddToXml(heldElement);
-            rootElement.addContent(heldElement);
         }
+        rootElement.addContent(heldElement);
     }
 
     void LoadFromXml(Element heldElement) {

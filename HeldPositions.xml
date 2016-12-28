@@ -1,18 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<HeldPositions heldStocks="5">
-  <heldStock ticker="TGT">
-    <purchase priceForOne="73.5" position="27" portions="1" date="2016-12-26T13:20:06.035-05:00[America/New_York]" />
-  </heldStock>
+<HeldPositions heldStocks="1">
   <heldStock ticker="SBUX">
-    <purchase priceForOne="57.01" position="35" portions="1" date="2016-12-26T13:17:44.395-05:00[America/New_York]" />
-  </heldStock>
-  <heldStock ticker="GM">
-    <purchase priceForOne="35.69" position="56" portions="1" date="2016-12-26T13:26:59.645-05:00[America/New_York]" />
-  </heldStock>
-  <heldStock ticker="WBA">
-    <purchase priceForOne="84.28" position="23" portions="1" date="2016-12-26T13:22:10.921-05:00[America/New_York]" />
-  </heldStock>
-  <heldStock ticker="ACN">
-    <purchase priceForOne="117.48" position="17" portions="1" date="2016-12-26T13:24:35.219-05:00[America/New_York]" />
+    <purchase priceForOne="56.9" position="35" portions="1" date="2016-12-27T15:36:57.843-05:00[America/New_York]" />
   </heldStock>
 </HeldPositions>

@@ -9,6 +9,7 @@
 
 *.txt
 *.txt1
+*.csv
 private.xml
 
 build/

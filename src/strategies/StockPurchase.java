@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 import org.jdom2.Attribute;
 import org.jdom2.DataConversionException;
 import org.jdom2.Element;
-import tradingapp.Timing;
+import tradingapp.TradingTimer;
 
 /**
  *
@@ -24,31 +24,24 @@ public class StockPurchase {
     public double priceForOne = 0;
     public int position = 0;
     public int portions = 0;
-    public ZonedDateTime date = Timing.GetNYTimeNow();
+    public ZonedDateTime date = TradingTimer.GetNYTimeNow();
     
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder();
-        str.append("Stock purchase - priceForOne;").append(priceForOne);
-        str.append("; position;").append(position);
-        str.append("; portions;").append(portions);
-        str.append("; date;").append(date).append("\r\n");
+        str.append("Stock purchase - priceForOne ").append(priceForOne);
+        str.append(", position ").append(position);
+        str.append(", portions ").append(portions);
+        str.append(", date ").append(date).append("\r\n");
         
         return str.toString();
     }
 
-    void LoadFromStrings(String[] strs) {
+    /*void LoadFromStrings(String[] strs) {
         priceForOne = Double.parseDouble(strs[1]);
         position = Integer.parseInt(strs[3]);
         portions = Integer.parseInt(strs[5]);
-        
-        /*SimpleDateFormat sdf = new SimpleDateFormat();
-        try {
-            date = sdf.parse(strs[7]);
-        } catch (ParseException ex) {
-            logger.severe("Failed to load StockPurchase date from string: " + ex);
-        }*/
-    }
+    }*/
 
     void AddToXml(Element heldElement) {
         Element purchaseElement = new Element("purchase");

@@ -15,7 +15,7 @@ public class CommLogger implements ILogger {
 
     @Override
     public void log(String valueOf) {
-        System.out.println("COMMUNICATION LOG: " + valueOf);
+        //System.out.print("COMMUNICATION LOG: " + valueOf);
     }
     
 }

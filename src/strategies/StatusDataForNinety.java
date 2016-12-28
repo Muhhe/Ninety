@@ -39,22 +39,6 @@ public class StatusDataForNinety {
     public double moneyToInvest = 40000;
 
     public void SaveHeldPositionsToFile() {
-        /*try {
-            List<String> lines = new ArrayList<>();
-
-            lines.add("Number of held stock:" + heldStocks.size());
-
-            for (HeldStock heldStock : heldStocks.values()) {
-                lines.add(heldStock.toString());
-            }
-
-            Path file = Paths.get("HeldPositions.txt");
-            Files.write(file, lines, Charset.forName("UTF-8"));
-
-        } catch (IOException ex) {
-            logger.severe("Failed to create file: " + ex.getMessage());
-        }*/
-
         try {
             //root element
             Element rootElement = new Element("HeldPositions");
@@ -67,9 +51,8 @@ public class StatusDataForNinety {
 
             XMLOutputter xmlOutput = new XMLOutputter();
 
-            //Path file = Paths.get("HeldPositions.txt");
             File yourFile = new File("HeldPositions.xml");
-            yourFile.createNewFile(); // if file already exists will do nothing 
+            yourFile.createNewFile();
             FileOutputStream oFile = new FileOutputStream(yourFile, false);
 
             xmlOutput.setFormat(Format.getPrettyFormat());
@@ -83,41 +66,13 @@ public class StatusDataForNinety {
     public void ReadHeldPositions() {
 
         heldStocks.clear();
-
-        /*try {
-            Path file = Paths.get("HeldPositions.txt");
-            List<String> allLines = Files.readAllLines(file);
-
-            Iterator<String> iterator = allLines.iterator();
-            String next = iterator.next();
-            String[] split = next.split(":");
-            int count = Integer.parseInt(split[1]);
-
-            iterator.remove();
-
-            for (int i = 0; i < count; i++) {
-                HeldStock held = new HeldStock();
-                held.LoadFromString(allLines);
-                heldStocks.put(held.tickerSymbol, held);
-            }
-
-        } catch (IOException ex) {
-            logger.severe("Failed to create file: " + ex.getMessage());
-        }*/
         try {
             File inputFile = new File("HeldPositions.xml");
-
             SAXBuilder saxBuilder = new SAXBuilder();
-
             Document document = saxBuilder.build(inputFile);
 
-            //System.out.println("Root element :"
-            //        + document.getRootElement().getName());
-
             Element rootElement = document.getRootElement();
-
             List<Element> heldStocksElements = rootElement.getChildren();
-            //System.out.println("----------------------------");
 
             for (Element heldElement : heldStocksElements) {
                 HeldStock held = new HeldStock();
@@ -152,8 +107,6 @@ public class StatusDataForNinety {
     }
 
     public void PrintStatus() {
-        //List<String> lines = new ArrayList<>();
-
         logger.info("Status report: number of held stock: " + heldStocks.size());
         logger.info("Held portions: " + GetBoughtPortions() + "/20");
 
