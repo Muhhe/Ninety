@@ -10,6 +10,7 @@
 *.txt
 *.txt1
 *.csv
+*.lck
 private.xml
 
 build/

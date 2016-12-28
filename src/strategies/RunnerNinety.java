@@ -40,9 +40,6 @@ public class RunnerNinety {
     public boolean isStartScheduled = false;
     
     private TradingTimer timer = new TradingTimer();
-    //private TradingTimer m_timerHistData;
-    //private TradingTimer m_timerStartNinety;
-
 
     private Ninety ninety = new Ninety();
 
@@ -50,30 +47,9 @@ public class RunnerNinety {
         m_IBcomm.connect(port);
         statusData.ReadHeldPositions();
     }
-
-    public boolean CheckIfTradingDay() {    //TODO jeste poresit
-        LocalDate date = LocalDate.now();
-        DayOfWeek dow = date.getDayOfWeek();
-
-        logger.info("It's " + dow + "!");
-
-        if (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY) {
-            logger.info("Nothing to trade during weekend");
-            return false;
-        }
-        
-        LocalTime closeTime = timer.GetTodayCloseTime();
-        
-        if (closeTime == null) {
-            logger.info("It's holiday today!");
-            return false;
-        }
-        
-        //TODO: check if holiday
-        return true;
-    }
     
     private void ScheduleForTomorrowDay() {
+        logger.info("Scheduling for tomorrow!");
         isStartScheduled = true;
         ZonedDateTime tomorrowCheck = TradingTimer.GetNYTimeNow().plusDays(1).with(FIRST_CHECK_TIME);
         timer.startTaskAt(tomorrowCheck, new Runnable() {
@@ -92,14 +68,12 @@ public class RunnerNinety {
     public void ScheduleFirstCheck() {
         
         timer.LoadSpecialTradingDays();
-        //boolean isTradingToday = CheckIfTradingDay();
         
         ZonedDateTime now = TradingTimer.GetNYTimeNow();
         LocalTime closeTime = timer.GetTodayCloseTime();
 
         if (closeTime == null) {
-            logger.info("It's holiday today!");
-            
+            logger.info("No trading today.");
             ScheduleForTomorrowDay();
             return;
         }
@@ -111,7 +85,7 @@ public class RunnerNinety {
         logger.info("LastCall: " + lastCall);
         
         if (now.compareTo(lastCall) > 0) {
-            logger.info("Not enough time today. Scheduling for tomorrow!");
+            logger.info("Not enough time today.");
             ScheduleForTomorrowDay();
             return;
         }
@@ -182,7 +156,7 @@ public class RunnerNinety {
 
         try {
 
-            if (!CheckIfTradingDay()) {
+            if (timer.GetTodayCloseTime() == null) {
                 return;
             }
 

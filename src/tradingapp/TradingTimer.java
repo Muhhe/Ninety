@@ -7,6 +7,7 @@ package tradingapp;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -115,12 +116,24 @@ public class TradingTimer {
         LocalDate today = LocalDate.now();
         LocalTime closingTime = DEFAULT_CLOSE_TIME;
         
+        DayOfWeek dow = today.getDayOfWeek();
+
+        logger.info("It's " + dow + "!");
+
+        if (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY) {
+            logger.info("Nothing to trade during weekend");
+            return null;
+        }
+        
         for (TradingDay day : specialTradingDays) {
             if (day.date.equals(today)) {
                 if (day.closingTime == null) {
+                    logger.info("Today is holiday!");
                     return null;
                 } else {
                     closingTime = day.closingTime;
+                    logger.info("Today is a special day! Closing at " + closingTime.toString());
+                    break;
                 }
             }
         }
