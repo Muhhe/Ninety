@@ -173,6 +173,7 @@ public class Ninety {
             StockIndicatorsForNinety stockIndicator = dataFor90Map.get(stockToBuy);
             if (stockIndicator == null) {
                 logger.severe("Cannot find indicators for " + stockToBuy);
+                return null;
                 //TODO: pruser
             }
 
@@ -214,6 +215,7 @@ public class Ninety {
                 StockIndicatorsForNinety stockIndicator2 = dataFor90Map.get(stock2.tickerSymbol);
                 if ((stockIndicator1 == null) || (stockIndicator2 == null)) {
                     logger.severe("Cannot find indicators for " + stock1.tickerSymbol + " and/or " + stock2.tickerSymbol);
+                    return -1;
                     //TODO: pruser
                 }
                 return Double.compare(stockIndicator1.rsi2, stockIndicator2.rsi2);
@@ -228,6 +230,7 @@ public class Ninety {
             StockIndicatorsForNinety stockIndicator = dataFor90Map.get(heldStock.tickerSymbol);
             if (stockIndicator == null) {
                 logger.severe("Cannot find indicators for " + heldStock.tickerSymbol);
+                continue;
                 //TODO: pruser
             }
 

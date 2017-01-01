@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -45,20 +44,18 @@ public class TradingTimer {
     
     private List<TradingDay> specialTradingDays = new ArrayList<TradingDay>();
 
-    public final static ZoneId zoneNY = ZoneId.of("America/New_York");
+    public final static ZoneId ZONE_NY = ZoneId.of("America/New_York");
     
     public static ZonedDateTime GetNYTimeNow() {
-        return ZonedDateTime.now(zoneNY);
+        return ZonedDateTime.now(ZONE_NY);
     }
 
     public void startTaskAt(final ZonedDateTime time, Runnable runnableTask) {
         Runnable taskWrapper = new Runnable() {
-
             @Override
             public void run() {
                 runnableTask.run();
             }
-
         };
 
         long delay = computeTimeFromNowTo(time);
@@ -86,9 +83,7 @@ public class TradingTimer {
     }
 
     public static long computeTimeFromNowTo(ZonedDateTime time) {        
-        ZonedDateTime zonedNowNY = GetNYTimeNow();
-
-        Duration duration = Duration.between(zonedNowNY, time);
+        Duration duration = Duration.between(GetNYTimeNow(), time);
         return duration.getSeconds();
     }
 
@@ -106,10 +101,13 @@ public class TradingTimer {
     public void stop() {
         executorService.shutdownNow();
         try {
-            executorService.awaitTermination(1, TimeUnit.DAYS);
+            if (!executorService.awaitTermination(10, TimeUnit.MINUTES)) {
+                logger.severe("Cannot stop execution.");
+            }
         } catch (InterruptedException ex) {
             logger.severe(ex.getMessage());
         }
+        executorService = Executors.newScheduledThreadPool(5); 
     }
     
     public LocalTime GetTodayCloseTime() {
@@ -143,6 +141,7 @@ public class TradingTimer {
     
     public void LoadSpecialTradingDays() {
 
+        logger.fine("Loading special days!");
         specialTradingDays.clear();
         try {
             File inputFile = new File("specialTradingDays.xml");
@@ -173,12 +172,14 @@ public class TradingTimer {
 
                 specialTradingDays.add(day);
             }
+            
+            logger.fine("Special days loaded: " + specialTradingDays.size());
         } catch (JDOMException e) {
             e.printStackTrace();
-            logger.severe("Error in loading from XML: JDOMException.\r\n" + e);
+            logger.severe("Error in loading special days from XML: JDOMException.\r\n" + e);
         } catch (IOException ioe) {
             ioe.printStackTrace();
-            logger.severe("Error in loading from XML: IOException.\r\n" + ioe);
+            logger.severe("Error in loading special days from XML: IOException.\r\n" + ioe);
         }
     }
 }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <HeldPositions heldStocks="1">
-  <heldStock ticker="SBUX">
-    <purchase priceForOne="56.9" position="35" portions="1" date="2016-12-27T15:36:57.843-05:00[America/New_York]" />
+  <heldStock ticker="WBA">
+    <purchase priceForOne="82.76" position="24" portions="1" date="2017-01-01T15:58:55.356-05:00[America/New_York]" />
   </heldStock>
 </HeldPositions>

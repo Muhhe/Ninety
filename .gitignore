@@ -8,7 +8,7 @@
 *.ear
 
 *.txt
-*.txt1
+*.txt.1
 *.csv
 *.lck
 private.xml

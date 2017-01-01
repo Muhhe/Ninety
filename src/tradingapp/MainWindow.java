@@ -19,7 +19,9 @@ import strategies.RunnerNinety;
  */
 public class MainWindow extends javax.swing.JFrame {
 
+    public final static String COMM_LOGGER_NAME = "CommLoggerName";
     private final static Logger logger = Logger.getLogger( Logger.GLOBAL_LOGGER_NAME );
+    private final static Logger loggerComm = Logger.getLogger( COMM_LOGGER_NAME );
     
     private final IBCommunication m_comm;
     
@@ -45,6 +47,13 @@ public class MainWindow extends javax.swing.JFrame {
             logger.addHandler(fileTxt);
             logger.addHandler(textHandler);
             
+            loggerComm.setLevel(Level.FINEST);
+            FileHandler fileTxtComm = new FileHandler("LoggingComm.txt");
+            TextAreaLogHandler textHandlerComm = new TextAreaLogHandler(commArea);
+            
+            loggerComm.addHandler(fileTxtComm);
+            loggerComm.addHandler(textHandlerComm);
+            
         } catch (IOException e) {
             throw new RuntimeException("Problems with creating the log files");
         }
@@ -62,8 +71,6 @@ public class MainWindow extends javax.swing.JFrame {
     private void initComponents() {
 
         startButton = new javax.swing.JButton();
-        logScrollPane = new javax.swing.JScrollPane();
-        logArea = new javax.swing.JTextArea();
         tickSymbolTextField = new javax.swing.JTextField();
         connectButton = new javax.swing.JButton();
         portTextField = new javax.swing.JTextField();
@@ -76,6 +83,12 @@ public class MainWindow extends javax.swing.JFrame {
         LoadStatusFileButton = new javax.swing.JButton();
         printStatusButton = new javax.swing.JButton();
         isOnCheckbox = new javax.swing.JCheckBox();
+        logTabbedPane = new javax.swing.JTabbedPane();
+        logScrollPane = new javax.swing.JScrollPane();
+        logArea = new javax.swing.JTextArea();
+        commScrollPane = new javax.swing.JScrollPane();
+        commArea = new javax.swing.JTextArea();
+        startNowButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setMinimumSize(new java.awt.Dimension(300, 300));
@@ -86,11 +99,6 @@ public class MainWindow extends javax.swing.JFrame {
                 startButtonActionPerformed(evt);
             }
         });
-
-        logArea.setEditable(false);
-        logArea.setColumns(20);
-        logArea.setRows(5);
-        logScrollPane.setViewportView(logArea);
 
         tickSymbolTextField.setText("AAPL");
         tickSymbolTextField.addActionListener(new java.awt.event.ActionListener() {
@@ -173,6 +181,27 @@ public class MainWindow extends javax.swing.JFrame {
         isOnCheckbox.setEnabled(false);
         isOnCheckbox.setFocusable(false);
 
+        logArea.setEditable(false);
+        logArea.setColumns(20);
+        logArea.setRows(5);
+        logScrollPane.setViewportView(logArea);
+
+        logTabbedPane.addTab("Log", logScrollPane);
+
+        commArea.setEditable(false);
+        commArea.setColumns(20);
+        commArea.setRows(5);
+        commScrollPane.setViewportView(commArea);
+
+        logTabbedPane.addTab("Comm", commScrollPane);
+
+        startNowButton.setText("StartNow");
+        startNowButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                startNowButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -180,7 +209,6 @@ public class MainWindow extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(logScrollPane)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
@@ -190,13 +218,16 @@ public class MainWindow extends javax.swing.JFrame {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(buyButton)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(sellButton)
-                                .addGap(44, 44, 44)
+                                .addComponent(sellButton))
+                            .addComponent(isOnCheckbox))
+                        .addGap(44, 44, 44)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
                                 .addComponent(connectButton)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(portTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(isOnCheckbox))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(startNowButton))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, 15, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(loadStatusButton)
@@ -209,8 +240,10 @@ public class MainWindow extends javax.swing.JFrame {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(LoadStatusFileButton))
                             .addComponent(printStatusButton))
-                        .addGap(0, 6, Short.MAX_VALUE)))
-                .addContainerGap())
+                        .addContainerGap(11, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(logTabbedPane)
+                        .addContainerGap())))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -230,11 +263,12 @@ public class MainWindow extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(saveStatusButton)
                     .addComponent(LoadStatusFileButton)
-                    .addComponent(isOnCheckbox))
+                    .addComponent(isOnCheckbox)
+                    .addComponent(startNowButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(printStatusButton)
-                .addGap(18, 18, 18)
-                .addComponent(logScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 528, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(logTabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 535, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -242,14 +276,13 @@ public class MainWindow extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void startButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startButtonActionPerformed
-        if (!ninetyRunner.isStrategyRunning) {
+        if (!ninetyRunner.isStartScheduled) {
             ninetyRunner.ScheduleFirstCheck();
             isOnCheckbox.setSelected(true);
         } else {
             ninetyRunner.Stop();
             isOnCheckbox.setSelected(false);
         }
-        
     }//GEN-LAST:event_startButtonActionPerformed
 
     private void tickSymbolTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tickSymbolTextFieldActionPerformed
@@ -317,6 +350,16 @@ public class MainWindow extends javax.swing.JFrame {
         ninetyRunner.statusData.PrintStatus();
     }//GEN-LAST:event_printStatusButtonActionPerformed
 
+    private void startNowButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startNowButtonActionPerformed
+        if (!ninetyRunner.isStartScheduled) {
+            ninetyRunner.RunNow();
+            isOnCheckbox.setSelected(true);
+        } else {
+            ninetyRunner.Stop();
+            isOnCheckbox.setSelected(false);
+        }
+    }//GEN-LAST:event_startNowButtonActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -357,16 +400,20 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JButton SellAllButton;
     private javax.swing.JButton buyButton;
     private javax.swing.JButton buyStatusButton;
+    private javax.swing.JTextArea commArea;
+    private javax.swing.JScrollPane commScrollPane;
     private javax.swing.JButton connectButton;
     private javax.swing.JCheckBox isOnCheckbox;
     private javax.swing.JButton loadStatusButton;
     private javax.swing.JTextArea logArea;
     private javax.swing.JScrollPane logScrollPane;
+    private javax.swing.JTabbedPane logTabbedPane;
     private javax.swing.JTextField portTextField;
     private javax.swing.JButton printStatusButton;
     private javax.swing.JButton saveStatusButton;
     private javax.swing.JButton sellButton;
     private javax.swing.JButton startButton;
+    private javax.swing.JButton startNowButton;
     private javax.swing.JTextField tickSymbolTextField;
     // End of variables declaration//GEN-END:variables
 }
