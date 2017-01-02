@@ -24,11 +24,11 @@ public class RunnerNinety {
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     
     private final static LocalTime FIRST_CHECK_TIME = LocalTime.of(10, 0);
-    //private final static Duration DURATION_BEFORECLOSE_HISTDATA = Duration.ofMinutes(5);
-    //private final static Duration DURATION_BEFORECLOSE_RUNSTRATEGY = Duration.ofMinutes(1);
+    private final static Duration DURATION_BEFORECLOSE_HISTDATA = Duration.ofMinutes(5);
+    private final static Duration DURATION_BEFORECLOSE_RUNSTRATEGY = Duration.ofMinutes(1);
     
-    private final static Duration DURATION_BEFORECLOSE_HISTDATA = Duration.ofMinutes(1);
-    private final static Duration DURATION_BEFORECLOSE_RUNSTRATEGY = Duration.ofMinutes(0);
+    //private final static Duration DURATION_BEFORECLOSE_HISTDATA = Duration.ofMinutes(1);
+    //private final static Duration DURATION_BEFORECLOSE_RUNSTRATEGY = Duration.ofMinutes(0);
 
     public StockDataForNinety stockData = new StockDataForNinety();
     public StatusDataForNinety statusData = new StatusDataForNinety();
@@ -53,7 +53,6 @@ public class RunnerNinety {
         Thread thr = new Thread(new Runnable() {
             @Override
             public void run() {
-        
                 broker.connect();
                 stockData.PrepareHistData();
                 RunNinety();
@@ -197,7 +196,6 @@ public class RunnerNinety {
 
             // Selling held stocks
             List<TradeOrder> sellOrders = Ninety.ComputeStocksToSell(stockData.indicatorsMap, statusData);
-            //List<TradeOrder> sellOrders = ProcessStocksToSellIntoOrders(stocksToSell);
 
             for (TradeOrder tradeOrder : sellOrders) {
                 broker.PlaceOrder(tradeOrder);
@@ -215,12 +213,10 @@ public class RunnerNinety {
             // TODO: wait until done
             // Buying new stock
             TradeOrder buyOrder = Ninety.ComputeStocksToBuy(stockData.indicatorsMap, statusData, sellOrders);
-            //TradeOrder buyOrder = ProcessStockToBuyIntoOrder(tickerToBuy, stocksToSell);
             broker.PlaceOrder(buyOrder);
 
             // Buying more held stock
             List<TradeOrder> buyMoreOrders = Ninety.computeStocksToBuyMore(stockData.indicatorsMap, statusData);
-            //List<TradeOrder> buyMoreOrders = ProcessStocksToBuyMoreIntoOrders(stocksToBuyMore);
 
             for (TradeOrder tradeOrder : buyMoreOrders) {
                 broker.PlaceOrder(tradeOrder);
@@ -238,9 +234,7 @@ public class RunnerNinety {
             // TODO: wait until done
             // TODO: check held positions
             statusData.SaveHeldPositionsToFile();
-
-        //} catch (InterruptedException ex) {
-        //    Logger.getLogger(RunnerNinety.class.getName()).log(Level.SEVERE, null, ex);
+            
         } finally {
 
             try {
