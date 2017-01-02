@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Root>
-  <TradingDay date="2016-12-26" closeTime="15:36:00"/>
+  <TradingDay date="2016-01-02" closeTime="15:36:00"/>
+  <TradingDay date="2017-01-02"/>
 </Root>

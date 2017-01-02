@@ -6,7 +6,9 @@
 package tradingapp;
 
 import communication.IBCommunication;
+import communication.Position;
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,13 +21,15 @@ import strategies.RunnerNinety;
  */
 public class MainWindow extends javax.swing.JFrame {
 
-    public final static String COMM_LOGGER_NAME = "CommLoggerName";
+    public final static String LOGGER_COMM_NAME = "CommLogger";
+    public final static String LOGGER_TADELOG_NAME = "TradeLogLogger";
     private final static Logger logger = Logger.getLogger( Logger.GLOBAL_LOGGER_NAME );
-    private final static Logger loggerComm = Logger.getLogger( COMM_LOGGER_NAME );
+    private final static Logger loggerComm = Logger.getLogger(LOGGER_COMM_NAME );
+    private final static Logger loggerTradeLog = Logger.getLogger(LOGGER_TADELOG_NAME );
     
     private final IBCommunication m_comm;
     
-    RunnerNinety ninetyRunner = new RunnerNinety(4001);
+    RunnerNinety ninetyRunner;
     private boolean m_connected = false;
     
     /**
@@ -54,11 +58,15 @@ public class MainWindow extends javax.swing.JFrame {
             loggerComm.addHandler(fileTxtComm);
             loggerComm.addHandler(textHandlerComm);
             
+            loggerTradeLog.setLevel(Level.FINEST);
+            
         } catch (IOException e) {
             throw new RuntimeException("Problems with creating the log files");
         }
         
         m_comm = new IBCommunication();
+        
+        ninetyRunner = new RunnerNinety(4001);
     }
 
     /**
@@ -89,6 +97,8 @@ public class MainWindow extends javax.swing.JFrame {
         commScrollPane = new javax.swing.JScrollPane();
         commArea = new javax.swing.JTextArea();
         startNowButton = new javax.swing.JButton();
+        getPositionsButton = new javax.swing.JButton();
+        checkPositionsButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setMinimumSize(new java.awt.Dimension(300, 300));
@@ -202,6 +212,20 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
 
+        getPositionsButton.setText("GetPositions");
+        getPositionsButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                getPositionsButtonActionPerformed(evt);
+            }
+        });
+
+        checkPositionsButton.setText("CheckPositions");
+        checkPositionsButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                checkPositionsButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -227,7 +251,7 @@ public class MainWindow extends javax.swing.JFrame {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(portTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addComponent(startNowButton))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, 15, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(loadStatusButton)
@@ -239,8 +263,13 @@ public class MainWindow extends javax.swing.JFrame {
                                 .addComponent(saveStatusButton)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(LoadStatusFileButton))
-                            .addComponent(printStatusButton))
-                        .addContainerGap(11, Short.MAX_VALUE))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(printStatusButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(getPositionsButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(checkPositionsButton)))
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addComponent(logTabbedPane)
                         .addContainerGap())))
@@ -266,7 +295,10 @@ public class MainWindow extends javax.swing.JFrame {
                     .addComponent(isOnCheckbox)
                     .addComponent(startNowButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(printStatusButton)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(printStatusButton)
+                    .addComponent(getPositionsButton)
+                    .addComponent(checkPositionsButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(logTabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 535, Short.MAX_VALUE)
                 .addContainerGap())
@@ -360,6 +392,25 @@ public class MainWindow extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_startNowButtonActionPerformed
 
+    private void getPositionsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_getPositionsButtonActionPerformed
+        ninetyRunner.broker.connect();
+        List<Position> allPositions = ninetyRunner.broker.getAllPositions();
+        
+        for (Position position : allPositions) {
+            logger.info("Stock :" + position.tickerSymbol + ", position: " + position.pos + ", avgPrice: " + position.avgPrice);
+        }
+        
+        ninetyRunner.broker.disconnect();
+    }//GEN-LAST:event_getPositionsButtonActionPerformed
+
+    private void checkPositionsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkPositionsButtonActionPerformed
+        ninetyRunner.broker.connect();
+        
+        ninetyRunner.CheckHeldPositions();
+        
+        ninetyRunner.broker.disconnect();
+    }//GEN-LAST:event_checkPositionsButtonActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -400,9 +451,11 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JButton SellAllButton;
     private javax.swing.JButton buyButton;
     private javax.swing.JButton buyStatusButton;
+    private javax.swing.JButton checkPositionsButton;
     private javax.swing.JTextArea commArea;
     private javax.swing.JScrollPane commScrollPane;
     private javax.swing.JButton connectButton;
+    private javax.swing.JButton getPositionsButton;
     private javax.swing.JCheckBox isOnCheckbox;
     private javax.swing.JButton loadStatusButton;
     private javax.swing.JTextArea logArea;

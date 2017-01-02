@@ -6,13 +6,21 @@
 package strategies;
 
 import communication.IBBroker;
-import communication.IBCommunication;
+import communication.OrderStatus;
+import communication.Position;
+import java.io.File;
+import java.io.IOException;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import static tradingapp.MainWindow.LOGGER_TADELOG_NAME;
 import tradingapp.TradingTimer;
 import tradingapp.TradeOrder;
 
@@ -22,19 +30,17 @@ import tradingapp.TradeOrder;
  */
 public class RunnerNinety {
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+    private final static Logger loggerTradeLog = Logger.getLogger(LOGGER_TADELOG_NAME );
     
     private final static LocalTime FIRST_CHECK_TIME = LocalTime.of(10, 0);
     private final static Duration DURATION_BEFORECLOSE_HISTDATA = Duration.ofMinutes(5);
     private final static Duration DURATION_BEFORECLOSE_RUNSTRATEGY = Duration.ofMinutes(1);
-    
-    //private final static Duration DURATION_BEFORECLOSE_HISTDATA = Duration.ofMinutes(1);
-    //private final static Duration DURATION_BEFORECLOSE_RUNSTRATEGY = Duration.ofMinutes(0);
 
     public StockDataForNinety stockData = new StockDataForNinety();
     public StatusDataForNinety statusData = new StatusDataForNinety();
 
     //private final IBCommunication m_IBcomm = new IBCommunication();
-    private final IBBroker broker = new IBBroker();
+    public final IBBroker broker = new IBBroker();
 
     //public boolean isStrategyRunning = false;
     public boolean isStartScheduled = false;
@@ -44,7 +50,8 @@ public class RunnerNinety {
     private Ninety ninety = new Ninety();
 
     public RunnerNinety(int port) {
-        //statusData.ReadHeldPositions();
+        statusData.ReadHeldPositions();
+        statusData.PrintStatus();
     }
     
     public void RunNow() {
@@ -56,6 +63,7 @@ public class RunnerNinety {
                 broker.connect();
                 stockData.PrepareHistData();
                 RunNinety();
+                broker.disconnect();
             }
         });
         
@@ -75,7 +83,7 @@ public class RunnerNinety {
         
         Duration durationToNextRun = Duration.ofSeconds(TradingTimer.computeTimeFromNowTo(tomorrowCheck));
 
-        logger.info("Next run is scheduled for " + tomorrowCheck.format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
+        logger.info("Next check is scheduled for " + tomorrowCheck.format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
         logger.info("Starting in " + durationToNextRun.toString());
     }
     
@@ -107,6 +115,8 @@ public class RunnerNinety {
         ScheduleLoadingHistDataAndStrategyRun(now.with(closeTime));
         
         broker.connect();
+        CheckHeldPositions();
+        
     }
 
     public void ScheduleLoadingHistDataAndStrategyRun(ZonedDateTime closeTime) {
@@ -135,8 +145,23 @@ public class RunnerNinety {
         timer.startTaskAt(timeRunStrategy, new Runnable() {
             @Override
             public void run() {
+                LocalDate today = LocalDate.now();
+                String todayString = today.toString();
+                FileHandler fileHandler = null;
+                try {
+                    fileHandler = new FileHandler("dataLog/" + todayString + "/TradeLog.txt");
+                } catch (IOException | SecurityException ex) {
+                    logger.log(Level.SEVERE, null, ex);
+                }
+                loggerTradeLog.addHandler(fileHandler);
+                
                 RunNinety();
                 ScheduleForTomorrowDay();
+                
+                fileHandler.close();
+                loggerTradeLog.removeHandler(fileHandler);
+                
+                broker.disconnect();
             }
         });
 
@@ -224,15 +249,20 @@ public class RunnerNinety {
 
             logger.info("Finished computing stocks to buy.");
 
-            try {
-                Thread.sleep(30000);
+            /*try {
+            Thread.sleep(30000);
             } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-                logger.info("Thread interuppted: " + ex);
+            Thread.currentThread().interrupt();
+            logger.info("Thread interuppted: " + ex);
+            }*/
+            if (!broker.waitUntilOrdersClosed(60)) {
+                logger.severe("Some orders was not closed on time.");
             }
-
-            // TODO: wait until done
-            // TODO: check held positions
+            
+            ProcessSubmittedOrders();
+            
+            CheckHeldPositions();
+            
             statusData.SaveHeldPositionsToFile();
             
         } finally {
@@ -243,14 +273,169 @@ public class RunnerNinety {
                 Thread.currentThread().interrupt();
                 logger.info("Thread interuppted: " + ex);
             }
-
-            //stockData.histDataMutex.release();
-            //logger.info("RunNinety: Released lock on hist data.");
             
             logger.info("Trading day finished");
             statusData.PrintStatus();
             //isStrategyRunning = false;
             isStartScheduled = false;
+        }
+    }
+
+    private void ProcessSubmittedOrders() {
+        for (OrderStatus order : broker.orderStatusMap.values()) {
+            if (order.status != OrderStatus.Status.FILLED) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("Order not closed - id: " + order.orderId);
+                sb.append(", ticker: " + order.order.tickerSymbol);
+                sb.append(", action: " + order.order.orderType.toString());
+                sb.append(", status: " + order.status.toString());
+                sb.append(", remaining: " + order.remaining + "/" + order.order.position);
+                logger.severe(sb.toString());
+                UpdateHeldByOrderStatus(order);
+                continue;
+            }
+            
+            StringBuilder sb = new StringBuilder();
+            sb.append("Order filled - id: " + order.orderId );
+            sb.append(", ticker: " + order.order.tickerSymbol);
+            sb.append(", action: " + order.order.orderType.toString());
+            sb.append(", position: " + order.order.position);
+            sb.append(", fillPrice: " + order.fillPrice);
+            sb.append(", timeToFill: " + order.timestampIssued.until(order.timestampFilled, ChronoUnit.SECONDS) + "s");
+            sb.append(", priceDiff: " + (order.fillPrice - order.order.expectedPrice));
+            logger.fine(sb.toString());
+            
+            UpdateHeldByOrderStatus(order);
+        }
+    }
+    
+    private void UpdateHeldByOrderStatus(OrderStatus order) {
+        HeldStock held = statusData.heldStocks.get(order.order.tickerSymbol);
+        
+        if (order.filled == 0) {
+            return;
+        }
+        
+        // Add new stock
+        if (held == null) {
+            if (order.order.orderType == TradeOrder.OrderType.SELL) {
+                logger.severe("Trying to sell not held stock: " + order.order.tickerSymbol);
+                return;
+            }
+
+            held = new HeldStock();
+            held.tickerSymbol = order.order.tickerSymbol;
+
+            StockPurchase purchase = new StockPurchase();
+            purchase.date = order.timestampFilled;
+            purchase.portions = 1;
+            purchase.position = order.filled;
+            purchase.priceForOne = order.fillPrice;
+
+            held.purchases.add(purchase);
+
+            statusData.heldStocks.put(held.tickerSymbol, held);
+            logger.finer("New stock bought: " + held.tickerSymbol + "', position: " + purchase.position + ", priceForOne: " + purchase.priceForOne + "$.");
+            
+            StringBuilder sb = new StringBuilder();
+            sb.append("New stock bought - " );
+            sb.append("ticker: " + order.order.tickerSymbol);
+            sb.append(", position: " + purchase.position);
+            sb.append(", price: " + order.fillPrice);
+            sb.append(", priceDiff: " + (order.fillPrice - order.order.expectedPrice));
+            sb.append(", timeToFill: " + order.timestampIssued.until(order.timestampFilled, ChronoUnit.SECONDS) + "s");
+            loggerTradeLog.info(sb.toString());
+            //TODO: doplnit indicatory atd.
+            return;
+        }
+
+        if (order.order.orderType == TradeOrder.OrderType.SELL) {
+            if (order.filled != held.GetPosition()) {
+                logger.severe("Not all position has been sold for: " + held.tickerSymbol);
+                // TODO: nejak poresit
+            }
+
+            statusData.heldStocks.remove(held);
+
+            double profit = (order.fillPrice - held.GetAvgPrice()) * held.GetPosition();
+            logger.info("Stock sold '" + held.tickerSymbol + "', position: " + order.filled + ", total profit: " + profit + "$.");
+            
+            StringBuilder sb = new StringBuilder();
+            sb.append("Stock sold - " );
+            sb.append("ticker: " + order.order.tickerSymbol);
+            sb.append(", position: " + order.filled);
+            sb.append(", profit: " + profit + "$");
+            sb.append(", price: " + order.fillPrice);
+            sb.append(", priceDiff: " + (order.fillPrice - order.order.expectedPrice));
+            sb.append(", timeToFill: " + order.timestampIssued.until(order.timestampFilled, ChronoUnit.SECONDS) + "s");
+            loggerTradeLog.info(sb.toString());
+            //TODO: doplnit indicatory atd.
+        } else {
+            
+            int newPortions = 1;
+            switch (held.GetPortions()) {
+                case 1:
+                    newPortions = 2;
+                    break;
+                case 3:
+                    newPortions = 3;
+                    break;
+                case 6:
+                    newPortions = 4;
+                    break;
+                default:
+                    logger.severe("Bought stock '" + held.tickerSymbol + "' has somehow " + held.GetPortions() + " bought portions!!!");
+                    //TODO: dafuq?
+            }
+            
+            StockPurchase purchase = new StockPurchase();
+            purchase.date = order.timestampFilled;
+            purchase.portions = newPortions;
+            purchase.position = order.filled;
+            purchase.priceForOne = order.fillPrice;
+
+            held.purchases.add(purchase);
+            logger.info("More stock bought '" + held.tickerSymbol + "', position: " + purchase.position + ", priceForOne: " + purchase.priceForOne + "$.");
+            
+            StringBuilder sb = new StringBuilder();
+            sb.append("More stock bought - " );
+            sb.append("ticker: " + order.order.tickerSymbol);
+            sb.append(", position: " + purchase.position);
+            sb.append(", price: " + order.fillPrice);
+            sb.append(", priceDiff: " + (order.fillPrice - order.order.expectedPrice));
+            sb.append(", timeToFill: " + order.timestampIssued.until(order.timestampFilled, ChronoUnit.SECONDS) + "s");
+            loggerTradeLog.info(sb.toString());
+            //TODO: doplnit indicatory atd.
+        }
+    }
+    
+    public void CheckHeldPositions() {
+        List<Position> allPositions = broker.getAllPositions();
+        
+        logger.fine("Held postions on IB: " + allPositions.size());
+        for (Position position : allPositions) {
+            logger.fine("Stock: " + position.tickerSymbol + ", position: " + position.pos + ", avgPrice: " + position.avgPrice);
+            
+            if (!statusData.heldStocks.containsKey(position.tickerSymbol)) {
+                logger.warning("Stock " + position.tickerSymbol + " found on IB but it's not locally saved. Position " + position.pos);
+            }
+        }
+        
+        for (HeldStock held : statusData.heldStocks.values()) {
+            boolean found = false;
+            for (Position position : allPositions) {
+                if (position.tickerSymbol.contentEquals(held.tickerSymbol)) {
+                    found = true;
+                    
+                    if (held.GetPosition() != position.pos) {
+                        logger.severe("Held position mismatch for ticker: " + held.tickerSymbol + ", position on IB: " + position.pos + " vs saved: " + held.GetPosition());
+                    }
+                    break;
+                }
+            }
+            if (!found) {
+                logger.severe("Held position not found on IB: " + held.tickerSymbol + ", position: " + held.GetPosition());
+            }
         }
     }
 }

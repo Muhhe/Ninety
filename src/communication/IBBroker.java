@@ -18,9 +18,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static tradingapp.MainWindow.COMM_LOGGER_NAME;
 import tradingapp.TradeOrder;
 import tradingapp.TradingTimer;
+import static tradingapp.MainWindow.LOGGER_COMM_NAME;
 
 /**
  *
@@ -28,7 +28,7 @@ import tradingapp.TradingTimer;
  */
 public class IBBroker extends BaseIBConnectionImpl {
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
-    private final static Logger loggerComm = Logger.getLogger( COMM_LOGGER_NAME );
+    private final static Logger loggerComm = Logger.getLogger(LOGGER_COMM_NAME );
     
     public Map<Integer, OrderStatus> orderStatusMap = new ConcurrentHashMap<>();
     public Map<Integer, OrderStatus> activeOrdersMap = new ConcurrentHashMap<>();
@@ -38,6 +38,7 @@ public class IBBroker extends BaseIBConnectionImpl {
     protected BlockingQueue<Integer> nextIdQueue = new LinkedBlockingQueue<>();
     protected CountDownLatch getPositionsCountdownLatch = null;
     protected CountDownLatch ordersClosedWaitCountdownLatch = null;
+    protected CountDownLatch connectiongLatch = null;
     protected List<Position> positionsList = new ArrayList<>();
     
     public void connect() {
@@ -45,6 +46,22 @@ public class IBBroker extends BaseIBConnectionImpl {
             loggerComm.info("Connecting to IB.");
             ibClientSocket.eConnect(null, 4001, 1 );
             // TODO: wait?
+            connectiongLatch = new CountDownLatch(1);
+            try {
+                if (!connectiongLatch.await(10, TimeUnit.SECONDS)) {
+                    loggerComm.severe("Cannot connect to IB");
+                }
+            } catch (InterruptedException ex) {
+                loggerComm.log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
+    public void disconnect() {
+        if( connected ) {
+            loggerComm.info("Disconnecting from IB.");
+            ibClientSocket.eDisconnect();
+            connected = false;
         }
     }
     
@@ -65,6 +82,7 @@ public class IBBroker extends BaseIBConnectionImpl {
         if (!connected) {
             connected = true;
             loggerComm.info("Connection to IB successful.");
+            connectiongLatch.countDown();
             // TODO: nejakej latch?
         }
     }

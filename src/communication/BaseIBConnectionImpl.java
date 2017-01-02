@@ -14,14 +14,14 @@ import com.ib.client.Order;
 import com.ib.client.OrderState;
 import com.ib.client.UnderComp;
 import java.util.logging.Logger;
-import static tradingapp.MainWindow.COMM_LOGGER_NAME;
+import static tradingapp.MainWindow.LOGGER_COMM_NAME;
 
 /**
  *
  * @author Muhe
  */
 public class BaseIBConnectionImpl  implements EWrapper {
-    private final static Logger logger = Logger.getLogger(COMM_LOGGER_NAME);
+    private final static Logger logger = Logger.getLogger(LOGGER_COMM_NAME);
 
     @Override
     public void tickPrice(int tickerId, int field, double price, int canAutoExecute) {
@@ -240,17 +240,17 @@ public class BaseIBConnectionImpl  implements EWrapper {
 
     @Override
     public void error(Exception e) {
-        //not implemented
+        logger.severe("Comm error - Exception:" + e );
     }
 
     @Override
     public void error(String str) {
-        //not implemented
+        logger.severe("Comm error - str:" + str );
     }
 
     @Override
     public void error(int id, int errorCode, String errorMsg) {
-        //not implemented
+        logger.severe("Comm error - id:" + id + ", errorCode: " + errorCode + ", errorMsg: " + errorMsg );
     }
 
     @Override

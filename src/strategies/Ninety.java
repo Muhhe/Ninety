@@ -137,21 +137,21 @@ public class Ninety {
         List<TradeOrder> tradeOrders = new ArrayList<TradeOrder>();
 
         for (HeldStock heldStock : stocksToSell) {
+            StockIndicatorsForNinety stockIndicator = dataFor90Map.get(heldStock.tickerSymbol);
+            if (stockIndicator == null) {
+                logger.severe("Cannot find indicators for " + heldStock.tickerSymbol);
+                continue;
+            }
+            
             TradeOrder order = new TradeOrder();
             order.orderType = TradeOrder.OrderType.SELL;
             order.tickerSymbol = heldStock.tickerSymbol;
             order.position = heldStock.GetPosition();
+            order.expectedPrice = stockIndicator.actValue;
             tradeOrders.add(order);
 
-            StockIndicatorsForNinety stockIndicator = dataFor90Map.get(heldStock.tickerSymbol);
-            if (stockIndicator == null) {
-                logger.severe("Cannot find indicators for " + heldStock.tickerSymbol);
-            }
-
-            double profit = (stockIndicator.actValue - heldStock.GetAvgPrice()) * heldStock.GetPosition();
-            logger.info("Selling stock '" + heldStock.tickerSymbol + "', position: " + order.position + ", total profit: " + profit + "$.");
-
-            statusDataFor90.heldStocks.remove(heldStock.tickerSymbol);
+            logger.info("Selling stock '" + heldStock.tickerSymbol + "', position: " + order.position);
+            //statusDataFor90.heldStocks.remove(heldStock.tickerSymbol);
             // TODO: check if sold and compare expected vs real price
         }
 
@@ -183,8 +183,9 @@ public class Ninety {
                 order.orderType = TradeOrder.OrderType.BUY;
                 order.tickerSymbol = stockToBuy;
                 order.position = (int) (statusDataFor90.GetOnePortionValue() / stockIndicator.actValue);
+                order.expectedPrice = stockIndicator.actValue;
 
-                HeldStock heldStock = new HeldStock();
+                /*HeldStock heldStock = new HeldStock();
                 heldStock.tickerSymbol = stockToBuy;
 
                 StockPurchase purchase = new StockPurchase();
@@ -196,7 +197,7 @@ public class Ninety {
                 heldStock.purchases.add(purchase);
                 // TODO: check if bought and compare expected vs real price
 
-                statusDataFor90.heldStocks.put(heldStock.tickerSymbol, heldStock);
+                statusDataFor90.heldStocks.put(heldStock.tickerSymbol, heldStock);*/
             } else {
                 logger.info("Positions are full at " + statusDataFor90.GetBoughtPortions() + "/20!");
             }
@@ -257,9 +258,10 @@ public class Ninety {
                 }
 
                 order.position = (int) (statusDataFor90.GetOnePortionValue() * newPortions / stockIndicator.actValue);
+                order.expectedPrice = stockIndicator.actValue;
 
                 logger.info("Buying " + order.position + " more stock '" + heldStock.tickerSymbol + "' for " + (stockIndicator.actValue * order.position) + ". " + newPortions + " new portions. RSI2: " + stockIndicator.rsi2);
-                tradeOrders.add(order);
+                /*tradeOrders.add(order);
 
                 StockPurchase purchase = new StockPurchase();
                 purchase.date = TradingTimer.GetNYTimeNow();
@@ -268,7 +270,7 @@ public class Ninety {
                 purchase.priceForOne = stockIndicator.actValue;
 
                 heldStock.purchases.add(purchase);
-                // TODO: check if bought and compare expected vs real price
+                // TODO: check if bought and compare expected vs real price*/
 
             } else {
                 logger.info("Stock '" + heldStock.tickerSymbol + "' is at max limit, cannot BUY more!");

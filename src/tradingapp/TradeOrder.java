@@ -16,6 +16,7 @@ public class TradeOrder {
     //public double limitTotalMoney = 0;
     public int position = 0;
     public String tickerSymbol;
+    public double expectedPrice = 0;
 
     @Override
     public String toString() {
