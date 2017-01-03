@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Root>
-  <TradingDay date="2016-01-02" closeTime="15:36:00"/>
   <TradingDay date="2017-01-02"/>
+  <TradingDay date="2017-01-16"/>
+  <TradingDay date="2017-02-20"/>
+  <TradingDay date="2017-04-14"/>
+  <TradingDay date="2017-05-29"/>
+  <TradingDay date="2017-07-03" closeTime="13:00:00"/>
+  <TradingDay date="2017-07-04"/>
+  <TradingDay date="2017-09-04"/>
+  <TradingDay date="2017-11-23"/>
+  <TradingDay date="2017-11-24" closeTime="13:00:00"/>
+  <TradingDay date="2017-12-25"/>
 </Root>
