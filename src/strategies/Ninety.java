@@ -241,6 +241,8 @@ public class Ninety {
 
                 order.position = (int) (statusDataFor90.GetOnePortionValue() * newPortions / stockIndicator.actValue);
                 order.expectedPrice = stockIndicator.actValue;
+                
+                tradeOrders.add(order);
 
                 logger.info("Buying " + order.position + " more stock '" + heldStock.tickerSymbol + "' for " + (stockIndicator.actValue * order.position) + ". " + newPortions + " new portions. RSI2: " + stockIndicator.rsi2);
 

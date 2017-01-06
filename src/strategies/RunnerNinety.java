@@ -156,6 +156,10 @@ public class RunnerNinety {
             public void run() {
                 // TODO: check held positions
                 stockData.PrepareHistData();
+                stockData.UpdateDataWithActValues(timer);
+                stockData.CalculateIndicators();
+                stockData.CheckHistData(LocalDate.now(), timer);
+                CheckHeldPositions();
                 // TODO: run check
             }
         });
@@ -473,6 +477,9 @@ public class RunnerNinety {
         
         logger.fine("Held postions on IB: " + allPositions.size());
         for (Position position : allPositions) {
+            if (position.pos == 0) {    // IB keeps stock with 0 position
+                continue;
+            }
             logger.fine("Stock: " + position.toString());
             
             if (!statusData.heldStocks.containsKey(position.tickerSymbol)) {

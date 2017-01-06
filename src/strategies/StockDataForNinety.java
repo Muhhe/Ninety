@@ -296,22 +296,28 @@ public class StockDataForNinety {
                 checkDate = checkDate.minusDays(1);
             }
             for (LocalDate date : data.dates) {
+                boolean isLocalOk = true;
                 switch (date.compareTo(checkDate)) {
                     case 0:
                         //logger.finest("Date OK. Date should be " + checkDate + " and is " + date);
                         break;
                     case 1:
                         logger.severe("Failed check hist data for: " + ticker + ". Date should be " + checkDate + " but is " + date);
-                        isOk = false;
+                        isLocalOk = false;
                         break;
                     case -1:
                         logger.severe("Failed check hist data for: " + ticker + ". Date should be " + checkDate + " but is " + date);
-                        isOk = false;
+                        isLocalOk = false;
                         break;
-                    default:
+                    default:    //TODO: cislo znamena posun dnu - predelat switch
                         logger.severe("Failed check hist data for: " + ticker + ". Unknown compare value. Date should be " + checkDate + " but is " + date);
-                        isOk = false;
+                        isLocalOk = false;
                 }
+                if (!isLocalOk) {
+                    isOk = false;
+                    break;
+                }
+
                 checkDate = checkDate.minusDays(1);
                 while (!timer.IsTradingDay(checkDate)) {
                     checkDate = checkDate.minusDays(1);
@@ -329,7 +335,7 @@ public class StockDataForNinety {
         if (isOk) {
             logger.fine("History data check - OK");
         } else {
-            logger.warning("History data check - FAILEDD");
+            logger.warning("History data check - FAILED");
         }
     }
 }
