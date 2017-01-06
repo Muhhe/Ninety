@@ -65,11 +65,13 @@ public class RunnerNinety {
             @Override
             public void run() {
                 //broker.connect();
-                stockData.PrepareHistData();
+                stockData.PrepareHistData();  
+                timer.LoadSpecialTradingDays();
                 
                 //RunNinety();
                 
-                stockData.UpdateDataWithActValues();
+                stockData.UpdateDataWithActValues(timer);
+                stockData.CheckHistData(LocalDate.now(), timer);
                 stockData.CalculateIndicators();
                 //TODO: run check
 
@@ -79,7 +81,7 @@ public class RunnerNinety {
                 
                 List<TradeOrder> sells = RunNinetySells();
 
-                stockData.UpdateDataWithActValues();
+                stockData.UpdateDataWithActValues(timer);
                 
                 RunNinetyBuys(sells);
                 
@@ -181,9 +183,9 @@ public class RunnerNinety {
                 loggerTradeLog.addHandler(fileHandler);
                 
                 //RunNinety();
-                stockData.UpdateDataWithActValues();
+                stockData.UpdateDataWithActValues(timer);
                 stockData.CalculateIndicators();
-                //TODO: run check
+                stockData.CheckHistData(today, timer);
 
                 statusData.PrintStatus();
 
@@ -198,15 +200,17 @@ public class RunnerNinety {
                 ProcessSubmittedOrders();
                 CheckHeldPositions();
 
-                stockData.UpdateDataWithActValues();
+                stockData.UpdateDataWithActValues(timer);
+                stockData.CheckHistData(today, timer);
                 
                 RunNinetyBuys(sells);
                 
                 if (!broker.waitUntilOrdersClosed(60)) {
-                    logger.severe("Some orders was not closed on time.");
+                    logger.severe("Some orders were not closed on time.");
                 }
 
                 ProcessSubmittedOrders();
+                broker.orderStatusMap.clear();
 
                 CheckHeldPositions();
 
@@ -288,7 +292,7 @@ public class RunnerNinety {
     }
     
 
-    private void RunNinety() {
+    /*private void RunNinety() {
 
         try {
 
@@ -297,16 +301,16 @@ public class RunnerNinety {
             //}
 
             // TODO: co kdyz je to moc dlouho? Poresit v StockData a hodit dyztak vyjimku
-            /*logger.info("RunNinety: Getting lock on hist data.");
-            boolean acuiredInTime = stockData.histDataMutex.tryAcquire(1, TimeUnit.MINUTES);
-            if (!acuiredInTime) {
-                logger.severe("Acuire on hist data lock timed out!");
-                return;
-            }
-            logger.info("RunNinety: Got lock on hist data.");*/
+            //logger.info("RunNinety: Getting lock on hist data.");
+            //boolean acuiredInTime = stockData.histDataMutex.tryAcquire(1, TimeUnit.MINUTES);
+            //if (!acuiredInTime) {
+            //    logger.severe("Acuire on hist data lock timed out!");
+            //    return;
+            //}
+            //logger.info("RunNinety: Got lock on hist data.");
 
-            stockData.UpdateDataWithActValues();
-            stockData.CalculateIndicators();
+            //stockData.UpdateDataWithActValues(timer);
+            //stockData.CalculateIndicators();
             //TODO: run check
 
             logger.info("Starting Ninety strategy");
@@ -330,7 +334,7 @@ public class RunnerNinety {
             
             CheckHeldPositions();
             
-            stockData.UpdateDataWithActValues();
+            stockData.UpdateDataWithActValues(timer);
 
             // Buying new stock
             TradeOrder buyOrder = Ninety.ComputeStocksToBuy(stockData.indicatorsMap, statusData, sellOrders);
@@ -349,7 +353,9 @@ public class RunnerNinety {
                 logger.severe("Some orders was not closed on time.");
             }
             
+            // TODO: predelat
             ProcessSubmittedOrders();
+            broker.orderStatusMap.clear();
             
             CheckHeldPositions();
             
@@ -362,7 +368,7 @@ public class RunnerNinety {
             //isStrategyRunning = false;
             isStartScheduled = false;
         }
-    }
+    }*/
 
     private void ProcessSubmittedOrders() {
         
@@ -417,18 +423,19 @@ public class RunnerNinety {
         }
 
         if (order.order.orderType == TradeOrder.OrderType.SELL) {
-            if (order.filled != held.GetPosition()) {
-                logger.severe("Not all position has been sold for: " + held.tickerSymbol);
-                // TODO: nejak poresit
-            }
-
-            statusData.heldStocks.remove(held);
-
             double profit = (order.fillPrice - held.GetAvgPrice()) * held.GetPosition();
             logger.info("Stock removed - profit: " + profit + ", " + order.toString());
             
             loggerTradeLog.info(order.toString() + ", profit: " + profit);
             //TODO: doplnit indicatory atd.
+            
+            if (order.filled != held.GetPosition()) {
+                logger.severe("Not all position has been sold for: " + held.tickerSymbol);
+                // TODO: nejak poresit
+                return;
+            }
+
+            statusData.heldStocks.remove(held.tickerSymbol);
         } else {
             
             int newPortions = 1;

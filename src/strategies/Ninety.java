@@ -54,7 +54,6 @@ public class Ninety {
                 }
             } else {
                 logger.severe("ComputeStocksToSell: Data for bought stock '" + heldStock.tickerSymbol + "' not found!!!");
-                //PrintStatus();
                 // TODO: co ted? Musi se odchytit uz pri sanity checku.
             }
         }
@@ -80,7 +79,6 @@ public class Ninety {
                 }
             } else {
                 logger.severe("ComputeStocksToBuyMore: Data for bought stock '" + heldStock.tickerSymbol + "' not found!!!");
-                //PrintStatus();
                 // TODO: co ted? Musi se odchytit uz pri sanity checku.
             }
         }
@@ -151,8 +149,6 @@ public class Ninety {
             tradeOrders.add(order);
 
             logger.info("Selling stock '" + heldStock.tickerSymbol + "', position: " + order.position);
-            //statusDataFor90.heldStocks.remove(heldStock.tickerSymbol);
-            // TODO: check if sold and compare expected vs real price
         }
 
         return tradeOrders;
@@ -184,20 +180,6 @@ public class Ninety {
                 order.tickerSymbol = stockToBuy;
                 order.position = (int) (statusDataFor90.GetOnePortionValue() / stockIndicator.actValue);
                 order.expectedPrice = stockIndicator.actValue;
-
-                /*HeldStock heldStock = new HeldStock();
-                heldStock.tickerSymbol = stockToBuy;
-
-                StockPurchase purchase = new StockPurchase();
-                purchase.date = TradingTimer.GetNYTimeNow();
-                purchase.portions = 1;
-                purchase.position = order.position;
-                purchase.priceForOne = stockIndicator.actValue;
-
-                heldStock.purchases.add(purchase);
-                // TODO: check if bought and compare expected vs real price
-
-                statusDataFor90.heldStocks.put(heldStock.tickerSymbol, heldStock);*/
             } else {
                 logger.info("Positions are full at " + statusDataFor90.GetBoughtPortions() + "/20!");
             }
@@ -261,16 +243,6 @@ public class Ninety {
                 order.expectedPrice = stockIndicator.actValue;
 
                 logger.info("Buying " + order.position + " more stock '" + heldStock.tickerSymbol + "' for " + (stockIndicator.actValue * order.position) + ". " + newPortions + " new portions. RSI2: " + stockIndicator.rsi2);
-                /*tradeOrders.add(order);
-
-                StockPurchase purchase = new StockPurchase();
-                purchase.date = TradingTimer.GetNYTimeNow();
-                purchase.portions = newPortions;
-                purchase.position = order.position;
-                purchase.priceForOne = stockIndicator.actValue;
-
-                heldStock.purchases.add(purchase);
-                // TODO: check if bought and compare expected vs real price*/
 
             } else {
                 logger.info("Stock '" + heldStock.tickerSymbol + "' is at max limit, cannot BUY more!");

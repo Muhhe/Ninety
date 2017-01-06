@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import tradingapp.TradingTimer;
 
 /**
  *
@@ -43,10 +44,10 @@ public class StockDataForNinety {
             "EMR", "EXC", "F", "FB", "FDX", "FOX", "GD", "GE",
             "GILD", "GM", "GOOG", "GS", "HAL", "HD", "HON", "IBM", "INTC",
             "JNJ", "JPM", "KMI", "KO", "LLY", "LMT", "LOW", "MA", "MCD", "MDLZ", "MDT",
-            "MET", "MMM", "MO", "MON", "MRK", "MS", "MSFT", "NEE", "NKE", "ORCL", "OXY",
+            "MET", "MMM", "MO", "MON", "MRK", "MS", "MSFT", "NKE", "ORCL", "OXY",
             "PCLN", "PEP", "PFE", "PG", "PM", "PYPL", "QCOM", "RTN", "SBUX", "SLB",
             "SO", "SPG", "T", "TGT", "TWX", "TXN", "UNH", "UNP", "UPS", "USB",
-            "UTX", "V", "VZ", "WBA", "WFC", "WMT", "XOM"};
+            "UTX", "V", "VZ", "WBA", "WFC", "WMT", "XOM"}; //"NEE" - blbe se nacita z YAHOO
 
         return tickers;
     }
@@ -74,8 +75,12 @@ public class StockDataForNinety {
         }
     }
 
-    public void UpdateDataWithActValues() {
-
+    public void UpdateDataWithActValues(TradingTimer timer) {
+        if (!timer.IsTradingDay(LocalDate.now())) {
+            logger.fine("Today is not a trading day. Cannot update with actual values.");
+            return;
+        }
+        
         try {
             logger.fine("UpdateDataWithActValues: Getting lock on hist data.");
             histDataMutex.acquire();
@@ -270,6 +275,61 @@ public class StockDataForNinety {
                     logger.log(Level.SEVERE, null, ex);
                 }
             }
+        }
+    }
+
+    // TODO: udelat z timeru singleton?
+    public void CheckHistData(final LocalDate uptoDay, TradingTimer timer) {
+        logger.fine("Starting history data check.");
+        boolean isOk = true;
+        for (Map.Entry<String, CloseData> entry : closeDataMap.entrySet()) {
+            String ticker = entry.getKey();
+            CloseData data = entry.getValue();
+
+            if ((data.adjCloses.length != 200)
+                    || (data.dates.length != 200)) {
+                logger.severe("Failed check hist data for: " + ticker + ". Length is not 200 but " + data.adjCloses.length);
+                isOk = false;
+            }
+            LocalDate checkDate = uptoDay;
+            while (!timer.IsTradingDay(checkDate)) {
+                checkDate = checkDate.minusDays(1);
+            }
+            for (LocalDate date : data.dates) {
+                switch (date.compareTo(checkDate)) {
+                    case 0:
+                        //logger.finest("Date OK. Date should be " + checkDate + " and is " + date);
+                        break;
+                    case 1:
+                        logger.severe("Failed check hist data for: " + ticker + ". Date should be " + checkDate + " but is " + date);
+                        isOk = false;
+                        break;
+                    case -1:
+                        logger.severe("Failed check hist data for: " + ticker + ". Date should be " + checkDate + " but is " + date);
+                        isOk = false;
+                        break;
+                    default:
+                        logger.severe("Failed check hist data for: " + ticker + ". Unknown compare value. Date should be " + checkDate + " but is " + date);
+                        isOk = false;
+                }
+                checkDate = checkDate.minusDays(1);
+                while (!timer.IsTradingDay(checkDate)) {
+                    checkDate = checkDate.minusDays(1);
+                }
+            }
+
+            for (double adjClose : data.adjCloses) {
+                if (adjClose == 0) {
+                    logger.severe("Failed check hist data for: " + ticker + ". AdjClose value is 0");
+                    isOk = false;
+                }
+            }
+        }
+        
+        if (isOk) {
+            logger.fine("History data check - OK");
+        } else {
+            logger.warning("History data check - FAILEDD");
         }
     }
 }

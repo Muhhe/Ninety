@@ -110,6 +110,22 @@ public class TradingTimer {
         executorService = Executors.newScheduledThreadPool(5); 
     }
     
+    public boolean IsTradingDay(LocalDate day) {
+        
+        DayOfWeek dow = day.getDayOfWeek();
+        if (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY) {
+            return false;
+        }
+        
+        for (TradingDay specialDay : specialTradingDays) {
+            if (specialDay.date.equals(day)) {
+                return specialDay.closingTime != null;
+            }
+        }
+        
+        return true;
+    }
+    
     public LocalTime GetTodayCloseTime() {
         LocalDate today = LocalDate.now();
         LocalTime closingTime = DEFAULT_CLOSE_TIME;

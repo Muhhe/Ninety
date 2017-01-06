@@ -26,7 +26,7 @@ public class TextAreaLogHandler extends Handler {
     
     @Override
     public void publish(LogRecord record) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.S");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
         ZonedDateTime now = TradingTimer.GetNYTimeNow();
         m_textArea.append( formatter.format(now) );
         m_textArea.append(": ");
