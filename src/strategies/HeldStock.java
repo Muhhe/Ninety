@@ -5,6 +5,7 @@
  */
 package strategies;
 
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -42,19 +43,6 @@ public class HeldStock {
         }
         return avgPrice / GetPosition();
     }
-    
-    @Override
-    public String toString() {
-        StringBuilder str = new StringBuilder();
-        str.append("Held stock: ").append(tickerSymbol);
-        str.append(", purchases ").append(purchases.size()).append("\r\n");
-        
-        for (StockPurchase purchase : purchases) {
-            str.append(purchase.toString());
-        }
-
-        return str.toString();
-    }
 
     void AddToXml(Element rootElement) {
         Element heldElement = new Element("heldStock");
@@ -76,5 +64,29 @@ public class HeldStock {
             purchase.LoadFromXml(purchaseElement);
             purchases.add(purchase);
         }
+    }
+   
+    
+    public String toStringLong() {
+        StringBuilder str = new StringBuilder();
+        str.append("Held stock: ").append(tickerSymbol);
+        str.append(", purchases ").append(purchases.size()).append("\r\n");
+        
+        for (StockPurchase purchase : purchases) {
+            str.append(purchase.toString());
+        }
+
+        return str.toString();
+    }
+    
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(tickerSymbol);
+        sb.append(", position: ").append(GetPosition());
+        sb.append(", portions: ").append(GetPortions());
+        sb.append(", avgPrice: ").append(GetAvgPrice()).append("$");
+
+        return sb.toString();
     }
 }

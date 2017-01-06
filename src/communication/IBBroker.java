@@ -40,6 +40,7 @@ public class IBBroker extends BaseIBConnectionImpl {
     protected CountDownLatch ordersClosedWaitCountdownLatch = null;
     protected CountDownLatch connectiongLatch = null;
     protected List<Position> positionsList = new ArrayList<>();
+    private int nextOrderId = -1;
     
     public void connect() {
         if( !connected ) {
@@ -74,6 +75,7 @@ public class IBBroker extends BaseIBConnectionImpl {
     @Override
     public void nextValidId(int orderId) {
         try {
+            loggerComm.info("Puting nextValidId: " + orderId);
             nextIdQueue.put(orderId);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -87,10 +89,29 @@ public class IBBroker extends BaseIBConnectionImpl {
         }
     }
     
-    public void PlaceOrder(TradeOrder tradeOrder) {
+    public synchronized int getNextOrderId() {
+        if (nextOrderId == -1) {
+            try {
+                ibClientSocket.reqIds(1);
+                Integer id = nextIdQueue.poll(5, TimeUnit.SECONDS);
+                if (id == null) {
+                    loggerComm.severe("Cannot get ID for order.");
+                    return -1;
+                }
+                nextOrderId = id;
+                return nextOrderId;
+            } catch (InterruptedException ex) {
+                logger.severe(ex.getMessage() + ex);
+                return -1;
+            }
+        }
+        return ++nextOrderId;
+    }
+    
+    public boolean PlaceOrder(TradeOrder tradeOrder) {
         if (!connected) {
             loggerComm.severe("IB not connected. Cannot place order.");
-            return;
+            return false;
         }
         
         Contract contract = new Contract();
@@ -105,15 +126,13 @@ public class IBBroker extends BaseIBConnectionImpl {
         } else {
             ibOrder.m_action = "SELL";
         }
-        try {
-            Integer id = nextIdQueue.poll(10, TimeUnit.SECONDS);
-            if (id == null) {
-                loggerComm.severe("Cannot get ID for order: " + tradeOrder.tickerSymbol + ", " + ibOrder.m_action);
-                return;
-            } 
-            ibOrder.m_orderId = id;
-        } catch (InterruptedException ex) {
-            loggerComm.log(Level.SEVERE, null, ex);
+        
+        ibOrder.m_orderId = getNextOrderId();
+        
+        if (orderStatusMap.containsKey(ibOrder.m_orderId)) {
+            loggerComm.severe("Trying to use duplicate ID for order: " + tradeOrder.tickerSymbol + ", " + ibOrder.m_action);
+            return false;
+            //TODO: co s tim?
         }
         
         ibOrder.m_totalQuantity = tradeOrder.position;
@@ -131,6 +150,8 @@ public class IBBroker extends BaseIBConnectionImpl {
         OrderStatus orderStatus = new OrderStatus(tradeOrder, ibOrder.m_orderId);
         orderStatusMap.put(ibOrder.m_orderId, orderStatus);
         activeOrdersMap.put(ibOrder.m_orderId, orderStatus);
+        
+        return true;
     }
     
     @Override

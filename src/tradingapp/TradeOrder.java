@@ -13,7 +13,6 @@ public class TradeOrder {
     public enum OrderType {BUY, SELL};
     
     public OrderType orderType = OrderType.SELL;
-    //public double limitTotalMoney = 0;
     public int position = 0;
     public String tickerSymbol;
     public double expectedPrice = 0;

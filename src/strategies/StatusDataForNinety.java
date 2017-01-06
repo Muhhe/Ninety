@@ -111,7 +111,7 @@ public class StatusDataForNinety {
         logger.info("Held portions: " + GetBoughtPortions() + "/20");
 
         for (HeldStock heldStock : heldStocks.values()) {
-            logger.info(heldStock.toString());
+            logger.info(heldStock.toStringLong());
         }
     }
 }

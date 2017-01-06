@@ -38,14 +38,14 @@ public class StockDataForNinety {
     String[] getSP100() {
         String[] tickers = {
             "AAPL", "ABBV", "ABT", "ACN", "AGN", "AIG", "ALL", "AMGN", "AMZN",
-            /*"AXP", "BA", "BAC", "BIIB", "BK", "BLK", "BMY", "C", "CAT", "CELG", "CL", "CMCSA",
+            "AXP", "BA", "BAC", "BIIB", "BK", "BLK", "BMY", "C", "CAT", "CELG", "CL", "CMCSA",
             "COF", "COP", "COST", "CSCO", "CVS", "CVX", "DD", "DHR", "DIS", "DOW", "DUK",
             "EMR", "EXC", "F", "FB", "FDX", "FOX", "GD", "GE",
             "GILD", "GM", "GOOG", "GS", "HAL", "HD", "HON", "IBM", "INTC",
             "JNJ", "JPM", "KMI", "KO", "LLY", "LMT", "LOW", "MA", "MCD", "MDLZ", "MDT",
             "MET", "MMM", "MO", "MON", "MRK", "MS", "MSFT", "NEE", "NKE", "ORCL", "OXY",
             "PCLN", "PEP", "PFE", "PG", "PM", "PYPL", "QCOM", "RTN", "SBUX", "SLB",
-            "SO", "SPG", "T", "TGT", "TWX", "TXN", "UNH", "UNP", "UPS", "USB",*/
+            "SO", "SPG", "T", "TGT", "TWX", "TXN", "UNH", "UNP", "UPS", "USB",
             "UTX", "V", "VZ", "WBA", "WFC", "WMT", "XOM"};
 
         return tickers;
@@ -237,8 +237,7 @@ public class StockDataForNinety {
     }
     
     public void SaveIndicatorsToCSVFile() {
-        LocalDate today = LocalDate.now();
-        String todayString = today.toString();
+        String todayString = LocalDate.now().toString();
         File file = new File("dataLog/" + todayString + "/indicators.csv");
         File directory = new File(file.getParentFile().getAbsolutePath());
         directory.mkdirs();

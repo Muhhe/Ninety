@@ -7,6 +7,7 @@ package tradingapp;
 
 import communication.IBCommunication;
 import communication.Position;
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.FileHandler;

@@ -5,8 +5,8 @@
  */
 package tradingapp;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import javax.swing.JTextArea;
@@ -26,9 +26,9 @@ public class TextAreaLogHandler extends Handler {
     
     @Override
     public void publish(LogRecord record) {
-        Calendar cal = Calendar.getInstance();
-        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss.SSS");
-        m_textArea.append( sdf.format(cal.getTime()) );
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.S");
+        ZonedDateTime now = TradingTimer.GetNYTimeNow();
+        m_textArea.append( formatter.format(now) );
         m_textArea.append(": ");
         m_textArea.append(record.getMessage());
         m_textArea.append("\r\n");

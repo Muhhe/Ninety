@@ -19,4 +19,8 @@ public class Position {
         this.avgPrice = avgPrice;
         this.pos = pos;
     }
+    
+    public String toString() {
+        return tickerSymbol + ", position: " + pos + ", avgPrice: " + avgPrice;
+    }
 }
