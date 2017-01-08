@@ -50,6 +50,7 @@
                               <Component id="portTextField" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <Component id="startNowButton" min="-2" max="-2" attributes="0"/>
+                          <Component id="backTestButton" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace type="unrelated" max="32767" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
@@ -108,6 +109,7 @@
                   <Component id="printStatusButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="getPositionsButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="checkPositionsButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="backTestButton" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace type="unrelated" max="-2" attributes="0"/>
               <Component id="logTabbedPane" pref="535" max="32767" attributes="0"/>
@@ -225,6 +227,9 @@
       <Layout class="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout"/>
       <SubComponents>
         <Container class="javax.swing.JScrollPane" name="logScrollPane">
+          <Properties>
+            <Property name="autoscrolls" type="boolean" value="true"/>
+          </Properties>
           <AuxValues>
             <AuxValue name="autoScrollPane" type="java.lang.Boolean" value="true"/>
           </AuxValues>
@@ -294,6 +299,14 @@
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="checkPositionsButtonActionPerformed"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JButton" name="backTestButton">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="RunBacktest"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="backTestButtonActionPerformed"/>
       </Events>
     </Component>
   </SubComponents>

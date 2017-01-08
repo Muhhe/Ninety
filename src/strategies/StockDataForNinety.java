@@ -36,7 +36,7 @@ public class StockDataForNinety {
 
     public final Semaphore histDataMutex = new Semaphore(1);
 
-    String[] getSP100() {
+    public static String[] getSP100() {
         String[] tickers = {
             "AAPL", "ABBV", "ABT", "ACN", "AGN", "AIG", "ALL", "AMGN", "AMZN",
             "AXP", "BA", "BAC", "BIIB", "BK", "BLK", "BMY", "C", "CAT", "CELG", "CL", "CMCSA",
@@ -135,16 +135,16 @@ public class StockDataForNinety {
             logger.fine("UpdateDataWithActValues: Released lock on hist data.");
             logger.info("Finished to load actual data");
             
-            SaveHistDataToFiles();
+            //SaveHistDataToFiles();
         }
     }
 
     public void CalculateIndicators() {
         try {
-            logger.fine("CalculateIndicators: Getting lock on hist data.");
+            logger.finer("CalculateIndicators: Getting lock on hist data.");
             histDataMutex.acquire();
 
-            logger.info("Starting to compute indicators");
+            logger.fine("Starting to compute indicators");
             for (Map.Entry<String, CloseData> entry : closeDataMap.entrySet()) {
                 CloseData value = entry.getValue();
                 StockIndicatorsForNinety data90 = new StockIndicatorsForNinety();
@@ -161,11 +161,11 @@ public class StockDataForNinety {
             logger.info("Thread interuppted: " + ex);
         } finally {
             histDataMutex.release();
-            logger.fine("CalculateIndicators: Released lock on hist data.");
-            logger.info("Finished to compute indicators");
+            logger.finer("CalculateIndicators: Released lock on hist data.");
+            logger.fine("Finished to compute indicators");
             
-            SaveStockIndicatorsToFiles();
-            SaveIndicatorsToCSVFile();
+            //SaveStockIndicatorsToFiles();
+            //SaveIndicatorsToCSVFile();
         }
     }
 

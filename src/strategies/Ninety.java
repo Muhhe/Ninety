@@ -40,7 +40,7 @@ public class Ninety {
 
     public static List<TradeOrder> ComputeStocksToSell(Map<String, StockIndicatorsForNinety> dataFor90Map, StatusDataForNinety statusDataFor90) {
         
-        logger.info("Started to compute stocks to sell.");
+        logger.fine("Started to compute stocks to sell.");
 
         List<HeldStock> stocksToSell = new ArrayList<HeldStock>();
 
@@ -50,7 +50,7 @@ public class Ninety {
                 if (ComputeIfSellStock(tickerIndicators)) {
                     stocksToSell.add(heldStock);
                     double profit = CalculateProfitPercent(heldStock, tickerIndicators.actValue);
-                    logger.info("SELL: " + heldStock.tickerSymbol + ", profit: " + profit + "%, actValue: " + tickerIndicators.actValue + ", SMA5: " + tickerIndicators.sma5);
+                    logger.fine("SELL: " + heldStock.tickerSymbol + ", profit: " + profit + "%, actValue: " + tickerIndicators.actValue + ", SMA5: " + tickerIndicators.sma5);
                 }
             } else {
                 logger.severe("ComputeStocksToSell: Data for bought stock '" + heldStock.tickerSymbol + "' not found!!!");
@@ -67,7 +67,7 @@ public class Ninety {
 
     public static List<TradeOrder> computeStocksToBuyMore(Map<String, StockIndicatorsForNinety> dataFor90Map, StatusDataForNinety statusDataFor90) {
 
-        logger.info("Started to compute held stocks to buy more.");
+        logger.fine("Started to compute held stocks to buy more.");
         List<HeldStock> stocksToBuyMore = new ArrayList<HeldStock>();
 
         for (HeldStock heldStock : statusDataFor90.heldStocks.values()) {
@@ -75,7 +75,7 @@ public class Ninety {
             if (tickerIndicators != null) {
                 if (computeIfBuyMoreStock(heldStock, tickerIndicators.actValue)) {
                     stocksToBuyMore.add(heldStock);
-                    logger.info("BUY MORE: " + heldStock.tickerSymbol + ", actValue: " + tickerIndicators.actValue + ", lastBuyValue: " + heldStock.purchases.get(heldStock.purchases.size() - 1).priceForOne + ", SMA5: " + tickerIndicators.sma5);
+                    logger.fine("BUY MORE: " + heldStock.tickerSymbol + ", actValue: " + tickerIndicators.actValue + ", lastBuyValue: " + heldStock.purchases.get(heldStock.purchases.size() - 1).priceForOne + ", SMA5: " + tickerIndicators.sma5);
                 }
             } else {
                 logger.severe("ComputeStocksToBuyMore: Data for bought stock '" + heldStock.tickerSymbol + "' not found!!!");
@@ -98,7 +98,7 @@ public class Ninety {
     public static TradeOrder ComputeStocksToBuy(Map<String, StockIndicatorsForNinety> dataFor90Map, StatusDataForNinety statusDataFor90, List<TradeOrder> recentlySoldStocks) {
         String stockToBuy = null;
         double rsi2ToBuy = 100;
-        logger.info("Started to compute new stocks to buy.");
+        logger.fine("Started to compute new stocks to buy.");
         
         for (Map.Entry<String, StockIndicatorsForNinety> entry : dataFor90Map.entrySet()) {
             String tickerSymbol = entry.getKey();
@@ -110,7 +110,7 @@ public class Ninety {
 
             if (computeBuyTicker(tickerIndicators)) {
 
-                logger.info("Possible BUY: " + tickerSymbol + ", actValue: " + tickerIndicators.actValue + ", SMA200: " + tickerIndicators.sma200 + ", SMA5: " + tickerIndicators.sma5 + ", RSI2: " + tickerIndicators.rsi2);
+                logger.fine("Possible BUY: " + tickerSymbol + ", actValue: " + tickerIndicators.actValue + ", SMA200: " + tickerIndicators.sma200 + ", SMA5: " + tickerIndicators.sma5 + ", RSI2: " + tickerIndicators.rsi2);
 
                 if (stockToBuy == null) {
                     stockToBuy = new String();
@@ -124,7 +124,7 @@ public class Ninety {
         }
 
         if (stockToBuy != null) {
-            logger.info("FINAL BUY: " + stockToBuy + ", RSI2: " + rsi2ToBuy);
+            logger.fine("FINAL BUY: " + stockToBuy + ", RSI2: " + rsi2ToBuy);
         }
 
         return ProcessStockToBuyIntoOrder(stockToBuy, recentlySoldStocks, dataFor90Map, statusDataFor90);
@@ -148,7 +148,7 @@ public class Ninety {
             order.expectedPrice = stockIndicator.actValue;
             tradeOrders.add(order);
 
-            logger.info("Selling stock '" + heldStock.tickerSymbol + "', position: " + order.position);
+            logger.fine("Selling stock '" + heldStock.tickerSymbol + "', position: " + order.position);
         }
 
         return tradeOrders;
@@ -174,14 +174,14 @@ public class Ninety {
             }
 
             if (statusDataFor90.GetBoughtPortions() < 20) {
-                logger.info("Buying new stock '" + stockToBuy + "'!");
+                logger.fine("Buying new stock '" + stockToBuy + "'!");
                 order = new TradeOrder();
                 order.orderType = TradeOrder.OrderType.BUY;
                 order.tickerSymbol = stockToBuy;
                 order.position = (int) (statusDataFor90.GetOnePortionValue() / stockIndicator.actValue);
                 order.expectedPrice = stockIndicator.actValue;
             } else {
-                logger.info("Positions are full at " + statusDataFor90.GetBoughtPortions() + "/20!");
+                logger.fine("Positions are full at " + statusDataFor90.GetBoughtPortions() + "/20!");
             }
         }
 
@@ -244,10 +244,10 @@ public class Ninety {
                 
                 tradeOrders.add(order);
 
-                logger.info("Buying " + order.position + " more stock '" + heldStock.tickerSymbol + "' for " + (stockIndicator.actValue * order.position) + ". " + newPortions + " new portions. RSI2: " + stockIndicator.rsi2);
+                logger.fine("Buying " + order.position + " more stock '" + heldStock.tickerSymbol + "' for " + (stockIndicator.actValue * order.position) + ". " + newPortions + " new portions. RSI2: " + stockIndicator.rsi2);
 
             } else {
-                logger.info("Stock '" + heldStock.tickerSymbol + "' is at max limit, cannot BUY more!");
+                logger.fine("Stock '" + heldStock.tickerSymbol + "' is at max limit, cannot BUY more!");
             }
         }
 

@@ -10,6 +10,8 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -19,7 +21,78 @@ import java.util.logging.Logger;
  */
 public class DataGetterHistYahoo {
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+    
+    public static List<Double> readRawAdjCloseData(LocalDate startDate, LocalDate endDate, String tickerSymbol) {
+        return readRawAdjCloseData(startDate, endDate, tickerSymbol, -1);
+    }
+    
+    public static List<Double> readRawAdjCloseData(LocalDate startDate, LocalDate endDate, String tickerSymbol, int maxCount) {
+        
+        ArrayList<Double> arr = new ArrayList<>();
+        
+        int startYear = startDate.getYear();
+        int startMonth = startDate.getMonth().getValue();
+        int startDay = startDate.getDayOfMonth();
+        
+        int endYear = endDate.getYear();
+        int endMonth = endDate.getMonth().getValue();
+        int endDay = endDate.getDayOfMonth();
 
+        StringBuilder urlBuilder = new StringBuilder();
+
+        urlBuilder.append("http://ichart.yahoo.com/table.csv?s=");
+        urlBuilder.append(tickerSymbol);
+        urlBuilder.append("&a=");
+        urlBuilder.append(startMonth);
+        urlBuilder.append("&b=");
+        urlBuilder.append(startDay);
+        urlBuilder.append("&c=");
+        urlBuilder.append(startYear);
+        urlBuilder.append("&d=");
+        urlBuilder.append(endMonth);
+        urlBuilder.append("&e=");
+        urlBuilder.append(endDay);
+        urlBuilder.append("&f=");
+        urlBuilder.append(endYear);
+
+        String line;
+        String cvsSplitBy = ",";
+        int totalCount = 0;
+
+        URL urlYahoo;
+        try {
+            urlYahoo = new URL(urlBuilder.toString());
+
+            BufferedReader br = new BufferedReader(
+                    new InputStreamReader(urlYahoo.openStream()));
+
+            line = br.readLine(); // skip first line
+                
+            while ((line = br.readLine()) != null) {
+
+                String[] dateLine = line.split(cvsSplitBy);
+
+                double adjClose = Double.parseDouble(dateLine[6]);
+
+                arr.add(adjClose);
+                
+                totalCount++;
+                if (totalCount == maxCount) {
+                    break;
+                }
+            }
+
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, "Failed to read data from Yahoo.");
+            logger.log(Level.SEVERE, null, ex);
+            
+            return null;
+        }
+        
+        return arr;
+    }
+
+    @SuppressWarnings("UnusedAssignment")
     public static CloseData readData(LocalDate lastDate, int daysToRead, String tickerSymbol) {
         
         CloseData data = new CloseData(daysToRead);

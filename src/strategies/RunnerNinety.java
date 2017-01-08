@@ -8,7 +8,6 @@ package strategies;
 import communication.IBBroker;
 import communication.OrderStatus;
 import communication.Position;
-import data.CloseData;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,7 +16,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -43,15 +41,11 @@ public class RunnerNinety {
     public StockDataForNinety stockData = new StockDataForNinety();
     public StatusDataForNinety statusData = new StatusDataForNinety();
 
-    //private final IBCommunication m_IBcomm = new IBCommunication();
     public final IBBroker broker = new IBBroker();
 
-    //public boolean isStrategyRunning = false;
     public boolean isStartScheduled = false;
     
     private TradingTimer timer = new TradingTimer();
-
-    private Ninety ninety = new Ninety();
 
     public RunnerNinety(int port) {
         statusData.ReadHeldPositions();
@@ -64,17 +58,17 @@ public class RunnerNinety {
         Thread thr = new Thread(new Runnable() {
             @Override
             public void run() {
-                //broker.connect();
-                stockData.PrepareHistData();  
                 timer.LoadSpecialTradingDays();
                 
-                //RunNinety();
-                
+                stockData.PrepareHistData();                
                 stockData.UpdateDataWithActValues(timer);
+                stockData.SaveHistDataToFiles();
+                
                 stockData.CheckHistData(LocalDate.now(), timer);
                 stockData.CalculateIndicators();
-                //TODO: run check
-
+                stockData.SaveStockIndicatorsToFiles();
+                stockData.SaveIndicatorsToCSVFile();
+                
                 statusData.PrintStatus();
 
                 logger.info("Starting Ninety strategy");
@@ -84,8 +78,6 @@ public class RunnerNinety {
                 stockData.UpdateDataWithActValues(timer);
                 
                 RunNinetyBuys(sells);
-                
-                //broker.disconnect();
                 
                 copyLogFileToDataLog();
             }
@@ -144,12 +136,6 @@ public class RunnerNinety {
     }
 
     public void ScheduleLoadingHistDataAndStrategyRun(ZonedDateTime closeTime) {
-        
-        /*if (isStrategyRunning) {
-            logger.warning("Ninety strategy is already running.");
-            return;
-        }*/
-        
         ZonedDateTime timeLoadHistData = closeTime.minus(DURATION_BEFORECLOSE_HISTDATA);
         timer.startTaskAt(timeLoadHistData, new Runnable() {
             @Override
@@ -157,10 +143,13 @@ public class RunnerNinety {
                 // TODO: check held positions
                 stockData.PrepareHistData();
                 stockData.UpdateDataWithActValues(timer);
+                stockData.SaveHistDataToFiles();
+                
                 stockData.CalculateIndicators();
+                stockData.SaveStockIndicatorsToFiles();
+                stockData.SaveIndicatorsToCSVFile();
                 stockData.CheckHistData(LocalDate.now(), timer);
                 CheckHeldPositions();
-                // TODO: run check
             }
         });
 
@@ -186,7 +175,6 @@ public class RunnerNinety {
                 }
                 loggerTradeLog.addHandler(fileHandler);
                 
-                //RunNinety();
                 stockData.UpdateDataWithActValues(timer);
                 stockData.CalculateIndicators();
                 stockData.CheckHistData(today, timer);
@@ -224,6 +212,8 @@ public class RunnerNinety {
                 statusData.PrintStatus();
                 isStartScheduled = false;
                 
+                copyLogFileToDataLog();
+                
                 ScheduleForTomorrowDay();
                 
                 fileHandler.close();
@@ -237,15 +227,12 @@ public class RunnerNinety {
 
         logger.info("Starting Ninety strategy is scheduled for " + timeRunStrategy.format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
         logger.info("Starting in " + timeToStart.toString());
-
-        //isStrategyRunning = true;
     }
 
     public void Stop() {
         logger.info("Stopping execution of Ninety strategy.");
         timer.stop();
         logger.info("Execution of Ninety strategy is stopped.");
-        //isStrategyRunning = false;
         isStartScheduled = false;
     }
     public void BuyLoadedStatus() {
@@ -256,10 +243,6 @@ public class RunnerNinety {
             order.position = heldStock.GetPosition();
             broker.PlaceOrder(order);
         }
-    }
-
-    public void SellAllPositions() {
-        //m_IBBroker.SellAllPositions();
     }
     
     public List<TradeOrder> RunNinetySells() {
@@ -294,85 +277,6 @@ public class RunnerNinety {
 
         logger.info("Finished computing stocks to buy.");
     }
-    
-
-    /*private void RunNinety() {
-
-        try {
-
-            //if (timer.GetTodayCloseTime() == null) {
-            //    return;
-            //}
-
-            // TODO: co kdyz je to moc dlouho? Poresit v StockData a hodit dyztak vyjimku
-            //logger.info("RunNinety: Getting lock on hist data.");
-            //boolean acuiredInTime = stockData.histDataMutex.tryAcquire(1, TimeUnit.MINUTES);
-            //if (!acuiredInTime) {
-            //    logger.severe("Acuire on hist data lock timed out!");
-            //    return;
-            //}
-            //logger.info("RunNinety: Got lock on hist data.");
-
-            //stockData.UpdateDataWithActValues(timer);
-            //stockData.CalculateIndicators();
-            //TODO: run check
-
-            logger.info("Starting Ninety strategy");
-
-            statusData.PrintStatus();
-
-            // Selling held stocks
-            List<TradeOrder> sellOrders = Ninety.ComputeStocksToSell(stockData.indicatorsMap, statusData);
-
-            for (TradeOrder tradeOrder : sellOrders) {
-                broker.PlaceOrder(tradeOrder);
-            }
-
-            logger.info("Finished computing stocks to sell.");
-
-            if (!broker.waitUntilOrdersClosed(20)) {
-                logger.severe("Some SELL orders were not closed on time.");
-            }
-            
-            ProcessSubmittedOrders();
-            
-            CheckHeldPositions();
-            
-            stockData.UpdateDataWithActValues(timer);
-
-            // Buying new stock
-            TradeOrder buyOrder = Ninety.ComputeStocksToBuy(stockData.indicatorsMap, statusData, sellOrders);
-            broker.PlaceOrder(buyOrder);
-
-            // Buying more held stock
-            List<TradeOrder> buyMoreOrders = Ninety.computeStocksToBuyMore(stockData.indicatorsMap, statusData);
-
-            for (TradeOrder tradeOrder : buyMoreOrders) {
-                broker.PlaceOrder(tradeOrder);
-            }
-
-            logger.info("Finished computing stocks to buy.");
-
-            if (!broker.waitUntilOrdersClosed(60)) {
-                logger.severe("Some orders was not closed on time.");
-            }
-            
-            // TODO: predelat
-            ProcessSubmittedOrders();
-            broker.orderStatusMap.clear();
-            
-            CheckHeldPositions();
-            
-            statusData.SaveHeldPositionsToFile();
-            
-        } finally {
-            
-            logger.info("Trading day finished");
-            statusData.PrintStatus();
-            //isStrategyRunning = false;
-            isStartScheduled = false;
-        }
-    }*/
 
     private void ProcessSubmittedOrders() {
         
@@ -407,7 +311,10 @@ public class RunnerNinety {
                 return;
             }
 
-            held = new HeldStock();
+            
+            
+            loggerTradeLog.info(order.toString());
+            //TODO: doplnit indicatory atd.held = new HeldStock();
             held.tickerSymbol = order.order.tickerSymbol;
 
             StockPurchase purchase = new StockPurchase();
@@ -420,9 +327,6 @@ public class RunnerNinety {
 
             statusData.heldStocks.put(held.tickerSymbol, held);
             logger.finer("New stock added: " + held.toString());
-            
-            loggerTradeLog.info(order.toString());
-            //TODO: doplnit indicatory atd.
             return;
         }
 

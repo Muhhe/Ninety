@@ -9,11 +9,14 @@ import communication.IBCommunication;
 import communication.Position;
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import strategies.BackTesterNinety;
 import strategies.RunnerNinety;
 
 /**
@@ -100,6 +103,7 @@ public class MainWindow extends javax.swing.JFrame {
         startNowButton = new javax.swing.JButton();
         getPositionsButton = new javax.swing.JButton();
         checkPositionsButton = new javax.swing.JButton();
+        backTestButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setMinimumSize(new java.awt.Dimension(300, 300));
@@ -192,6 +196,8 @@ public class MainWindow extends javax.swing.JFrame {
         isOnCheckbox.setEnabled(false);
         isOnCheckbox.setFocusable(false);
 
+        logScrollPane.setAutoscrolls(true);
+
         logArea.setEditable(false);
         logArea.setColumns(20);
         logArea.setRows(5);
@@ -227,6 +233,13 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
 
+        backTestButton.setText("RunBacktest");
+        backTestButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                backTestButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -251,7 +264,8 @@ public class MainWindow extends javax.swing.JFrame {
                                 .addComponent(connectButton)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(portTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(startNowButton))
+                            .addComponent(startNowButton)
+                            .addComponent(backTestButton))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
@@ -270,10 +284,9 @@ public class MainWindow extends javax.swing.JFrame {
                                 .addComponent(getPositionsButton)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(checkPositionsButton)))
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(logTabbedPane)
-                        .addContainerGap())))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(logTabbedPane, javax.swing.GroupLayout.Alignment.TRAILING))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -299,7 +312,8 @@ public class MainWindow extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(printStatusButton)
                     .addComponent(getPositionsButton)
-                    .addComponent(checkPositionsButton))
+                    .addComponent(checkPositionsButton)
+                    .addComponent(backTestButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(logTabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 535, Short.MAX_VALUE)
                 .addContainerGap())
@@ -366,7 +380,6 @@ public class MainWindow extends javax.swing.JFrame {
     }//GEN-LAST:event_buyStatusButtonActionPerformed
 
     private void SellAllButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SellAllButtonActionPerformed
-        ninetyRunner.SellAllPositions();
     }//GEN-LAST:event_SellAllButtonActionPerformed
 
     private void saveStatusButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveStatusButtonActionPerformed
@@ -412,6 +425,20 @@ public class MainWindow extends javax.swing.JFrame {
         ninetyRunner.broker.disconnect();
     }//GEN-LAST:event_checkPositionsButtonActionPerformed
 
+    private void backTestButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backTestButtonActionPerformed
+        LocalDate start = LocalDate.parse("2015-01-01");                                          
+        LocalDate end = LocalDate.parse("2016-01-01");
+        
+        Thread thr = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                BackTesterNinety.RunTest(start, end);
+            }
+        });
+        
+        thr.start();
+    }//GEN-LAST:event_backTestButtonActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -450,6 +477,7 @@ public class MainWindow extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton LoadStatusFileButton;
     private javax.swing.JButton SellAllButton;
+    private javax.swing.JButton backTestButton;
     private javax.swing.JButton buyButton;
     private javax.swing.JButton buyStatusButton;
     private javax.swing.JButton checkPositionsButton;
