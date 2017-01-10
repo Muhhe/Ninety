@@ -245,10 +245,17 @@ public class BackTesterNinety {
         return dataMap;
     }
     
+    private static class EquityInTime {
+        LocalDate date;
+        double profit;
+    }
+    
     public static double RunTest(LocalDate startDate, LocalDate endDate) {
         Map<String, CloseData> dataMap = LoadData(startDate, endDate);
         StatusDataForNinety statusData = new StatusDataForNinety();
         double totalProfit = 0;
+        
+        List<EquityInTime> equityList = new ArrayList<>();
         
         logger.info("Starting test from " + startDate.toString() + " to " + endDate.toString());
         
@@ -261,6 +268,12 @@ public class BackTesterNinety {
             
             LocalDate date = dataMap.entrySet().iterator().next().getValue().dates[testingDayInx];
             logger.info("Starting to compute day " + date.toString() + ", index: " + dayInx + "/" + size + ". Profit so far = " + totalProfit);
+            
+            EquityInTime eq = new EquityInTime();
+            eq.date = date;
+            eq.profit = totalProfit;
+            
+            equityList.add(eq);
             
             Map<String, StockIndicatorsForNinety> indicatorsMap = new HashMap<>(getSP100().length);
             for (String string : StockDataForNinety.getSP100()) {
@@ -348,7 +361,45 @@ public class BackTesterNinety {
         }
         logger.setLevel(Level.INFO);
         logger.info("TestCompleted. Profit = " + totalProfit);
+        
+        SaveEquityToCsv(equityList);
 
         return totalProfit;
+    }
+  
+    private static void SaveEquityToCsv(List<EquityInTime> equityList) {
+        
+        logger.info("Saving equity to CSV");
+        
+        File file = new File("backtestCache/_equity.csv");
+        File directory = new File(file.getParentFile().getAbsolutePath());
+        directory.mkdirs();
+        BufferedWriter output = null;
+        try {
+            file.delete();
+            file.createNewFile();
+            output = new BufferedWriter(new FileWriter(file));
+
+            for (EquityInTime equityInTime : equityList) {
+                double profit = equityInTime.profit;
+                LocalDate date = equityInTime.date;
+
+                output.write(date.toString());
+                output.write(";");
+                output.write(Double.toString(profit));
+                output.newLine();
+            }
+
+        } catch (IOException ex) {
+            logger.warning("Cannot create equity CSV");
+        } finally {
+            if (output != null) {
+                try {
+                    output.close();
+                } catch (IOException ex) {
+                    logger.log(Level.SEVERE, null, ex);
+                }
+            }
+        }
     }
 }

@@ -31,18 +31,35 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" attributes="0">
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Group type="102" alignment="0" attributes="0">
-                              <Component id="startButton" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
+                          <Component id="startButton" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="isOnCheckbox" alignment="0" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="102" attributes="0">
+                              <EmptySpace min="-2" pref="18" max="-2" attributes="0"/>
                               <Component id="tickSymbolTextField" min="-2" pref="51" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="buyButton" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="sellButton" min="-2" max="-2" attributes="0"/>
                           </Group>
-                          <Component id="isOnCheckbox" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Group type="102" alignment="0" attributes="0">
+                              <EmptySpace min="-2" pref="3" max="-2" attributes="0"/>
+                              <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="backTestButton" min="-2" max="-2" attributes="0"/>
+                                  <Group type="102" attributes="0">
+                                      <Component id="fromBTField" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="jLabel2" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="toBTField" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                              </Group>
+                          </Group>
                       </Group>
-                      <EmptySpace min="-2" pref="44" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="18" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" attributes="0">
                               <Component id="connectButton" min="-2" max="-2" attributes="0"/>
@@ -50,9 +67,8 @@
                               <Component id="portTextField" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <Component id="startNowButton" min="-2" max="-2" attributes="0"/>
-                          <Component id="backTestButton" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace type="unrelated" max="32767" attributes="0"/>
+                      <EmptySpace type="unrelated" pref="23" max="32767" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" attributes="0">
                               <Component id="loadStatusButton" min="-2" max="-2" attributes="0"/>
@@ -74,7 +90,7 @@
                               <Component id="checkPositionsButton" min="-2" max="-2" attributes="0"/>
                           </Group>
                       </Group>
-                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                      <EmptySpace min="0" pref="13" max="32767" attributes="0"/>
                   </Group>
                   <Component id="logTabbedPane" alignment="1" max="32767" attributes="0"/>
               </Group>
@@ -103,6 +119,10 @@
                   <Component id="LoadStatusFileButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="isOnCheckbox" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="startNowButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="fromBTField" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="toBTField" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="jLabel1" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="jLabel2" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
@@ -308,6 +328,26 @@
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="backTestButtonActionPerformed"/>
       </Events>
+    </Component>
+    <Component class="javax.swing.JTextField" name="fromBTField">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="2013-01-01"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JTextField" name="toBTField">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="2016-01-01"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="jLabel1">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="From"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="jLabel2">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="To"/>
+      </Properties>
     </Component>
   </SubComponents>
 </Form>

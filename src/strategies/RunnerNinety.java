@@ -128,7 +128,10 @@ public class RunnerNinety {
             stockData.SaveStockIndicatorsToFiles();
             stockData.SaveIndicatorsToCSVFile();
             stockData.CheckHistData(LocalDate.now(), timer);
+
+            broker.connect();
             CheckHeldPositions();
+            broker.disconnect();
         }
     }
 

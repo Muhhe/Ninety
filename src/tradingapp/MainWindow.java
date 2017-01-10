@@ -105,6 +105,10 @@ public class MainWindow extends javax.swing.JFrame {
         getPositionsButton = new javax.swing.JButton();
         checkPositionsButton = new javax.swing.JButton();
         backTestButton = new javax.swing.JButton();
+        fromBTField = new javax.swing.JTextField();
+        toBTField = new javax.swing.JTextField();
+        jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setMinimumSize(new java.awt.Dimension(300, 300));
@@ -241,6 +245,14 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
 
+        fromBTField.setText("2013-01-01");
+
+        toBTField.setText("2016-01-01");
+
+        jLabel1.setText("From");
+
+        jLabel2.setText("To");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -250,24 +262,36 @@ public class MainWindow extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(startButton)
+                            .addComponent(isOnCheckbox))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(startButton)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGap(18, 18, 18)
                                 .addComponent(tickSymbolTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(buyButton)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(sellButton))
-                            .addComponent(isOnCheckbox))
-                        .addGap(44, 44, 44)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(3, 3, 3)
+                                .addComponent(jLabel1)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(backTestButton)
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addComponent(fromBTField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jLabel2)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(toBTField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                        .addGap(18, 18, 18)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(connectButton)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(portTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(startNowButton)
-                            .addComponent(backTestButton))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(startNowButton))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED, 23, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(loadStatusButton)
@@ -285,7 +309,7 @@ public class MainWindow extends javax.swing.JFrame {
                                 .addComponent(getPositionsButton)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(checkPositionsButton)))
-                        .addGap(0, 0, Short.MAX_VALUE))
+                        .addGap(0, 13, Short.MAX_VALUE))
                     .addComponent(logTabbedPane, javax.swing.GroupLayout.Alignment.TRAILING))
                 .addContainerGap())
         );
@@ -308,7 +332,11 @@ public class MainWindow extends javax.swing.JFrame {
                     .addComponent(saveStatusButton)
                     .addComponent(LoadStatusFileButton)
                     .addComponent(isOnCheckbox)
-                    .addComponent(startNowButton))
+                    .addComponent(startNowButton)
+                    .addComponent(fromBTField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(toBTField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel1)
+                    .addComponent(jLabel2))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(printStatusButton)
@@ -493,8 +521,11 @@ public class MainWindow extends javax.swing.JFrame {
     }//GEN-LAST:event_checkPositionsButtonActionPerformed
 
     private void backTestButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backTestButtonActionPerformed
-        LocalDate start = LocalDate.parse("2015-01-01");                                          
-        LocalDate end = LocalDate.parse("2016-01-01");
+        //LocalDate start = LocalDate.parse("2015-01-01");                                          
+        //LocalDate end = LocalDate.parse("2016-01-01");
+        
+        LocalDate start = LocalDate.parse(fromBTField.getText());                                          
+        LocalDate end = LocalDate.parse(toBTField.getText());
         
         Thread thr = new Thread(new Runnable() {
             @Override
@@ -551,8 +582,11 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JTextArea commArea;
     private javax.swing.JScrollPane commScrollPane;
     private javax.swing.JButton connectButton;
+    private javax.swing.JTextField fromBTField;
     private javax.swing.JButton getPositionsButton;
     private javax.swing.JCheckBox isOnCheckbox;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JButton loadStatusButton;
     private javax.swing.JTextArea logArea;
     private javax.swing.JScrollPane logScrollPane;
@@ -564,5 +598,6 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JButton startButton;
     private javax.swing.JButton startNowButton;
     private javax.swing.JTextField tickSymbolTextField;
+    private javax.swing.JTextField toBTField;
     // End of variables declaration//GEN-END:variables
 }
