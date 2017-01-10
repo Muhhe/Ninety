@@ -12,6 +12,7 @@
 *.csv
 *.lck
 private.xml
+_settings.xml
 
 build/
 nbproject/private

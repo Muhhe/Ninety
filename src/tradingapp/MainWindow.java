@@ -6,6 +6,7 @@
 package tradingapp;
 
 import communication.IBCommunication;
+import communication.OrderStatus;
 import communication.Position;
 import java.io.File;
 import java.io.IOException;
@@ -349,16 +350,82 @@ public class MainWindow extends javax.swing.JFrame {
         TradeOrder order = new TradeOrder();
         order.orderType = TradeOrder.OrderType.BUY;
         order.tickerSymbol = tickSymbolTextField.getText();
+        order.position = 10;
         
-        m_comm.PlaceOrder(order);
+        ninetyRunner.broker.connect();
+        
+        //m_comm.PlaceOrder(order);
+        logger.info("Placing " + order.toString());
+        
+        for (int i = 0; i < 10; i++) {
+            try {
+                Thread.sleep((long) (Math.random() * 200));
+                ninetyRunner.broker.PlaceOrder(order);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        
+        /*Thread[] threads = new Thread[10];
+        for(int i = 0; i < 10; i++) {
+            threads[i] = new Thread(new Runnable() {
+                            public void run() {
+                                ninetyRunner.broker.PlaceOrder(order);
+                            }
+                         });
+            threads[i].start();
+        }*/
+        
+        if (ninetyRunner.broker.waitUntilOrdersClosed(10)) {
+            logger.info("Order filled in time");
+        } else {
+            logger.info("Order NOT filled in time");
+        }
+        
+        ninetyRunner.broker.disconnect();
     }//GEN-LAST:event_buyButtonActionPerformed
 
     private void sellButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sellButtonActionPerformed
         TradeOrder order = new TradeOrder();
         order.orderType = TradeOrder.OrderType.SELL;
         order.tickerSymbol = tickSymbolTextField.getText();
+        order.position = 10;
         
-        m_comm.PlaceOrder(order);
+        ninetyRunner.broker.connect();
+        
+        //m_comm.PlaceOrder(order);
+        logger.info("Placing " + order.toString());
+        
+        for (int i = 0; i < 10; i++) {
+            try {
+                Thread.sleep((long) (Math.random() * 200));
+                ninetyRunner.broker.PlaceOrder(order);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        /*Thread[] threads = new Thread[10];
+        for(int i = 0; i < 10; i++) {
+            threads[i] = new Thread(new Runnable() {
+                            public void run() {
+                                ninetyRunner.broker.PlaceOrder(order);
+                            }
+                         });
+            threads[i].start();
+        }*/
+
+        if (ninetyRunner.broker.waitUntilOrdersClosed(10)) {
+            logger.info("Order filled in time");
+        } else {
+            logger.info("Order NOT filled in time");
+        }
+        for (OrderStatus value : ninetyRunner.broker.activeOrdersMap.values()) {
+            logger.info("Still active: " + value);
+        }
+        
+        ninetyRunner.broker.disconnect();
     }//GEN-LAST:event_sellButtonActionPerformed
 
     private void loadStatusButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadStatusButtonActionPerformed
@@ -368,7 +435,7 @@ public class MainWindow extends javax.swing.JFrame {
 
     private void buyStatusButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buyStatusButtonActionPerformed
         if (!m_connected) {
-            m_comm.connect(Integer.parseInt(portTextField.getText()));
+            ninetyRunner.broker.connect();
             m_connected = true;
             try {
                 Thread.sleep(5000);

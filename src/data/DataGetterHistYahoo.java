@@ -11,7 +11,6 @@ import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,13 +21,14 @@ import java.util.logging.Logger;
 public class DataGetterHistYahoo {
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     
-    public static List<Double> readRawAdjCloseData(LocalDate startDate, LocalDate endDate, String tickerSymbol) {
+    public static CloseData readRawAdjCloseData(LocalDate startDate, LocalDate endDate, String tickerSymbol) {
         return readRawAdjCloseData(startDate, endDate, tickerSymbol, -1);
     }
     
-    public static List<Double> readRawAdjCloseData(LocalDate startDate, LocalDate endDate, String tickerSymbol, int maxCount) {
+    public static CloseData readRawAdjCloseData(LocalDate startDate, LocalDate endDate, String tickerSymbol, int maxCount) {
         
-        ArrayList<Double> arr = new ArrayList<>();
+        ArrayList<Double> arrCloseVals = new ArrayList<>();
+        ArrayList<LocalDate> arrDates = new ArrayList<>();
         
         int startYear = startDate.getYear();
         int startMonth = startDate.getMonth().getValue();
@@ -43,18 +43,18 @@ public class DataGetterHistYahoo {
         urlBuilder.append("http://ichart.yahoo.com/table.csv?s=");
         urlBuilder.append(tickerSymbol);
         urlBuilder.append("&a=");
-        urlBuilder.append(startMonth);
+        urlBuilder.append(startMonth - 1);
         urlBuilder.append("&b=");
         urlBuilder.append(startDay);
         urlBuilder.append("&c=");
         urlBuilder.append(startYear);
         urlBuilder.append("&d=");
-        urlBuilder.append(endMonth);
+        urlBuilder.append(endMonth - 1);
         urlBuilder.append("&e=");
         urlBuilder.append(endDay);
         urlBuilder.append("&f=");
         urlBuilder.append(endYear);
-
+        
         String line;
         String cvsSplitBy = ",";
         int totalCount = 0;
@@ -63,8 +63,7 @@ public class DataGetterHistYahoo {
         try {
             urlYahoo = new URL(urlBuilder.toString());
 
-            BufferedReader br = new BufferedReader(
-                    new InputStreamReader(urlYahoo.openStream()));
+            BufferedReader br = new BufferedReader( new InputStreamReader(urlYahoo.openStream()));
 
             line = br.readLine(); // skip first line
                 
@@ -72,9 +71,11 @@ public class DataGetterHistYahoo {
 
                 String[] dateLine = line.split(cvsSplitBy);
 
+                LocalDate parsedDate = LocalDate.parse(dateLine[0], DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                arrDates.add(parsedDate);
+                
                 double adjClose = Double.parseDouble(dateLine[6]);
-
-                arr.add(adjClose);
+                arrCloseVals.add(adjClose);
                 
                 totalCount++;
                 if (totalCount == maxCount) {
@@ -88,8 +89,14 @@ public class DataGetterHistYahoo {
             
             return null;
         }
+        CloseData retData = new CloseData(0);
         
-        return arr;
+        retData.adjCloses = arrCloseVals.stream().mapToDouble(Double::doubleValue).toArray();
+        
+        retData.dates = new LocalDate[arrDates.size()];
+        retData.dates = arrDates.toArray(retData.dates);
+        
+        return retData;
     }
 
     @SuppressWarnings("UnusedAssignment")
@@ -106,13 +113,13 @@ public class DataGetterHistYahoo {
         urlBuilder.append("http://ichart.yahoo.com/table.csv?s=");
         urlBuilder.append(tickerSymbol);
         urlBuilder.append("&a=");
-        urlBuilder.append(month);
+        urlBuilder.append(month - 1);
         urlBuilder.append("&b=");
         urlBuilder.append(day);
         urlBuilder.append("&c=");
         urlBuilder.append(year - 1);
         urlBuilder.append("&d=");
-        urlBuilder.append(month);
+        urlBuilder.append(month - 1);
         urlBuilder.append("&e=");
         urlBuilder.append(day);
         urlBuilder.append("&f=");

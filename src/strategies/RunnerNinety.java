@@ -44,8 +44,93 @@ public class RunnerNinety {
     public final IBBroker broker = new IBBroker();
 
     public boolean isStartScheduled = false;
-    
-    private TradingTimer timer = new TradingTimer();
+
+    private final TradingTimer timer = new TradingTimer();
+
+    public class RunnerIB implements Runnable {
+
+        @Override
+        public void run() {
+            LocalDate today = LocalDate.now();
+            String todayString = today.toString();
+            FileHandler fileHandler = null;
+            try {
+                File file = new File("dataLog/" + todayString);
+                file.mkdirs();
+
+                fileHandler = new FileHandler("dataLog/" + todayString + "/TradeLog.txt");
+                loggerTradeLog.addHandler(fileHandler);
+            } catch (IOException | SecurityException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            }
+
+            // TODO: zajistit aby nebezel jeste hist data load?
+            stockData.UpdateDataWithActValues(timer);
+            stockData.CalculateIndicators();
+            stockData.CheckHistData(today, timer);
+
+            statusData.PrintStatus();
+
+            logger.info("Starting Ninety strategy");
+            broker.connect();
+
+            List<TradeOrder> sells = RunNinetySells();
+
+            if (!broker.waitUntilOrdersClosed(20)) {
+                logger.severe("Some SELL orders were not closed on time.");
+            }
+
+            ProcessSubmittedOrders();
+            CheckHeldPositions();
+
+            stockData.UpdateDataWithActValues(timer);
+            stockData.CheckHistData(today, timer);
+
+            RunNinetyBuys(sells);
+
+            if (!broker.waitUntilOrdersClosed(60)) {
+                logger.severe("Some orders were not closed on time.");
+            }
+
+            ProcessSubmittedOrders();
+            broker.clearOrderMaps();
+
+            CheckHeldPositions();
+
+            statusData.SaveHeldPositionsToFile();
+
+            logger.info("Trading day finished");
+            statusData.PrintStatus();
+            isStartScheduled = false;
+
+            copyLogFileToDataLog();
+
+            ScheduleForTomorrowDay();
+
+            if (fileHandler != null) {
+                fileHandler.close();
+                loggerTradeLog.removeHandler(fileHandler);
+            }
+
+            broker.disconnect();
+        }
+    }
+
+    public class HistDataLoadRunner implements Runnable {
+
+        @Override
+        public void run() {
+            stockData.PrepareHistData();
+            stockData.UpdateDataWithActValues(timer);
+            stockData.SaveHistDataToFiles();
+
+            stockData.CalculateIndicators();
+            stockData.SaveStockIndicatorsToFiles();
+            stockData.SaveIndicatorsToCSVFile();
+            stockData.CheckHistData(LocalDate.now(), timer);
+            CheckHeldPositions();
+        }
+    }
 
     public RunnerNinety(int port) {
         statusData.ReadHeldPositions();
@@ -54,34 +139,19 @@ public class RunnerNinety {
     
     public void RunNow() {
         isStartScheduled = true;
+        timer.LoadSpecialTradingDays();
         
-        Thread thr = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                timer.LoadSpecialTradingDays();
-                
-                stockData.PrepareHistData();                
-                stockData.UpdateDataWithActValues(timer);
-                stockData.SaveHistDataToFiles();
-                
-                stockData.CheckHistData(LocalDate.now(), timer);
-                stockData.CalculateIndicators();
-                stockData.SaveStockIndicatorsToFiles();
-                stockData.SaveIndicatorsToCSVFile();
-                
-                statusData.PrintStatus();
-
-                logger.info("Starting Ninety strategy");
-                
-                List<TradeOrder> sells = RunNinetySells();
-
-                stockData.UpdateDataWithActValues(timer);
-                
-                RunNinetyBuys(sells);
-                
-                copyLogFileToDataLog();
-            }
-        });
+        Thread thr = new Thread(new HistDataLoadRunner());
+        
+        thr.start();
+        
+        try {
+            thr.join();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(RunnerNinety.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        thr = new Thread(new RunnerIB());
         
         thr.start();
     }
@@ -103,7 +173,7 @@ public class RunnerNinety {
         logger.info("Starting in " + durationToNextRun.toString());
     }
     
-    public void ScheduleFirstCheck() {      
+    public void ScheduleFirstCheck() {
         timer.LoadSpecialTradingDays();
         
         ZonedDateTime now = TradingTimer.GetNYTimeNow();
@@ -132,26 +202,13 @@ public class RunnerNinety {
         
         broker.connect();
         CheckHeldPositions();
+        broker.disconnect();
         
     }
 
     public void ScheduleLoadingHistDataAndStrategyRun(ZonedDateTime closeTime) {
         ZonedDateTime timeLoadHistData = closeTime.minus(DURATION_BEFORECLOSE_HISTDATA);
-        timer.startTaskAt(timeLoadHistData, new Runnable() {
-            @Override
-            public void run() {
-                // TODO: check held positions
-                stockData.PrepareHistData();
-                stockData.UpdateDataWithActValues(timer);
-                stockData.SaveHistDataToFiles();
-                
-                stockData.CalculateIndicators();
-                stockData.SaveStockIndicatorsToFiles();
-                stockData.SaveIndicatorsToCSVFile();
-                stockData.CheckHistData(LocalDate.now(), timer);
-                CheckHeldPositions();
-            }
-        });
+        timer.startTaskAt(timeLoadHistData, new HistDataLoadRunner());
 
         Duration timeToHist = Duration.ofSeconds(TradingTimer.computeTimeFromNowTo(timeLoadHistData));
 
@@ -159,69 +216,7 @@ public class RunnerNinety {
         logger.info("Starting in " + timeToHist.toString());
 
         ZonedDateTime timeRunStrategy = closeTime.minus(DURATION_BEFORECLOSE_RUNSTRATEGY);
-        timer.startTaskAt(timeRunStrategy, new Runnable() {
-            @Override
-            public void run() {
-                LocalDate today = LocalDate.now();
-                String todayString = today.toString();
-                FileHandler fileHandler = null;
-                try {
-                    File file = new File("dataLog/" + todayString);
-                    file.mkdirs();
-                    
-                    fileHandler = new FileHandler("dataLog/" + todayString + "/TradeLog.txt");
-                } catch (IOException | SecurityException ex) {
-                    logger.log(Level.SEVERE, null, ex);
-                }
-                loggerTradeLog.addHandler(fileHandler);
-                
-                stockData.UpdateDataWithActValues(timer);
-                stockData.CalculateIndicators();
-                stockData.CheckHistData(today, timer);
-
-                statusData.PrintStatus();
-
-                logger.info("Starting Ninety strategy");
-                
-                List<TradeOrder> sells = RunNinetySells();
-                
-                if (!broker.waitUntilOrdersClosed(20)) {
-                    logger.severe("Some SELL orders were not closed on time.");
-                }
-
-                ProcessSubmittedOrders();
-                CheckHeldPositions();
-
-                stockData.UpdateDataWithActValues(timer);
-                stockData.CheckHistData(today, timer);
-                
-                RunNinetyBuys(sells);
-                
-                if (!broker.waitUntilOrdersClosed(60)) {
-                    logger.severe("Some orders were not closed on time.");
-                }
-
-                ProcessSubmittedOrders();
-                broker.orderStatusMap.clear();
-
-                CheckHeldPositions();
-
-                statusData.SaveHeldPositionsToFile();
-                
-                logger.info("Trading day finished");
-                statusData.PrintStatus();
-                isStartScheduled = false;
-                
-                copyLogFileToDataLog();
-                
-                ScheduleForTomorrowDay();
-                
-                fileHandler.close();
-                loggerTradeLog.removeHandler(fileHandler);
-                
-                broker.disconnect();
-            }
-        });
+        timer.startTaskAt(timeRunStrategy, new RunnerIB());
 
         Duration timeToStart = Duration.ofSeconds(TradingTimer.computeTimeFromNowTo(timeRunStrategy));
 
@@ -311,10 +306,9 @@ public class RunnerNinety {
                 return;
             }
 
-            
-            
             loggerTradeLog.info(order.toString());
-            //TODO: doplnit indicatory atd.held = new HeldStock();
+            //TODO: doplnit indicatory atd.
+            held = new HeldStock();
             held.tickerSymbol = order.order.tickerSymbol;
 
             StockPurchase purchase = new StockPurchase();

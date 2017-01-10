@@ -9,6 +9,7 @@ import com.ib.client.Contract;
 import com.ib.client.EClientSocket;
 import com.ib.client.Order;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -30,8 +31,8 @@ public class IBBroker extends BaseIBConnectionImpl {
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     private final static Logger loggerComm = Logger.getLogger(LOGGER_COMM_NAME );
     
-    public Map<Integer, OrderStatus> orderStatusMap = new ConcurrentHashMap<>();
-    public Map<Integer, OrderStatus> activeOrdersMap = new ConcurrentHashMap<>();
+    public final Map<Integer, OrderStatus> orderStatusMap = new ConcurrentHashMap<>();
+    public final Map<Integer, OrderStatus> activeOrdersMap = new HashMap<>();
     
     public EClientSocket ibClientSocket = new EClientSocket(this);
     boolean connected = false;
@@ -108,7 +109,7 @@ public class IBBroker extends BaseIBConnectionImpl {
         return ++nextOrderId;
     }
     
-    public boolean PlaceOrder(TradeOrder tradeOrder) {
+    public synchronized boolean PlaceOrder(TradeOrder tradeOrder) {
         if (!connected) {
             loggerComm.severe("IB not connected. Cannot place order.");
             return false;
@@ -141,22 +142,25 @@ public class IBBroker extends BaseIBConnectionImpl {
         
         ibClientSocket.placeOrder(ibOrder.m_orderId, contract, ibOrder);
         logger.info("Placing order - ID: " + ibOrder.m_orderId + ", Ticker :" + tradeOrder.tickerSymbol + ", " + ibOrder.m_action);
+        loggerComm.info("Placing order - ID: " + ibOrder.m_orderId + ", " + tradeOrder.toString());
         
-        if (activeOrdersMap.isEmpty()) {
-            loggerComm.finest("Creating new latch for ordersClosedWaitCountdownLatch");
-            ordersClosedWaitCountdownLatch = new CountDownLatch(1);
+        synchronized(activeOrdersMap) {
+            if (activeOrdersMap.isEmpty()) {
+                loggerComm.finest("Creating new latch for ordersClosedWaitCountdownLatch");
+                ordersClosedWaitCountdownLatch = new CountDownLatch(1);
+            }
+
+            OrderStatus orderStatus = new OrderStatus(tradeOrder, ibOrder.m_orderId);
+            orderStatusMap.put(ibOrder.m_orderId, orderStatus);
+            activeOrdersMap.put(ibOrder.m_orderId, orderStatus);
         }
-        
-        OrderStatus orderStatus = new OrderStatus(tradeOrder, ibOrder.m_orderId);
-        orderStatusMap.put(ibOrder.m_orderId, orderStatus);
-        activeOrdersMap.put(ibOrder.m_orderId, orderStatus);
         
         return true;
     }
     
     @Override
     public void orderStatus(int orderId, String status, int filled, int remaining, double avgFillPrice, int permId, int parentId, double lastFillPrice, int clientId, String whyHeld) {
-        loggerComm.fine("OrderStatus(): orderId: " + orderId + " Status: " + status + " filled: " + filled + " remaining: " + remaining + " avgFillPrice: " + avgFillPrice + " permId: " + permId + " parentId: " + parentId + " lastFillePrice: " + lastFillPrice + " clientId: " + clientId + " whyHeld: " + whyHeld);
+        //loggerComm.finer("OrderStatus(): orderId: " + orderId + " Status: " + status + " filled: " + filled + " remaining: " + remaining + " avgFillPrice: " + avgFillPrice + " permId: " + permId + " parentId: " + parentId + " lastFillePrice: " + lastFillPrice + " clientId: " + clientId + " whyHeld: " + whyHeld);
         
         OrderStatus orderStatus = orderStatusMap.get(orderId);
 
@@ -170,18 +174,21 @@ public class IBBroker extends BaseIBConnectionImpl {
         orderStatus.fillPrice = avgFillPrice;
         
         orderStatus.status = OrderStatus.getOrderStatus(status);
-        
+
         if (orderStatus.status == OrderStatus.Status.FILLED) {
             orderStatus.timestampFilled = TradingTimer.GetNYTimeNow();
-            
-            activeOrdersMap.remove(orderId);
-            if (activeOrdersMap.isEmpty()) {
-                loggerComm.finest("Releasing latch for ordersClosedWaitCountdownLatch");
-                ordersClosedWaitCountdownLatch.countDown();
+            loggerComm.fine("FILLED id:" + orderId + ", " + orderStatus.toString());
+
+            synchronized (activeOrdersMap) {
+                if ((ordersClosedWaitCountdownLatch != null) && (activeOrdersMap.size() == 1)) {
+                    loggerComm.finest("Releasing latch for ordersClosedWaitCountdownLatch");
+                    ordersClosedWaitCountdownLatch.countDown();
+                }
+                activeOrdersMap.remove(orderId);
             }
         }
     }
-    
+
     public List<Position> getAllPositions() {
         positionsList.clear();
         if (!connected) {
@@ -210,15 +217,29 @@ public class IBBroker extends BaseIBConnectionImpl {
     @Override
     public void positionEnd() {
         getPositionsCountdownLatch.countDown();
-        loggerComm.fine( "Position END()");
+        loggerComm.fine("Position END()");
     }
-    
+
     public boolean waitUntilOrdersClosed(int maxWaitSeconds) {
         try {
+            Thread.sleep(100);  // For safety if orders are not yet issued
+
+            if (ordersClosedWaitCountdownLatch == null) {
+                return true;
+            }
+
             return ordersClosedWaitCountdownLatch.await(maxWaitSeconds, TimeUnit.SECONDS);
         } catch (InterruptedException ex) {
             loggerComm.log(Level.SEVERE, "waitUntilOrdersClosed", ex);
         }
         return false;
+    }
+
+    public void clearOrderMaps() {
+        synchronized (activeOrdersMap) {
+            activeOrdersMap.clear();
+            orderStatusMap.clear();
+            ordersClosedWaitCountdownLatch = null;
+        }
     }
 }

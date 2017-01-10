@@ -21,7 +21,7 @@ public class TradeOrder {
     public String toString() {
         String str = new String();
         
-        str += "Order '" + orderType + "' '" + tickerSymbol + "' position: " + position;
+        str += "Order '" + orderType + "', '" + tickerSymbol + "', position: " + position;
         return str;
     }
     
