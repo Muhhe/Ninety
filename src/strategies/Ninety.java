@@ -65,7 +65,7 @@ public class Ninety {
         return (actValue < heldStock.purchases.get(heldStock.purchases.size() - 1).priceForOne);
     }
 
-    public static List<TradeOrder> computeStocksToBuyMore(Map<String, StockIndicatorsForNinety> dataFor90Map, StatusDataForNinety statusDataFor90) {
+    public static List<TradeOrder> computeStocksToBuyMore(Map<String, StockIndicatorsForNinety> dataFor90Map, StatusDataForNinety statusDataFor90, int remainingPortions) {
 
         logger.fine("Started to compute held stocks to buy more.");
         List<HeldStock> stocksToBuyMore = new ArrayList<HeldStock>();
@@ -83,7 +83,7 @@ public class Ninety {
             }
         }
 
-        return ProcessStocksToBuyMoreIntoOrders(stocksToBuyMore, dataFor90Map, statusDataFor90);
+        return ProcessStocksToBuyMoreIntoOrders(stocksToBuyMore, dataFor90Map, statusDataFor90, remainingPortions);
     }
 
     private static boolean computeBuyTicker(StockIndicatorsForNinety tickerIndicators) {
@@ -188,7 +188,7 @@ public class Ninety {
         return order;
     }
 
-    private static List<TradeOrder> ProcessStocksToBuyMoreIntoOrders(List<HeldStock> stocksToBuyMore, Map<String, StockIndicatorsForNinety> dataFor90Map, StatusDataForNinety statusDataFor90) {
+    private static List<TradeOrder> ProcessStocksToBuyMoreIntoOrders(List<HeldStock> stocksToBuyMore, Map<String, StockIndicatorsForNinety> dataFor90Map, StatusDataForNinety statusDataFor90, int remainingPortions) {
         List<TradeOrder> tradeOrders = new ArrayList<TradeOrder>();
 
         Collections.sort(stocksToBuyMore, new Comparator<HeldStock>() {
@@ -234,10 +234,12 @@ public class Ninety {
                         continue;
                 }
 
-                if (statusDataFor90.GetBoughtPortions() + newPortions > 20) {
+                if (remainingPortions - newPortions < 0) {
                     logger.info("Cannot buy " + newPortions + " more portions of '" + heldStock.tickerSymbol + "' because we currently hold " + statusDataFor90.GetBoughtPortions() + "/20 portions.");
                     continue;
                 }
+                
+                remainingPortions -= newPortions;
 
                 order.position = (int) (statusDataFor90.GetOnePortionValue() * newPortions / stockIndicator.actValue);
                 order.expectedPrice = stockIndicator.actValue;

@@ -180,11 +180,11 @@ public class IBBroker extends BaseIBConnectionImpl {
             loggerComm.fine("FILLED id:" + orderId + ", " + orderStatus.toString());
 
             synchronized (activeOrdersMap) {
-                if ((ordersClosedWaitCountdownLatch != null) && (activeOrdersMap.size() == 1)) {
+                activeOrdersMap.remove(orderId);
+                if ((ordersClosedWaitCountdownLatch != null) && activeOrdersMap.isEmpty()) {
                     loggerComm.finest("Releasing latch for ordersClosedWaitCountdownLatch");
                     ordersClosedWaitCountdownLatch.countDown();
                 }
-                activeOrdersMap.remove(orderId);
             }
         }
     }

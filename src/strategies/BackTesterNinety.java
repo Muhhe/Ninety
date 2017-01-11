@@ -255,6 +255,15 @@ public class BackTesterNinety {
         StatusDataForNinety statusData = new StatusDataForNinety();
         double totalProfit = 0;
         
+        int totalSells = 0;
+        int profitSells = 0;
+        
+        double highestProfit = 0;
+        double highestDDproc = 0;
+        double highestDD = 0;
+        LocalDate dateOfHighestDD = LocalDate.MIN;
+        int fees = 0;
+        
         List<EquityInTime> equityList = new ArrayList<>();
         
         logger.info("Starting test from " + startDate.toString() + " to " + endDate.toString());
@@ -306,10 +315,30 @@ public class BackTesterNinety {
                 double profit = (tradeOrder.expectedPrice - held.GetAvgPrice()) * held.GetPosition();
                 logger.info("Stock sold - profit: " + profit + ", " + tradeOrder.toString());
 
+                profit -= 1;
+                fees++;
                 statusData.heldStocks.remove(held.tickerSymbol);
                 totalProfit += profit;
+
+                totalSells++;
+                if (profit > 0) {
+                    profitSells++;
+
+                    if (highestProfit < totalProfit) {
+                        highestProfit = totalProfit;
+                    }
+                } else {
+                    double dd = ((highestProfit - totalProfit) / (40000 + highestProfit)) * 100;
+                    
+                    if (highestDDproc < dd) {
+                        highestDD = highestProfit - totalProfit;
+                        highestDDproc = dd;
+                        dateOfHighestDD = date;
+                    }
+                }
             }
 
+            int remainingPortions = 20 - statusData.GetBoughtPortions();
             TradeOrder toBuy = Ninety.ComputeStocksToBuy(indicatorsMap, statusData, toSell);
 
             if (toBuy != null) {
@@ -326,9 +355,13 @@ public class BackTesterNinety {
 
                 statusData.heldStocks.put(held.tickerSymbol, held);
                 logger.info("New stock added: " + held.toString());
+                remainingPortions--;
+                
+                totalProfit -= 1;
+                fees++;
             }
 
-            List<TradeOrder> toBuyMore = Ninety.computeStocksToBuyMore(indicatorsMap, statusData);
+            List<TradeOrder> toBuyMore = Ninety.computeStocksToBuyMore(indicatorsMap, statusData, remainingPortions);
             
             for (TradeOrder tradeOrder : toBuyMore) {
                 HeldStock held = statusData.heldStocks.get(tradeOrder.tickerSymbol);
@@ -357,10 +390,14 @@ public class BackTesterNinety {
                 held.purchases.add(purchase);
                 
                 logger.info("More stock bought - " + held.toString());
+                totalProfit -= 1;
+                fees++;
             }
         }
         logger.setLevel(Level.INFO);
-        logger.info("TestCompleted. Profit = " + totalProfit);
+        logger.info("TestCompleted. Profit = " + totalProfit + ", succesful = " + (double)profitSells/(double)totalSells*100 + "%");
+        logger.info("Highest DD = " + highestDD + "$, " + highestDDproc + "%, date = " + dateOfHighestDD.toString());
+        logger.info("Paid on fees = " + fees + "$");
         
         SaveEquityToCsv(equityList);
 

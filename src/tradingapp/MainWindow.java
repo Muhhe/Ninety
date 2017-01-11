@@ -245,9 +245,9 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
 
-        fromBTField.setText("2013-01-01");
+        fromBTField.setText("2013-09-01");
 
-        toBTField.setText("2016-01-01");
+        toBTField.setText("2016-08-01");
 
         jLabel1.setText("From");
 

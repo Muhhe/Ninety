@@ -262,12 +262,17 @@ public class RunnerNinety {
     
     private void RunNinetyBuys(List<TradeOrder> sellOrders) {
         logger.info("Starting computing stocks to buy");
+        int remainingPortions = 20 - statusData.GetBoughtPortions();
+        
         // Buying new stock
         TradeOrder buyOrder = Ninety.ComputeStocksToBuy(stockData.indicatorsMap, statusData, sellOrders);
-        broker.PlaceOrder(buyOrder);
-
+        if (buyOrder != null) {
+            broker.PlaceOrder(buyOrder);
+            remainingPortions--;
+        }
+        
         // Buying more held stock
-        List<TradeOrder> buyMoreOrders = Ninety.computeStocksToBuyMore(stockData.indicatorsMap, statusData);
+        List<TradeOrder> buyMoreOrders = Ninety.computeStocksToBuyMore(stockData.indicatorsMap, statusData, remainingPortions);
 
         for (TradeOrder tradeOrder : buyMoreOrders) {
             broker.PlaceOrder(tradeOrder);
