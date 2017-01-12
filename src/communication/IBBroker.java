@@ -114,8 +114,6 @@ public class IBBroker extends BaseIBConnectionImpl {
     }
     
     public synchronized boolean PlaceOrder(TradeOrder tradeOrder) {
-        if (tradeOrder != null)
-        return false;
         if (!connected) {
             loggerComm.severe("IB not connected. Cannot place order.");
             return false;
