@@ -8,10 +8,12 @@ package communication;
 import com.ib.client.Contract;
 import com.ib.client.EClientSocket;
 import com.ib.client.Order;
+import com.ib.client.TagValue;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -33,6 +35,8 @@ public class IBBroker extends BaseIBConnectionImpl {
     
     public final Map<Integer, OrderStatus> orderStatusMap = new ConcurrentHashMap<>();
     public final Map<Integer, OrderStatus> activeOrdersMap = new HashMap<>();
+    
+    public final RealtimeDataIB realtimeData = new RealtimeDataIB();
     
     public EClientSocket ibClientSocket = new EClientSocket(this);
     boolean connected = false;
@@ -110,16 +114,14 @@ public class IBBroker extends BaseIBConnectionImpl {
     }
     
     public synchronized boolean PlaceOrder(TradeOrder tradeOrder) {
+        if (tradeOrder != null)
+        return false;
         if (!connected) {
             loggerComm.severe("IB not connected. Cannot place order.");
             return false;
         }
         
-        Contract contract = new Contract();
-        contract.m_symbol = tradeOrder.tickerSymbol;
-        contract.m_exchange = "SMART";
-        contract.m_secType = "CFD";
-        contract.m_currency = "USD";
+        Contract contract = CreateContract(tradeOrder.tickerSymbol);
         
         Order ibOrder = new Order();
         if (tradeOrder.orderType == TradeOrder.OrderType.BUY) {
@@ -241,5 +243,62 @@ public class IBBroker extends BaseIBConnectionImpl {
             orderStatusMap.clear();
             ordersClosedWaitCountdownLatch = null;
         }
+    }
+    
+    public void RequestRealtimeData(String ticker) {
+        Contract contract = CreateContract(ticker);
+        contract.m_secType = "STK"; //Cannot be CFD for req data
+        
+        int orderId = getNextOrderId();
+    
+        ibClientSocket.reqMktData(orderId, contract, null, false, new Vector<TagValue>());
+        realtimeData.CreateNew(ticker, orderId);
+        
+        try {
+            Thread.sleep(20);   //max number of commands to IB is 50/s
+        } catch (InterruptedException ex) {
+        }
+    }
+    
+    public void CancelAllRealtimeData() {
+        for (Integer orderId : realtimeData.GetAllOrderIds()) {
+            ibClientSocket.cancelMktData(orderId);
+            try {
+                Thread.sleep(20);   //max number of commands to IB is 50/s
+            } catch (InterruptedException ex) {
+            }
+        }
+        realtimeData.ClearMaps();
+    }
+
+    @Override
+    public void tickPrice(int orderId, int field, double price, int canAutoExecute) {
+        // Print out the current price.
+        // field will provide the price type:
+        // 1 = bid,  2 = ask, 4 = last
+        // 6 = high, 7 = low, 9 = close
+        //loggerComm.finest("tickPrice: " + orderId + "," + RealtimeDataIB.GetTickPriceFieldString(field) + "," + price);
+        
+        realtimeData.UpdateValue(orderId, field, price);
+    }
+    
+    public double GetLastPrice(String ticker) {
+        return realtimeData.GetLastPrice(ticker);
+    }
+
+    private Contract CreateContract(String ticker) {
+        Contract contract = new Contract();
+        contract.m_symbol = ticker;
+        contract.m_exchange = "SMART";
+        contract.m_secType = "CFD";
+        contract.m_currency = "USD";
+
+        if ((ticker == "MSFT")
+                || (ticker == "CSCO")
+                || (ticker == "INTC")) {
+            contract.m_exchange = "BATS";
+        }
+
+        return contract;
     }
 }

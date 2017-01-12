@@ -5,6 +5,7 @@
  */
 package strategies;
 
+import communication.IBBroker;
 import data.CloseData;
 import data.DataGetterActGoogle;
 import data.DataGetterHistYahoo;
@@ -35,6 +36,8 @@ public class StockDataForNinety {
     public Map<String, StockIndicatorsForNinety> indicatorsMap = new HashMap<>(getSP100().length);
 
     public final Semaphore histDataMutex = new Semaphore(1);
+    
+    public boolean isRealtimeDataSubscribed = false;
 
     public static String[] getSP100() {
         String[] tickers = {
@@ -74,8 +77,71 @@ public class StockDataForNinety {
             logger.fine("PrepareHistData: Released lock on hist data.");
         }
     }
+    
+    public void SubscribeRealtimeData(IBBroker broker) {
+        if (!isRealtimeDataSubscribed) {
+            for (String ticker : getSP100()) {
+                broker.RequestRealtimeData(ticker);
+            }
+            isRealtimeDataSubscribed = true;
+        }
+    }
+    
+    public void UnSubscribeRealtimeData(IBBroker broker) {
+        if (isRealtimeDataSubscribed) {
+            broker.CancelAllRealtimeData();
+            isRealtimeDataSubscribed = false;
+        }
+    }
+    
+    public void UpdateDataWithActValuesIB(TradingTimer timer, IBBroker broker) {
+        if (!timer.IsTradingDay(LocalDate.now())) {
+            logger.fine("Today is not a trading day. Cannot update with actual values.");
+            return;
+        }
 
-    public void UpdateDataWithActValues(TradingTimer timer) {
+        if (!isRealtimeDataSubscribed) {
+            SubscribeRealtimeData(broker);
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException ex) {
+            }
+        }
+
+        try {
+            logger.fine("UpdateDataWithActValues: Getting lock on hist data.");
+            histDataMutex.acquire();
+
+            if (closeDataMap.isEmpty()) {
+                logger.severe("updateDataWithActualValues - stockMap.isEmpty");
+                return;
+            }
+
+            logger.info("Starting to load actual data");
+
+            for (Iterator<Map.Entry<String, CloseData>> it = closeDataMap.entrySet().iterator(); it.hasNext();) {
+                Map.Entry<String, CloseData> entry = it.next();
+
+                double actValue = broker.GetLastPrice(entry.getKey());
+                if (actValue == 0) {
+                    logger.warning("Cannot load actual data for: " + entry.getKey() + "! This stock will not be used.");
+                    it.remove();
+                    continue;
+                }
+
+                entry.getValue().adjCloses[0] = actValue;
+                entry.getValue().dates[0] = LocalDate.now();
+            }
+
+        } catch (InterruptedException ex) {
+        } finally {
+            histDataMutex.release();
+            logger.fine("UpdateDataWithActValues: Released lock on hist data.");
+            logger.info("Finished to load actual data");
+        }
+    }
+
+    public void UpdateDataWithActValuesGoogle(TradingTimer timer) {
         if (!timer.IsTradingDay(LocalDate.now())) {
             logger.fine("Today is not a trading day. Cannot update with actual values.");
             return;
@@ -134,8 +200,6 @@ public class StockDataForNinety {
             histDataMutex.release();
             logger.fine("UpdateDataWithActValues: Released lock on hist data.");
             logger.info("Finished to load actual data");
-            
-            //SaveHistDataToFiles();
         }
     }
 

@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import strategies.BackTesterNinety;
 import strategies.RunnerNinety;
+import strategies.StockDataForNinety;
 
 /**
  *
@@ -370,8 +371,26 @@ public class MainWindow extends javax.swing.JFrame {
     }//GEN-LAST:event_portTextFieldActionPerformed
 
     private void connectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_connectButtonActionPerformed
-        m_comm.connect(Integer.parseInt(portTextField.getText()));
-        m_connected = true;
+        //m_comm.connect(Integer.parseInt(portTextField.getText()));
+        //m_connected = true;
+        
+        ninetyRunner.broker.connect();
+        
+        logger.info("SP100 length " + StockDataForNinety.getSP100().length);
+        
+        for (String ticker : StockDataForNinety.getSP100()) {
+            ninetyRunner.broker.RequestRealtimeData(ticker);
+        }
+        
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        logger.info("Price of " + tickSymbolTextField.getText() + " is " + ninetyRunner.broker.GetLastPrice(tickSymbolTextField.getText()));
+        
+        ninetyRunner.broker.CancelAllRealtimeData();
     }//GEN-LAST:event_connectButtonActionPerformed
 
     private void buyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buyButtonActionPerformed

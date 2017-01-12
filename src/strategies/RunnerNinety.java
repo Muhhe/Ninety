@@ -63,16 +63,23 @@ public class RunnerNinety {
             } catch (IOException | SecurityException ex) {
                 logger.log(Level.SEVERE, null, ex);
             }
+            
+            broker.connect();
+            
+            stockData.SubscribeRealtimeData(broker);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+            }
 
             // TODO: zajistit aby nebezel jeste hist data load?
-            stockData.UpdateDataWithActValues(timer);
+            stockData.UpdateDataWithActValuesIB(timer, broker);
             stockData.CalculateIndicators();
             stockData.CheckHistData(today, timer);
 
             statusData.PrintStatus();
 
             logger.info("Starting Ninety strategy");
-            broker.connect();
 
             List<TradeOrder> sells = RunNinetySells();
 
@@ -83,8 +90,10 @@ public class RunnerNinety {
             ProcessSubmittedOrders();
             CheckHeldPositions();
 
-            stockData.UpdateDataWithActValues(timer);
+            stockData.UpdateDataWithActValuesIB(timer, broker);
             stockData.CheckHistData(today, timer);
+            
+            stockData.UnSubscribeRealtimeData(broker);
 
             RunNinetyBuys(sells);
 
@@ -120,16 +129,24 @@ public class RunnerNinety {
 
         @Override
         public void run() {
+            broker.connect();
+            stockData.SubscribeRealtimeData(broker);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+            }
+            
             stockData.PrepareHistData();
-            stockData.UpdateDataWithActValues(timer);
+            stockData.UpdateDataWithActValuesIB(timer, broker);
             stockData.SaveHistDataToFiles();
+            
+            stockData.UnSubscribeRealtimeData(broker);
 
             stockData.CalculateIndicators();
             stockData.SaveStockIndicatorsToFiles();
             stockData.SaveIndicatorsToCSVFile();
             stockData.CheckHistData(LocalDate.now(), timer);
-
-            broker.connect();
+            
             CheckHeldPositions();
             broker.disconnect();
         }
