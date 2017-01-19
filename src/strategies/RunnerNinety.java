@@ -45,8 +45,6 @@ public class RunnerNinety {
 
     public boolean isStartScheduled = false;
 
-    private final TradingTimer timer = new TradingTimer();
-
     public class RunnerIB implements Runnable {
 
         @Override
@@ -73,9 +71,9 @@ public class RunnerNinety {
             }
 
             // TODO: zajistit aby nebezel jeste hist data load?
-            stockData.UpdateDataWithActValuesIB(timer, broker);
+            stockData.UpdateDataWithActValuesIB(broker);
             stockData.CalculateIndicators();
-            stockData.CheckHistData(today, timer);
+            stockData.CheckHistData(today);
 
             statusData.PrintStatus();
 
@@ -90,8 +88,8 @@ public class RunnerNinety {
             ProcessSubmittedOrders();
             CheckHeldPositions();
 
-            stockData.UpdateDataWithActValuesIB(timer, broker);
-            stockData.CheckHistData(today, timer);
+            stockData.UpdateDataWithActValuesIB(broker);
+            stockData.CheckHistData(today);
             
             stockData.UnSubscribeRealtimeData(broker);
 
@@ -129,6 +127,7 @@ public class RunnerNinety {
 
         @Override
         public void run() {
+            stockData = new StockDataForNinety();
             broker.connect();
             stockData.SubscribeRealtimeData(broker);
             try {
@@ -137,7 +136,7 @@ public class RunnerNinety {
             }
             
             stockData.PrepareHistData();
-            stockData.UpdateDataWithActValuesIB(timer, broker);
+            stockData.UpdateDataWithActValuesIB(broker);
             stockData.SaveHistDataToFiles();
             
             stockData.UnSubscribeRealtimeData(broker);
@@ -145,7 +144,7 @@ public class RunnerNinety {
             stockData.CalculateIndicators();
             stockData.SaveStockIndicatorsToFiles();
             stockData.SaveIndicatorsToCSVFile();
-            stockData.CheckHistData(LocalDate.now(), timer);
+            stockData.CheckHistData(LocalDate.now());
             
             CheckHeldPositions();
             broker.disconnect();
@@ -159,7 +158,7 @@ public class RunnerNinety {
     
     public void RunNow() {
         isStartScheduled = true;
-        timer.LoadSpecialTradingDays();
+        TradingTimer.LoadSpecialTradingDays();
         
         Thread thr = new Thread(new HistDataLoadRunner());
         
@@ -180,7 +179,7 @@ public class RunnerNinety {
         logger.info("Scheduling for tomorrow!");
         isStartScheduled = true;
         ZonedDateTime tomorrowCheck = TradingTimer.GetNYTimeNow().plusDays(1).with(FIRST_CHECK_TIME);
-        timer.startTaskAt(tomorrowCheck, new Runnable() {
+        TradingTimer.startTaskAt(tomorrowCheck, new Runnable() {
             @Override
             public void run() {
                 ScheduleFirstCheck();
@@ -194,10 +193,10 @@ public class RunnerNinety {
     }
     
     public void ScheduleFirstCheck() {
-        timer.LoadSpecialTradingDays();
+        TradingTimer.LoadSpecialTradingDays();
         
         ZonedDateTime now = TradingTimer.GetNYTimeNow();
-        LocalTime closeTime = timer.GetTodayCloseTime();
+        LocalTime closeTime = TradingTimer.GetTodayCloseTime();
 
         if (closeTime == null) {
             logger.info("No trading today.");
@@ -228,7 +227,7 @@ public class RunnerNinety {
 
     public void ScheduleLoadingHistDataAndStrategyRun(ZonedDateTime closeTime) {
         ZonedDateTime timeLoadHistData = closeTime.minus(DURATION_BEFORECLOSE_HISTDATA);
-        timer.startTaskAt(timeLoadHistData, new HistDataLoadRunner());
+        TradingTimer.startTaskAt(timeLoadHistData, new HistDataLoadRunner());
 
         Duration timeToHist = Duration.ofSeconds(TradingTimer.computeTimeFromNowTo(timeLoadHistData));
 
@@ -236,7 +235,7 @@ public class RunnerNinety {
         logger.info("Starting in " + timeToHist.toString());
 
         ZonedDateTime timeRunStrategy = closeTime.minus(DURATION_BEFORECLOSE_RUNSTRATEGY);
-        timer.startTaskAt(timeRunStrategy, new RunnerIB());
+        TradingTimer.startTaskAt(timeRunStrategy, new RunnerIB());
 
         Duration timeToStart = Duration.ofSeconds(TradingTimer.computeTimeFromNowTo(timeRunStrategy));
 
@@ -246,7 +245,7 @@ public class RunnerNinety {
 
     public void Stop() {
         logger.info("Stopping execution of Ninety strategy.");
-        timer.stop();
+        TradingTimer.stop();
         logger.info("Execution of Ninety strategy is stopped.");
         isStartScheduled = false;
     }
@@ -365,20 +364,10 @@ public class RunnerNinety {
             statusData.heldStocks.remove(held.tickerSymbol);
         } else {
             
-            int newPortions = 1;
-            switch (held.GetPortions()) {
-                case 1:
-                    newPortions = 2;
-                    break;
-                case 3:
-                    newPortions = 3;
-                    break;
-                case 6:
-                    newPortions = 4;
-                    break;
-                default:
-                    logger.severe("Bought stock '" + held.tickerSymbol + "' has somehow " + held.GetPortions() + " bought portions!!!");
-                    //TODO: dafuq?
+            int newPortions = Ninety.GetNewPortionsToBuy(held.GetPortions());
+            if (newPortions == 0) {
+                logger.severe("Bought stock '" + held.tickerSymbol + "' has somehow " + held.GetPortions() + " bought portions!!!");
+                //TODO: dafuq?
             }
             
             StockPurchase purchase = new StockPurchase();

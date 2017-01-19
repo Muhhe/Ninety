@@ -18,6 +18,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import strategies.BackTesterNinety;
+import strategies.NinetyChecker;
+import strategies.NinetyScheduler;
 import strategies.RunnerNinety;
 import strategies.StockDataForNinety;
 
@@ -35,7 +37,8 @@ public class MainWindow extends javax.swing.JFrame {
     
     private final IBCommunication m_comm;
     
-    RunnerNinety ninetyRunner;
+    //RunnerNinety ninetyRunner;
+    NinetyScheduler ninetyScheduler;
     private boolean m_connected = false;
     
     /**
@@ -72,7 +75,7 @@ public class MainWindow extends javax.swing.JFrame {
         
         m_comm = new IBCommunication();
         
-        ninetyRunner = new RunnerNinety(4001);
+        ninetyScheduler = new NinetyScheduler();
     }
 
     /**
@@ -353,11 +356,11 @@ public class MainWindow extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void startButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startButtonActionPerformed
-        if (!ninetyRunner.isStartScheduled) {
-            ninetyRunner.ScheduleFirstCheck();
+        if (!ninetyScheduler.isStartScheduled) {
+            ninetyScheduler.ScheduleFirstCheck();
             isOnCheckbox.setSelected(true);
         } else {
-            ninetyRunner.Stop();
+            ninetyScheduler.Stop();
             isOnCheckbox.setSelected(false);
         }
     }//GEN-LAST:event_startButtonActionPerformed
@@ -374,12 +377,12 @@ public class MainWindow extends javax.swing.JFrame {
         //m_comm.connect(Integer.parseInt(portTextField.getText()));
         //m_connected = true;
         
-        ninetyRunner.broker.connect();
+        ninetyScheduler.broker.connect();
         
         logger.info("SP100 length " + StockDataForNinety.getSP100().length);
         
         for (String ticker : StockDataForNinety.getSP100()) {
-            ninetyRunner.broker.RequestRealtimeData(ticker);
+            ninetyScheduler.broker.RequestRealtimeData(ticker);
         }
         
         try {
@@ -388,9 +391,9 @@ public class MainWindow extends javax.swing.JFrame {
             Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        logger.info("Price of " + tickSymbolTextField.getText() + " is " + ninetyRunner.broker.GetLastPrice(tickSymbolTextField.getText()));
+        logger.info("Price of " + tickSymbolTextField.getText() + " is " + ninetyScheduler.broker.GetLastPrice(tickSymbolTextField.getText()));
         
-        ninetyRunner.broker.CancelAllRealtimeData();
+        ninetyScheduler.broker.CancelAllRealtimeData();
     }//GEN-LAST:event_connectButtonActionPerformed
 
     private void buyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buyButtonActionPerformed
@@ -399,7 +402,7 @@ public class MainWindow extends javax.swing.JFrame {
         order.tickerSymbol = tickSymbolTextField.getText();
         order.position = 10;
         
-        ninetyRunner.broker.connect();
+        ninetyScheduler.broker.connect();
         
         //m_comm.PlaceOrder(order);
         logger.info("Placing " + order.toString());
@@ -407,7 +410,7 @@ public class MainWindow extends javax.swing.JFrame {
         for (int i = 0; i < 10; i++) {
             try {
                 Thread.sleep((long) (Math.random() * 200));
-                ninetyRunner.broker.PlaceOrder(order);
+                ninetyScheduler.broker.PlaceOrder(order);
             } catch (InterruptedException ex) {
                 Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -424,13 +427,13 @@ public class MainWindow extends javax.swing.JFrame {
             threads[i].start();
         }*/
         
-        if (ninetyRunner.broker.waitUntilOrdersClosed(10)) {
+        if (ninetyScheduler.broker.waitUntilOrdersClosed(10)) {
             logger.info("Order filled in time");
         } else {
             logger.info("Order NOT filled in time");
         }
         
-        ninetyRunner.broker.disconnect();
+        ninetyScheduler.broker.disconnect();
     }//GEN-LAST:event_buyButtonActionPerformed
 
     private void sellButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sellButtonActionPerformed
@@ -439,7 +442,7 @@ public class MainWindow extends javax.swing.JFrame {
         order.tickerSymbol = tickSymbolTextField.getText();
         order.position = 10;
         
-        ninetyRunner.broker.connect();
+        ninetyScheduler.broker.connect();
         
         //m_comm.PlaceOrder(order);
         logger.info("Placing " + order.toString());
@@ -447,7 +450,7 @@ public class MainWindow extends javax.swing.JFrame {
         for (int i = 0; i < 10; i++) {
             try {
                 Thread.sleep((long) (Math.random() * 200));
-                ninetyRunner.broker.PlaceOrder(order);
+                ninetyScheduler.broker.PlaceOrder(order);
             } catch (InterruptedException ex) {
                 Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -463,26 +466,26 @@ public class MainWindow extends javax.swing.JFrame {
             threads[i].start();
         }*/
 
-        if (ninetyRunner.broker.waitUntilOrdersClosed(10)) {
+        if (ninetyScheduler.broker.waitUntilOrdersClosed(10)) {
             logger.info("Order filled in time");
         } else {
             logger.info("Order NOT filled in time");
         }
-        for (OrderStatus value : ninetyRunner.broker.activeOrdersMap.values()) {
+        for (OrderStatus value : ninetyScheduler.broker.activeOrdersMap.values()) {
             logger.info("Still active: " + value);
         }
         
-        ninetyRunner.broker.disconnect();
+        //ninetyRunner.broker.disconnect();
     }//GEN-LAST:event_sellButtonActionPerformed
 
     private void loadStatusButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadStatusButtonActionPerformed
         //ninetyRunner.m_statusDataFor90.LoadStatus();
-        ninetyRunner.statusData.PrintStatus();
+        ninetyScheduler.statusData.PrintStatus();
     }//GEN-LAST:event_loadStatusButtonActionPerformed
 
     private void buyStatusButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buyStatusButtonActionPerformed
-        if (!m_connected) {
-            ninetyRunner.broker.connect();
+        /*if (!m_connected) {
+            ninetyScheduler.broker.connect();
             m_connected = true;
             try {
                 Thread.sleep(5000);
@@ -490,53 +493,53 @@ public class MainWindow extends javax.swing.JFrame {
                 Thread.currentThread().interrupt();
             }
         }
-        ninetyRunner.BuyLoadedStatus();
+        ninetyScheduler.BuyLoadedStatus();*/
     }//GEN-LAST:event_buyStatusButtonActionPerformed
 
     private void SellAllButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SellAllButtonActionPerformed
     }//GEN-LAST:event_SellAllButtonActionPerformed
 
     private void saveStatusButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveStatusButtonActionPerformed
-        ninetyRunner.statusData.SaveHeldPositionsToFile();
+        ninetyScheduler.statusData.SaveHeldPositionsToFile();
         logger.info("Status saved.");
     }//GEN-LAST:event_saveStatusButtonActionPerformed
 
     private void LoadStatusFileButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_LoadStatusFileButtonActionPerformed
-        ninetyRunner.statusData.ReadHeldPositions();
-        ninetyRunner.statusData.PrintStatus();
+        ninetyScheduler.statusData.ReadHeldPositions();
+        ninetyScheduler.statusData.PrintStatus();
     }//GEN-LAST:event_LoadStatusFileButtonActionPerformed
 
     private void printStatusButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_printStatusButtonActionPerformed
-        ninetyRunner.statusData.PrintStatus();
+        ninetyScheduler.statusData.PrintStatus();
     }//GEN-LAST:event_printStatusButtonActionPerformed
 
     private void startNowButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startNowButtonActionPerformed
-        if (!ninetyRunner.isStartScheduled) {
-            ninetyRunner.RunNow();
+        if (!ninetyScheduler.isStartScheduled) {
+            ninetyScheduler.RunNow();
             isOnCheckbox.setSelected(true);
         } else {
-            ninetyRunner.Stop();
+            ninetyScheduler.Stop();
             isOnCheckbox.setSelected(false);
         }
     }//GEN-LAST:event_startNowButtonActionPerformed
 
     private void getPositionsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_getPositionsButtonActionPerformed
-        ninetyRunner.broker.connect();
-        List<Position> allPositions = ninetyRunner.broker.getAllPositions();
+        ninetyScheduler.broker.connect();
+        List<Position> allPositions = ninetyScheduler.broker.getAllPositions();
         
         for (Position position : allPositions) {
             logger.info("Stock :" + position.tickerSymbol + ", position: " + position.pos + ", avgPrice: " + position.avgPrice);
         }
         
-        ninetyRunner.broker.disconnect();
+        ninetyScheduler.broker.disconnect();
     }//GEN-LAST:event_getPositionsButtonActionPerformed
 
     private void checkPositionsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkPositionsButtonActionPerformed
-        ninetyRunner.broker.connect();
+        ninetyScheduler.broker.connect();
         
-        ninetyRunner.CheckHeldPositions();
+        NinetyChecker.CheckHeldPositions(ninetyScheduler.statusData, ninetyScheduler.broker);
         
-        ninetyRunner.broker.disconnect();
+        ninetyScheduler.broker.disconnect();
     }//GEN-LAST:event_checkPositionsButtonActionPerformed
 
     private void backTestButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backTestButtonActionPerformed

@@ -22,7 +22,7 @@ import tradingapp.TradeOrder;
 public class Ninety {
 
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
-    
+
     private static boolean ComputeIfSellStock(StockIndicatorsForNinety data) {
         return (data.actValue > data.sma5);
     }
@@ -39,7 +39,7 @@ public class Ninety {
     }
 
     public static List<TradeOrder> ComputeStocksToSell(Map<String, StockIndicatorsForNinety> dataFor90Map, StatusDataForNinety statusDataFor90) {
-        
+
         logger.fine("Started to compute stocks to sell.");
 
         List<HeldStock> stocksToSell = new ArrayList<HeldStock>();
@@ -51,6 +51,9 @@ public class Ninety {
                     stocksToSell.add(heldStock);
                     double profit = CalculateProfitPercent(heldStock, tickerIndicators.actValue);
                     logger.fine("SELL: " + heldStock.tickerSymbol + ", profit: " + profit + "%, actValue: " + tickerIndicators.actValue + ", SMA5: " + tickerIndicators.sma5);
+                }
+                else {
+                    logger.fine("Not selling: " + heldStock.tickerSymbol + ", actValue: " + tickerIndicators.actValue + ", SMA5: " + tickerIndicators.sma5);
                 }
             } else {
                 logger.severe("ComputeStocksToSell: Data for bought stock '" + heldStock.tickerSymbol + "' not found!!!");
@@ -77,6 +80,9 @@ public class Ninety {
                     stocksToBuyMore.add(heldStock);
                     logger.fine("BUY MORE: " + heldStock.tickerSymbol + ", actValue: " + tickerIndicators.actValue + ", lastBuyValue: " + heldStock.purchases.get(heldStock.purchases.size() - 1).priceForOne + ", SMA5: " + tickerIndicators.sma5);
                 }
+                else {
+                    logger.fine("Not buying more: " + heldStock.tickerSymbol + ", actValue: " + tickerIndicators.actValue + ", lastBuyValue: " + heldStock.purchases.get(heldStock.purchases.size() - 1).priceForOne + ", SMA5: " + tickerIndicators.sma5);
+                }
             } else {
                 logger.severe("ComputeStocksToBuyMore: Data for bought stock '" + heldStock.tickerSymbol + "' not found!!!");
                 // TODO: co ted? Musi se odchytit uz pri sanity checku.
@@ -99,11 +105,11 @@ public class Ninety {
         String stockToBuy = null;
         double rsi2ToBuy = 100;
         logger.fine("Started to compute new stocks to buy.");
-        
+
         for (Map.Entry<String, StockIndicatorsForNinety> entry : dataFor90Map.entrySet()) {
             String tickerSymbol = entry.getKey();
             StockIndicatorsForNinety tickerIndicators = entry.getValue();
-            
+
             if (statusDataFor90.heldStocks.containsKey(tickerSymbol)) { // we already hold this stock
                 continue;
             }
@@ -129,7 +135,6 @@ public class Ninety {
 
         return ProcessStockToBuyIntoOrder(stockToBuy, recentlySoldStocks, dataFor90Map, statusDataFor90);
     }
-    
 
     private static List<TradeOrder> ProcessStocksToSellIntoOrders(List<HeldStock> stocksToSell, Map<String, StockIndicatorsForNinety> dataFor90Map, StatusDataForNinety statusDataFor90) {
         List<TradeOrder> tradeOrders = new ArrayList<TradeOrder>();
@@ -140,7 +145,7 @@ public class Ninety {
                 logger.severe("Cannot find indicators for " + heldStock.tickerSymbol);
                 continue;
             }
-            
+
             TradeOrder order = new TradeOrder();
             order.orderType = TradeOrder.OrderType.SELL;
             order.tickerSymbol = heldStock.tickerSymbol;
@@ -188,7 +193,11 @@ public class Ninety {
         return order;
     }
 
-    private static List<TradeOrder> ProcessStocksToBuyMoreIntoOrders(List<HeldStock> stocksToBuyMore, Map<String, StockIndicatorsForNinety> dataFor90Map, StatusDataForNinety statusDataFor90, int remainingPortions) {
+    private static List<TradeOrder> ProcessStocksToBuyMoreIntoOrders(List<HeldStock> stocksToBuyMore,
+            Map<String, StockIndicatorsForNinety> dataFor90Map, 
+            StatusDataForNinety statusDataFor90,
+            int remainingPortions) 
+    {
         List<TradeOrder> tradeOrders = new ArrayList<TradeOrder>();
 
         Collections.sort(stocksToBuyMore, new Comparator<HeldStock>() {
@@ -218,32 +227,22 @@ public class Ninety {
             }
 
             if (heldStock.GetPortions() < 10) {
-                int newPortions = 0;
-                switch (heldStock.GetPortions()) {
-                    case 1:
-                        newPortions = 2;
-                        break;
-                    case 3:
-                        newPortions = 3;
-                        break;
-                    case 6:
-                        newPortions = 4;
-                        break;
-                    default:
-                        logger.severe("Bought stock '" + heldStock.tickerSymbol + "' has somehow " + heldStock.GetPortions() + " bought portions!!!");
-                        continue;
+                int newPortions = GetNewPortionsToBuy(heldStock.GetPortions());
+                if (newPortions == 0) {
+                    logger.severe("Bought stock '" + heldStock.tickerSymbol + "' has somehow " + heldStock.GetPortions() + " bought portions!!!");
+                    continue;
                 }
 
                 if (remainingPortions - newPortions < 0) {
                     logger.info("Cannot buy " + newPortions + " more portions of '" + heldStock.tickerSymbol + "' because we currently hold " + statusDataFor90.GetBoughtPortions() + "/20 portions.");
                     continue;
                 }
-                
+
                 remainingPortions -= newPortions;
 
                 order.position = (int) (statusDataFor90.GetOnePortionValue() * newPortions / stockIndicator.actValue);
                 order.expectedPrice = stockIndicator.actValue;
-                
+
                 tradeOrders.add(order);
 
                 logger.fine("Buying " + order.position + " more stock '" + heldStock.tickerSymbol + "' for " + (stockIndicator.actValue * order.position) + ". " + newPortions + " new portions. RSI2: " + stockIndicator.rsi2);
@@ -254,5 +253,18 @@ public class Ninety {
         }
 
         return tradeOrders;
+    }
+    
+    public static int GetNewPortionsToBuy(int oldPortions) {
+        switch (oldPortions) {
+            case 1:
+                return 2;
+            case 3:
+                return 3;
+            case 6:
+                return 4;
+            default:
+                return 0;
+        }
     }
 }

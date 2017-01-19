@@ -51,7 +51,6 @@ public class IBBroker extends BaseIBConnectionImpl {
         if( !connected ) {
             loggerComm.info("Connecting to IB.");
             ibClientSocket.eConnect(null, 4001, 1 );
-            // TODO: wait?
             connectiongLatch = new CountDownLatch(1);
             try {
                 if (!connectiongLatch.await(10, TimeUnit.SECONDS)) {
@@ -90,7 +89,6 @@ public class IBBroker extends BaseIBConnectionImpl {
             connected = true;
             loggerComm.info("Connection to IB successful.");
             connectiongLatch.countDown();
-            // TODO: nejakej latch?
         }
     }
     
@@ -113,7 +111,7 @@ public class IBBroker extends BaseIBConnectionImpl {
         return ++nextOrderId;
     }
     
-    public synchronized boolean PlaceOrder(TradeOrder tradeOrder) {
+    public synchronized boolean PlaceOrder(TradeOrder tradeOrder) {        
         if (!connected) {
             loggerComm.severe("IB not connected. Cannot place order.");
             return false;
@@ -133,7 +131,7 @@ public class IBBroker extends BaseIBConnectionImpl {
         if (orderStatusMap.containsKey(ibOrder.m_orderId)) {
             loggerComm.severe("Trying to use duplicate ID for order: " + tradeOrder.tickerSymbol + ", " + ibOrder.m_action);
             return false;
-            //TODO: co s tim?
+            //TODO: co s tim? omezenej while?
         }
         
         ibOrder.m_totalQuantity = tradeOrder.position;
@@ -244,6 +242,11 @@ public class IBBroker extends BaseIBConnectionImpl {
     }
     
     public void RequestRealtimeData(String ticker) {
+        if (!connected) {
+            loggerComm.severe("IB not connected. Cannot RequestRealtimeData.");
+            return;
+        }
+        
         Contract contract = CreateContract(ticker);
         contract.m_secType = "STK"; //Cannot be CFD for req data
         

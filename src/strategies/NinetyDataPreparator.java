@@ -1,0 +1,52 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package strategies;
+
+import communication.IBBroker;
+import java.time.LocalDate;
+import java.util.logging.Logger;
+import static tradingapp.MainWindow.LOGGER_TADELOG_NAME;
+
+/**
+ *
+ * @author Muhe
+ */
+public class NinetyDataPreparator implements Runnable {
+
+    private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+
+    private final StockDataForNinety stockData;
+    private final IBBroker broker;
+
+    public NinetyDataPreparator(StockDataForNinety stockData, IBBroker broker) {
+        this.stockData = stockData;
+        this.broker = broker;
+    }
+
+    @Override
+    public void run() {
+        broker.connect();
+        logger.fine("Subscribing real-time data");
+        stockData.SubscribeRealtimeData(broker);
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException ex) {
+        }
+
+        stockData.PrepareHistData();
+        stockData.UpdateDataWithActValuesIB(broker);
+        stockData.SaveHistDataToFiles();
+
+        stockData.UnSubscribeRealtimeData(broker);
+
+        stockData.CalculateIndicators();
+        stockData.SaveStockIndicatorsToFiles();
+        stockData.SaveIndicatorsToCSVFile();
+        stockData.CheckHistData(LocalDate.now());
+
+        broker.disconnect();
+    }
+}

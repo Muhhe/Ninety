@@ -36,7 +36,7 @@ public class StockDataForNinety {
     public Map<String, StockIndicatorsForNinety> indicatorsMap = new HashMap<>(getSP100().length);
 
     public final Semaphore histDataMutex = new Semaphore(1);
-    
+
     public boolean isRealtimeDataSubscribed = false;
 
     public static String[] getSP100() {
@@ -77,7 +77,7 @@ public class StockDataForNinety {
             logger.fine("PrepareHistData: Released lock on hist data.");
         }
     }
-    
+
     public void SubscribeRealtimeData(IBBroker broker) {
         if (!isRealtimeDataSubscribed) {
             for (String ticker : getSP100()) {
@@ -86,16 +86,31 @@ public class StockDataForNinety {
             isRealtimeDataSubscribed = true;
         }
     }
-    
+
     public void UnSubscribeRealtimeData(IBBroker broker) {
         if (isRealtimeDataSubscribed) {
             broker.CancelAllRealtimeData();
             isRealtimeDataSubscribed = false;
         }
     }
-    
-    public void UpdateDataWithActValuesIB(TradingTimer timer, IBBroker broker) {
-        if (!timer.IsTradingDay(LocalDate.now())) {
+
+    private boolean CheckRealtimeDataOnIB(IBBroker broker) {
+        int tickersFilled = 0;
+
+        for (Iterator<Map.Entry<String, CloseData>> it = closeDataMap.entrySet().iterator(); it.hasNext();) {
+            Map.Entry<String, CloseData> entry = it.next();
+
+            double actValue = broker.GetLastPrice(entry.getKey());
+            if (actValue != 0) {
+                tickersFilled++;
+            }
+        }
+
+        return tickersFilled > closeDataMap.size()/2;
+    }
+
+    public void UpdateDataWithActValuesIB(IBBroker broker) {
+        if (!TradingTimer.IsTradingDay(LocalDate.now())) {
             logger.fine("Today is not a trading day. Cannot update with actual values.");
             return;
         }
@@ -119,18 +134,32 @@ public class StockDataForNinety {
 
             logger.info("Starting to load actual data");
 
-            for (Iterator<Map.Entry<String, CloseData>> it = closeDataMap.entrySet().iterator(); it.hasNext();) {
-                Map.Entry<String, CloseData> entry = it.next();
+            if (CheckRealtimeDataOnIB(broker)) {
 
-                double actValue = broker.GetLastPrice(entry.getKey());
-                if (actValue == 0) {
-                    logger.warning("Cannot load actual data for: " + entry.getKey() + "! This stock will not be used.");
-                    it.remove();
-                    continue;
+                for (Iterator<Map.Entry<String, CloseData>> it = closeDataMap.entrySet().iterator(); it.hasNext();) {
+                    Map.Entry<String, CloseData> entry = it.next();
+
+                    double actValue = broker.GetLastPrice(entry.getKey());
+                    if (actValue == 0) {
+
+                        try {
+                            actValue = DataGetterActGoogle.readActualData(entry.getKey());
+                        } catch (IOException | NumberFormatException ex) {
+                            logger.warning("Cannot load actual data for: " + entry.getKey() + ", exception: " + ex.getMessage() + "! This stock will not be used.");
+                            it.remove();
+                            continue;
+                        }
+
+                        logger.warning("Failed to load actual data from IB for: " + entry.getKey() + "! Load from Google succeded.");
+                    }
+
+                    entry.getValue().adjCloses[0] = actValue;
+                    entry.getValue().dates[0] = LocalDate.now();
                 }
 
-                entry.getValue().adjCloses[0] = actValue;
-                entry.getValue().dates[0] = LocalDate.now();
+            } else {
+                logger.warning("Failed to load real-time data from IB. Trying to load it from Google.");
+                UpdateDataWithActValuesGoogle();
             }
 
         } catch (InterruptedException ex) {
@@ -141,22 +170,9 @@ public class StockDataForNinety {
         }
     }
 
-    public void UpdateDataWithActValuesGoogle(TradingTimer timer) {
-        if (!timer.IsTradingDay(LocalDate.now())) {
-            logger.fine("Today is not a trading day. Cannot update with actual values.");
-            return;
-        }
-        
+    private void UpdateDataWithActValuesGoogle() {
         try {
-            logger.fine("UpdateDataWithActValues: Getting lock on hist data.");
-            histDataMutex.acquire();
-
-            if (closeDataMap.isEmpty()) {
-                logger.severe("updateDataWithActualValues - stockMap.isEmpty");
-                return;
-            }
-
-            logger.info("Starting to load actual data");
+            logger.info("Starting to load actual data from Google");
 
             String[] tickerSymbols = getSP100();
             Map<String, Double> valuesMap = DataGetterActGoogle.readActualData(tickerSymbols);
@@ -184,22 +200,17 @@ public class StockDataForNinety {
             logger.info("Loading one at a time...");
             for (Iterator<Map.Entry<String, CloseData>> it = closeDataMap.entrySet().iterator(); it.hasNext();) {
                 CloseData closeData = it.next().getValue();
-                String symbol = it.next().getKey();
+                String ticker = it.next().getKey();
                 try {
-                    closeData.adjCloses[0] = DataGetterActGoogle.readActualData(symbol);
+                    closeData.adjCloses[0] = DataGetterActGoogle.readActualData(ticker);
                     closeData.dates[0] = LocalDate.now();
                 } catch (IOException | NumberFormatException ex2) {
-                    logger.warning("Cannot load actual data for: " + symbol + ", exception: " + ex2.getMessage());
+                    logger.warning("Cannot load actual data for: " + ticker + ", exception: " + ex2.getMessage());
                     it.remove();
                 }
             }
-        } catch (InterruptedException ex) {
-            logger.log(Level.SEVERE, null, ex);
-            logger.info("Thread interuppted: " + ex);
         } finally {
-            histDataMutex.release();
-            logger.fine("UpdateDataWithActValues: Released lock on hist data.");
-            logger.info("Finished to load actual data");
+            logger.info("Finished to load actual data from Google");
         }
     }
 
@@ -227,7 +238,7 @@ public class StockDataForNinety {
             histDataMutex.release();
             logger.finer("CalculateIndicators: Released lock on hist data.");
             logger.fine("Finished to compute indicators");
-            
+
             //SaveStockIndicatorsToFiles();
             //SaveIndicatorsToCSVFile();
         }
@@ -244,11 +255,11 @@ public class StockDataForNinety {
             try {
                 file.createNewFile();
                 output = new BufferedWriter(new FileWriter(file));
-                
+
                 double[] adjCloses = entry.getValue().adjCloses;
                 LocalDate[] dates = entry.getValue().dates;
-                assert(adjCloses.length == dates.length);
-                
+                assert (adjCloses.length == dates.length);
+
                 for (int inx = 0; inx < adjCloses.length; inx++) {
                     output.write(dates[inx].toString());
                     output.write(";");
@@ -269,7 +280,7 @@ public class StockDataForNinety {
             }
         }
     }
-    
+
     public void SaveStockIndicatorsToFiles() {
         LocalDate today = LocalDate.now();
         String todayString = today.toString();
@@ -281,7 +292,7 @@ public class StockDataForNinety {
             try {
                 file.createNewFile();
                 output = new BufferedWriter(new FileWriter(file));
-                        
+
                 StockIndicatorsForNinety indicators = entry.getValue();
                 output.write("ActValue: " + Double.toString(indicators.actValue));
                 output.newLine();
@@ -290,7 +301,7 @@ public class StockDataForNinety {
                 output.write("SMA5: " + Double.toString(indicators.sma5));
                 output.newLine();
                 output.write("RSI2: " + Double.toString(indicators.rsi2));
-                
+
             } catch (IOException ex) {
                 logger.warning("Cannot create indicators log for: " + entry.getKey());
             } finally {
@@ -304,7 +315,7 @@ public class StockDataForNinety {
             }
         }
     }
-    
+
     public void SaveIndicatorsToCSVFile() {
         String todayString = LocalDate.now().toString();
         File file = new File("dataLog/" + todayString + "/indicators.csv");
@@ -342,8 +353,8 @@ public class StockDataForNinety {
         }
     }
 
-    // TODO: udelat z timeru singleton?
-    public void CheckHistData(final LocalDate uptoDay, TradingTimer timer) {
+    // TODO: kontrolovat velikost closeDataMap != GetSP100().lenght
+    public void CheckHistData(final LocalDate uptoDay) {
         logger.fine("Starting history data check.");
         boolean isOk = true;
         for (Map.Entry<String, CloseData> entry : closeDataMap.entrySet()) {
@@ -356,7 +367,7 @@ public class StockDataForNinety {
                 isOk = false;
             }
             LocalDate checkDate = uptoDay;
-            while (!timer.IsTradingDay(checkDate)) {
+            while (!TradingTimer.IsTradingDay(checkDate)) {
                 checkDate = checkDate.minusDays(1);
             }
             for (LocalDate date : data.dates) {
@@ -383,7 +394,7 @@ public class StockDataForNinety {
                 }
 
                 checkDate = checkDate.minusDays(1);
-                while (!timer.IsTradingDay(checkDate)) {
+                while (!TradingTimer.IsTradingDay(checkDate)) {
                     checkDate = checkDate.minusDays(1);
                 }
             }
@@ -395,7 +406,7 @@ public class StockDataForNinety {
                 }
             }
         }
-        
+
         if (isOk) {
             logger.fine("History data check - OK");
         } else {

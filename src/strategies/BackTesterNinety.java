@@ -366,20 +366,10 @@ public class BackTesterNinety {
             for (TradeOrder tradeOrder : toBuyMore) {
                 HeldStock held = statusData.heldStocks.get(tradeOrder.tickerSymbol);
                 
-                int newPortions = 1;
-                switch (held.GetPortions()) {
-                    case 1:
-                        newPortions = 2;
-                        break;
-                    case 3:
-                        newPortions = 3;
-                        break;
-                    case 6:
-                        newPortions = 4;
-                        break;
-                    default:
-                        logger.severe("Bought stock '" + held.tickerSymbol + "' has somehow " + held.GetPortions() + " bought portions!!!");
-                        //TODO: dafuq?
+                int newPortions = Ninety.GetNewPortionsToBuy(held.GetPortions());
+                if (newPortions == 0) {
+                    logger.severe("Bought stock '" + held.tickerSymbol + "' has somehow " + held.GetPortions() + " bought portions!!!");
+                    //TODO: dafuq?
                 }
 
                 StockPurchase purchase = new StockPurchase();

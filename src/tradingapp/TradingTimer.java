@@ -31,32 +31,39 @@ import org.jdom2.input.SAXBuilder;
  */
 public class TradingTimer {
 
+    private static TradingTimer instance = null;
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     private final static LocalTime DEFAULT_CLOSE_TIME = LocalTime.of(16, 00);
 
     ScheduledExecutorService executorService = Executors.newScheduledThreadPool(5);
-    //volatile boolean isStopIssued;
-    
+
+    private List<TradingDay> specialTradingDays = new ArrayList<TradingDay>();
+
+    public final static ZoneId ZONE_NY = ZoneId.of("America/New_York");
+
     private static class TradingDay {
+
         LocalDate date = null;
         LocalTime closingTime = null;
     }
     
-    private List<TradingDay> specialTradingDays = new ArrayList<TradingDay>();
+    protected TradingTimer() {
+        // Exists only to defeat instantiation.
+    }
 
-    public final static ZoneId ZONE_NY = ZoneId.of("America/New_York");
-    
+    public static TradingTimer getInstance() {
+        if (instance == null) {
+            instance = new TradingTimer();
+        }
+        return instance;
+    }
+
     public static ZonedDateTime GetNYTimeNow() {
         return ZonedDateTime.now(ZONE_NY);
     }
 
-    public void startTaskAt(final ZonedDateTime time, Runnable runnableTask) {
-        Runnable taskWrapper = new Runnable() {
-            @Override
-            public void run() {
-                runnableTask.run();
-            }
-        };
+    public static void startTaskAt(final ZonedDateTime time, Runnable runnableTask) {
+        TradingTimer timer = getInstance();
 
         long delay = computeTimeFromNowTo(time);
         
@@ -65,21 +72,14 @@ public class TradingTimer {
             return;
         }
         
-        executorService.schedule(taskWrapper, delay, TimeUnit.SECONDS);
+        timer.executorService.schedule(runnableTask, delay, TimeUnit.SECONDS);
     }
 
-    public void startTaskAt(int targetHour, int targetMin, int targetSec, Runnable runnableTask) {
-        Runnable taskWrapper = new Runnable() {
-
-            @Override
-            public void run() {
-                runnableTask.run();
-            }
-
-        };
-
+    public static void startTaskAt(int targetHour, int targetMin, int targetSec, Runnable runnableTask) {
+        TradingTimer timer = getInstance();
+        
         long delay = computeTimeFromNowTo(targetHour, targetMin, targetSec);
-        executorService.schedule(taskWrapper, delay, TimeUnit.SECONDS);
+        timer.executorService.schedule(runnableTask, delay, TimeUnit.SECONDS);
     }
 
     public static long computeTimeFromNowTo(ZonedDateTime time) {        
@@ -98,26 +98,28 @@ public class TradingTimer {
         return duration.getSeconds();
     }
 
-    public void stop() {
-        executorService.shutdownNow();
+    public static void stop() {
+        TradingTimer timer = getInstance();
+        timer.executorService.shutdownNow();
         try {
-            if (!executorService.awaitTermination(10, TimeUnit.MINUTES)) {
+            if (!timer.executorService.awaitTermination(10, TimeUnit.MINUTES)) {
                 logger.severe("Cannot stop execution.");
             }
         } catch (InterruptedException ex) {
             logger.severe(ex.getMessage());
         }
-        executorService = Executors.newScheduledThreadPool(5); 
+        timer.executorService = Executors.newScheduledThreadPool(5); 
     }
     
-    public boolean IsTradingDay(LocalDate day) {
+    public static boolean IsTradingDay(LocalDate day) {
+        TradingTimer timer = getInstance();
         
         DayOfWeek dow = day.getDayOfWeek();
         if (dow == DayOfWeek.SATURDAY || dow == DayOfWeek.SUNDAY) {
             return false;
         }
         
-        for (TradingDay specialDay : specialTradingDays) {
+        for (TradingDay specialDay : timer.specialTradingDays) {
             if (specialDay.date.equals(day)) {
                 return specialDay.closingTime != null;
             }
@@ -126,7 +128,9 @@ public class TradingTimer {
         return true;
     }
     
-    public LocalTime GetTodayCloseTime() {
+    public static LocalTime GetTodayCloseTime() {
+        TradingTimer timer = getInstance();
+        
         LocalDate today = LocalDate.now();
         LocalTime closingTime = DEFAULT_CLOSE_TIME;
         
@@ -139,7 +143,7 @@ public class TradingTimer {
             return null;
         }
         
-        for (TradingDay day : specialTradingDays) {
+        for (TradingDay day : timer.specialTradingDays) {
             if (day.date.equals(today)) {
                 if (day.closingTime == null) {
                     logger.info("Today is holiday!");
@@ -155,10 +159,11 @@ public class TradingTimer {
         return closingTime;
     }
     
-    public void LoadSpecialTradingDays() {
-
+    public static void LoadSpecialTradingDays() {
+        TradingTimer timer = getInstance();
+        
         logger.fine("Loading special days!");
-        specialTradingDays.clear();
+        timer.specialTradingDays.clear();
         try {
             File inputFile = new File("specialTradingDays.xml");
             SAXBuilder saxBuilder = new SAXBuilder();
@@ -186,10 +191,10 @@ public class TradingTimer {
                     day.closingTime = null;
                 }
 
-                specialTradingDays.add(day);
+                timer.specialTradingDays.add(day);
             }
             
-            logger.fine("Special days loaded: " + specialTradingDays.size());
+            logger.fine("Special days loaded: " + timer.specialTradingDays.size());
         } catch (JDOMException e) {
             e.printStackTrace();
             logger.severe("Error in loading special days from XML: JDOMException.\r\n" + e);

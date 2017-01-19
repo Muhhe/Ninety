@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import static tradingapp.MainWindow.LOGGER_COMM_NAME;
 
 /**
  *
@@ -17,18 +18,27 @@ import java.util.logging.Logger;
 public class RealtimeDataIB {
 
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+    private final static Logger loggerComm = Logger.getLogger(LOGGER_COMM_NAME );
 
     private class Data {
+
+        public String ticker;
+        public int orderId;
         public double last = 0;
         public double ask = 0;
         public double bid = 0;
+
+        private Data(String ticker, int orderID) {
+            this.ticker = ticker;
+            this.orderId = orderID;
+        }
     }
 
     private final Map<String, Data> dataMapByTicker = new HashMap<>(100);
     private final Map<Integer, Data> dataMapById = new HashMap<>(100);
 
     public synchronized void CreateNew(String ticker, int orderID) {
-        Data data = new Data();
+        Data data = new Data(ticker, orderID);
         dataMapByTicker.put(ticker, data);
         dataMapById.put(orderID, data);
     }
@@ -48,6 +58,9 @@ public class RealtimeDataIB {
                 data.ask = price;
                 break;
             case 4:
+                if (data.last == 0) {
+                    loggerComm.finer("Actual data updated. Ticker " + data.ticker + ", orderId " + orderID + ", price " + price);
+                }
                 data.last = price;
                 break;
             case 6://high
@@ -55,25 +68,26 @@ public class RealtimeDataIB {
             case 9://close
                 break;
             default:
-                // Sometimes 14
-                //logger.finest("Reatime data put: Unknown field " + field + ", ID " + orderID);
+            // Sometimes 14
+            //logger.finest("Reatime data put: Unknown field " + field + ", ID " + orderID);
         }
     }
-    
+
     public synchronized double GetLastPrice(String ticker) {
         Data data = dataMapByTicker.get(ticker);
-        
+
         if (data == null) {
-            logger.severe("Reatime data put: cannot find data for ticker " + ticker);
+            logger.warning("Reatime data get: cannot find data for ticker " + ticker);
             return 0;
         }
+        
         return data.last;
     }
-    
+
     public synchronized Set<Integer> GetAllOrderIds() {
         return dataMapById.keySet();
     }
-    
+
     public synchronized void ClearMaps() {
         dataMapById.clear();
         dataMapByTicker.clear();
