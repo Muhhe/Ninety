@@ -35,45 +35,16 @@ public class MainWindow extends javax.swing.JFrame {
     private final static Logger loggerComm = Logger.getLogger(LOGGER_COMM_NAME );
     private final static Logger loggerTradeLog = Logger.getLogger(LOGGER_TADELOG_NAME );
     
-    private final IBCommunication m_comm;
-    
-    //RunnerNinety ninetyRunner;
     NinetyScheduler ninetyScheduler;
-    private boolean m_connected = false;
+    //private boolean m_connected = false;
     
     /**
      * Creates new form MainWindow
      */
     public MainWindow() {
         initComponents();
-         
-        try {
-            logger.setLevel(Level.FINEST);
-            
-            FileHandler fileTxt = new FileHandler("Logging.txt");
-            TextAreaLogHandler textHandler = new TextAreaLogHandler(logArea);
-            
-            // create a TXT formatter
-            SimpleFormatter formatterTxt = new SimpleFormatter();
-            fileTxt.setFormatter(formatterTxt);
-            
-            logger.addHandler(fileTxt);
-            logger.addHandler(textHandler);
-            
-            loggerComm.setLevel(Level.FINEST);
-            FileHandler fileTxtComm = new FileHandler("LoggingComm.txt");
-            TextAreaLogHandler textHandlerComm = new TextAreaLogHandler(commArea);
-            
-            loggerComm.addHandler(fileTxtComm);
-            loggerComm.addHandler(textHandlerComm);
-            
-            loggerTradeLog.setLevel(Level.FINEST);
-            
-        } catch (IOException e) {
-            throw new RuntimeException("Problems with creating the log files");
-        }
         
-        m_comm = new IBCommunication();
+        TradeLogger.getInstance().initializeTextAreas(logArea, fineLogArea, commArea);
         
         ninetyScheduler = new NinetyScheduler();
     }
@@ -103,6 +74,8 @@ public class MainWindow extends javax.swing.JFrame {
         logTabbedPane = new javax.swing.JTabbedPane();
         logScrollPane = new javax.swing.JScrollPane();
         logArea = new javax.swing.JTextArea();
+        fineLogScrollPane = new javax.swing.JScrollPane();
+        fineLogArea = new javax.swing.JTextArea();
         commScrollPane = new javax.swing.JScrollPane();
         commArea = new javax.swing.JTextArea();
         startNowButton = new javax.swing.JButton();
@@ -212,14 +185,20 @@ public class MainWindow extends javax.swing.JFrame {
         logArea.setRows(5);
         logScrollPane.setViewportView(logArea);
 
-        logTabbedPane.addTab("Log", logScrollPane);
+        logTabbedPane.addTab("Info log", logScrollPane);
+
+        fineLogArea.setColumns(20);
+        fineLogArea.setRows(5);
+        fineLogScrollPane.setViewportView(fineLogArea);
+
+        logTabbedPane.addTab("Detailed log", fineLogScrollPane);
 
         commArea.setEditable(false);
         commArea.setColumns(20);
         commArea.setRows(5);
         commScrollPane.setViewportView(commArea);
 
-        logTabbedPane.addTab("Comm", commScrollPane);
+        logTabbedPane.addTab("Communication", commScrollPane);
 
         startNowButton.setText("StartNow");
         startNowButton.addActionListener(new java.awt.event.ActionListener() {
@@ -604,6 +583,8 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JTextArea commArea;
     private javax.swing.JScrollPane commScrollPane;
     private javax.swing.JButton connectButton;
+    private javax.swing.JTextArea fineLogArea;
+    private javax.swing.JScrollPane fineLogScrollPane;
     private javax.swing.JTextField fromBTField;
     private javax.swing.JButton getPositionsButton;
     private javax.swing.JCheckBox isOnCheckbox;

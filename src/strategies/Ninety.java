@@ -50,10 +50,10 @@ public class Ninety {
                 if (ComputeIfSellStock(tickerIndicators)) {
                     stocksToSell.add(heldStock);
                     double profit = CalculateProfitPercent(heldStock, tickerIndicators.actValue);
-                    logger.fine("SELL: " + heldStock.tickerSymbol + ", profit: " + profit + "%, actValue: " + tickerIndicators.actValue + ", SMA5: " + tickerIndicators.sma5);
+                    logger.info("SELL: " + heldStock.tickerSymbol + ", profit: " + profit + "%, actValue: " + tickerIndicators.actValue + ", SMA5: " + tickerIndicators.sma5);
                 }
                 else {
-                    logger.fine("Not selling: " + heldStock.tickerSymbol + ", actValue: " + tickerIndicators.actValue + ", SMA5: " + tickerIndicators.sma5);
+                    logger.info("Not selling: " + heldStock.tickerSymbol + ", actValue: " + tickerIndicators.actValue + ", SMA5: " + tickerIndicators.sma5);
                 }
             } else {
                 logger.severe("ComputeStocksToSell: Data for bought stock '" + heldStock.tickerSymbol + "' not found!!!");
@@ -78,10 +78,10 @@ public class Ninety {
             if (tickerIndicators != null) {
                 if (computeIfBuyMoreStock(heldStock, tickerIndicators.actValue)) {
                     stocksToBuyMore.add(heldStock);
-                    logger.fine("BUY MORE: " + heldStock.tickerSymbol + ", actValue: " + tickerIndicators.actValue + ", lastBuyValue: " + heldStock.purchases.get(heldStock.purchases.size() - 1).priceForOne + ", SMA5: " + tickerIndicators.sma5);
+                    logger.info("BUY MORE: " + heldStock.tickerSymbol + ", actValue: " + tickerIndicators.actValue + ", lastBuyValue: " + heldStock.purchases.get(heldStock.purchases.size() - 1).priceForOne + ", SMA5: " + tickerIndicators.sma5);
                 }
                 else {
-                    logger.fine("Not buying more: " + heldStock.tickerSymbol + ", actValue: " + tickerIndicators.actValue + ", lastBuyValue: " + heldStock.purchases.get(heldStock.purchases.size() - 1).priceForOne + ", SMA5: " + tickerIndicators.sma5);
+                    logger.info("Not buying more: " + heldStock.tickerSymbol + ", actValue: " + tickerIndicators.actValue + ", lastBuyValue: " + heldStock.purchases.get(heldStock.purchases.size() - 1).priceForOne + ", SMA5: " + tickerIndicators.sma5);
                 }
             } else {
                 logger.severe("ComputeStocksToBuyMore: Data for bought stock '" + heldStock.tickerSymbol + "' not found!!!");
@@ -116,7 +116,7 @@ public class Ninety {
 
             if (computeBuyTicker(tickerIndicators)) {
 
-                logger.fine("Possible BUY: " + tickerSymbol + ", actValue: " + tickerIndicators.actValue + ", SMA200: " + tickerIndicators.sma200 + ", SMA5: " + tickerIndicators.sma5 + ", RSI2: " + tickerIndicators.rsi2);
+                logger.info("Possible BUY: " + tickerSymbol + ", actValue: " + tickerIndicators.actValue + ", SMA200: " + tickerIndicators.sma200 + ", SMA5: " + tickerIndicators.sma5 + ", RSI2: " + tickerIndicators.rsi2);
 
                 if (stockToBuy == null) {
                     stockToBuy = new String();
@@ -130,7 +130,7 @@ public class Ninety {
         }
 
         if (stockToBuy != null) {
-            logger.fine("FINAL BUY: " + stockToBuy + ", RSI2: " + rsi2ToBuy);
+            logger.info("FINAL BUY: " + stockToBuy + ", RSI2: " + rsi2ToBuy);
         }
 
         return ProcessStockToBuyIntoOrder(stockToBuy, recentlySoldStocks, dataFor90Map, statusDataFor90);
@@ -245,10 +245,10 @@ public class Ninety {
 
                 tradeOrders.add(order);
 
-                logger.fine("Buying " + order.position + " more stock '" + heldStock.tickerSymbol + "' for " + (stockIndicator.actValue * order.position) + ". " + newPortions + " new portions. RSI2: " + stockIndicator.rsi2);
+                logger.info("Buying " + order.position + " more stock '" + heldStock.tickerSymbol + "' for " + (stockIndicator.actValue * order.position) + ". " + newPortions + " new portions. RSI2: " + stockIndicator.rsi2);
 
             } else {
-                logger.fine("Stock '" + heldStock.tickerSymbol + "' is at max limit, cannot BUY more!");
+                logger.info("Stock '" + heldStock.tickerSymbol + "' is at max limit, cannot BUY more!");
             }
         }
 

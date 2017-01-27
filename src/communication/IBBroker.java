@@ -47,7 +47,7 @@ public class IBBroker extends BaseIBConnectionImpl {
     protected List<Position> positionsList = new ArrayList<>();
     private int nextOrderId = -1;
     
-    public void connect() {
+    public boolean connect() {
         if( !connected ) {
             loggerComm.info("Connecting to IB.");
             ibClientSocket.eConnect(null, 4001, 1 );
@@ -55,11 +55,13 @@ public class IBBroker extends BaseIBConnectionImpl {
             try {
                 if (!connectiongLatch.await(10, TimeUnit.SECONDS)) {
                     loggerComm.severe("Cannot connect to IB");
+                    return false;
                 }
             } catch (InterruptedException ex) {
                 loggerComm.log(Level.SEVERE, null, ex);
             }
         }
+        return true;
     }
     
     public void disconnect() {

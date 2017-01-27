@@ -150,7 +150,7 @@ public class StockDataForNinety {
                             continue;
                         }
 
-                        logger.warning("Failed to load actual data from IB for: " + entry.getKey() + "! Load from Google succeded.");
+                        logger.info("Failed to load actual data from IB for: " + entry.getKey() + "! Load from Google succeded.");
                     }
 
                     entry.getValue().adjCloses[0] = actValue;
@@ -172,7 +172,7 @@ public class StockDataForNinety {
 
     private void UpdateDataWithActValuesGoogle() {
         try {
-            logger.info("Starting to load actual data from Google");
+            logger.fine("Starting to load actual data from Google");
 
             String[] tickerSymbols = getSP100();
             Map<String, Double> valuesMap = DataGetterActGoogle.readActualData(tickerSymbols);
@@ -210,7 +210,7 @@ public class StockDataForNinety {
                 }
             }
         } finally {
-            logger.info("Finished to load actual data from Google");
+            logger.fine("Finished to load actual data from Google");
         }
     }
 

@@ -100,11 +100,11 @@ public class StatusDataForNinety {
     }
 
     public void PrintStatus() {
-        logger.info("Status report: number of held stock: " + heldStocks.size());
-        logger.info("Held portions: " + GetBoughtPortions() + "/20");
+        logger.fine("Status report: number of held stock: " + heldStocks.size());
+        logger.fine("Held portions: " + GetBoughtPortions() + "/20");
 
         for (HeldStock heldStock : heldStocks.values()) {
-            logger.info(heldStock.toStringLong());
+            logger.fine(heldStock.toStringLong());
         }
     }
 }

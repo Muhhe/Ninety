@@ -46,7 +46,7 @@ public class RealtimeDataIB {
     public synchronized void UpdateValue(int orderID, int field, double price) {
         Data data = dataMapById.get(orderID);
         if (data == null) {
-            logger.severe("Reatime data put: cannot find data for order ID " + orderID);
+            loggerComm.warning("Reatime data put: cannot find data for order ID " + orderID);
             return;
         }
 
@@ -77,7 +77,7 @@ public class RealtimeDataIB {
         Data data = dataMapByTicker.get(ticker);
 
         if (data == null) {
-            logger.warning("Reatime data get: cannot find data for ticker " + ticker);
+            logger.fine("Reatime data get: cannot find data for ticker " + ticker);
             return 0;
         }
         

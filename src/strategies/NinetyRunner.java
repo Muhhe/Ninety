@@ -40,20 +40,11 @@ public class NinetyRunner implements Runnable {
     
     @Override
     public void run() {
-        LocalDate today = LocalDate.now();
-        String todayString = today.toString();
-        FileHandler fileHandler = null;
-        try {
-            File file = new File("dataLog/" + todayString);
-            file.mkdirs();
-
-            fileHandler = new FileHandler("dataLog/" + todayString + "/TradeLog.txt");
-            loggerTradeLog.addHandler(fileHandler);
-        } catch (IOException | SecurityException ex) {
-            logger.log(Level.SEVERE, null, ex);
+        logger.info("Starting Ninety strategy");
+        
+        if (!broker.connect() ) {
+            logger.severe("Cannot connect to IB");
         }
-
-        broker.connect();
 
         stockData.SubscribeRealtimeData(broker);
         try {
@@ -61,14 +52,11 @@ public class NinetyRunner implements Runnable {
         } catch (InterruptedException ex) {
         }
 
-        // TODO: zajistit aby nebezel jeste hist data load?
         stockData.UpdateDataWithActValuesIB(broker);
         stockData.CalculateIndicators();
-        stockData.CheckHistData(today);
+        stockData.CheckHistData(LocalDate.now());
 
         statusData.PrintStatus();
-
-        logger.info("Starting Ninety strategy");
 
         List<TradeOrder> sells = RunNinetySells();
 
@@ -80,7 +68,7 @@ public class NinetyRunner implements Runnable {
         NinetyChecker.CheckHeldPositions(statusData, broker);
 
         stockData.UpdateDataWithActValuesIB(broker);
-        stockData.CheckHistData(today);
+        stockData.CheckHistData(LocalDate.now());
 
         stockData.UnSubscribeRealtimeData(broker);
 
@@ -99,24 +87,12 @@ public class NinetyRunner implements Runnable {
 
         logger.info("Trading day finished");
         statusData.PrintStatus();
-        //isStartScheduled = false;
-
-        //copyLogFileToDataLog();
-
-        //ScheduleForTomorrowDay();
-
-        if (fileHandler != null) {
-            fileHandler.close();
-            loggerTradeLog.removeHandler(fileHandler);
-        }
 
         broker.disconnect();
     }
     
     public List<TradeOrder> RunNinetySells() {
         logger.info("Starting computing stocks to sell");
-
-        statusData.PrintStatus();
 
         // Selling held stocks
         List<TradeOrder> sellOrders = Ninety.ComputeStocksToSell(stockData.indicatorsMap, statusData);

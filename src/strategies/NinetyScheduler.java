@@ -18,6 +18,7 @@ import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import static tradingapp.MainWindow.LOGGER_TADELOG_NAME;
+import tradingapp.TradeLogger;
 import tradingapp.TradingTimer;
 
 /**
@@ -27,7 +28,6 @@ import tradingapp.TradingTimer;
 public class NinetyScheduler {
 
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
-    private final static Logger loggerTradeLog = Logger.getLogger(LOGGER_TADELOG_NAME);
 
     private final static LocalTime FIRST_CHECK_TIME = LocalTime.of(10, 0);
     private final static Duration DURATION_BEFORECLOSE_HISTDATA = Duration.ofMinutes(5);
@@ -47,6 +47,9 @@ public class NinetyScheduler {
     }
 
     public void RunNow() {
+        TradeLogger.getInstance().closeFiles();
+        TradeLogger.getInstance().initializeFiles(LocalDate.now());
+        
         isStartScheduled = true;
         TradingTimer.LoadSpecialTradingDays();
         
@@ -67,13 +70,13 @@ public class NinetyScheduler {
 
         Duration durationToNextRun = Duration.ofSeconds(TradingTimer.computeTimeFromNowTo(tomorrowCheck));
         
-        copyLogFileToDataLog();
-
         logger.info("Next check is scheduled for " + tomorrowCheck.format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
         logger.info("Starting in " + durationToNextRun.toString());
     }
 
     public void ScheduleFirstCheck() {
+        TradeLogger.getInstance().clearLogs();
+        TradeLogger.getInstance().initializeFiles(LocalDate.now());
         TradingTimer.LoadSpecialTradingDays();
 
         ZonedDateTime now = TradingTimer.GetNYTimeNow();
@@ -105,8 +108,9 @@ public class NinetyScheduler {
         
         ScheduleTradingRun(closeTimeZoned.minus(DURATION_BEFORECLOSE_RUNSTRATEGY));
                 
-
-        broker.connect();
+        if (!broker.connect() ) {
+            logger.severe("Cannot connect to IB");
+        }
         NinetyChecker.CheckHeldPositions(statusData, broker);
         broker.disconnect();
     }
@@ -143,9 +147,10 @@ public class NinetyScheduler {
                     logger.finer("Acquiring lock for trading run.");
                     dataMutex.acquire();
                     new NinetyRunner(stockData, statusData, broker).run();
-                    ScheduleForTomorrow();
                     dataMutex.release();
                     logger.finer("Released lock for trading run.");
+                    Thread.sleep(5000);
+                    ScheduleForTomorrow();
                 } catch (InterruptedException ex) {
                     throw new IllegalStateException("InterruptedException");
                 }
@@ -167,7 +172,7 @@ public class NinetyScheduler {
         isStartScheduled = false;
     }
     
-    private static void copyLogFileToDataLog() {
+    /*private static void copyLogFileToDataLog() {
         
         String todayString = LocalDate.now().toString();
         File newLogFile = new File("dataLog/" + todayString + "/log.txt");
@@ -184,5 +189,5 @@ public class NinetyScheduler {
         } catch (IOException ex) {
             logger.severe("Cannot copy local log to dataLog. " + ex);
         }
-    }
+    }*/
 }
