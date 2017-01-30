@@ -63,6 +63,7 @@ public class StockDataForNinety {
             logger.info("Starting to load historic data");
             String[] tickers = getSP100();
             for (String ticker : tickers) {
+                logger.finest("Loading hist data for " + ticker);
                 CloseData data = DataGetterHistYahoo.readData(LocalDate.now(), 200, ticker);
                 closeDataMap.put(ticker, data);
             }
@@ -248,7 +249,7 @@ public class StockDataForNinety {
         LocalDate today = LocalDate.now();
         String todayString = today.toString();
         for (Map.Entry<String, CloseData> entry : closeDataMap.entrySet()) {
-            File file = new File("dataLog/" + todayString + "/Historic/" + entry.getKey() + ".txt");
+            File file = new File("dataLog/" + todayString + "/Historic/" + entry.getKey() + ".csv");
             File directory = new File(file.getParentFile().getAbsolutePath());
             directory.mkdirs();
             BufferedWriter output = null;
@@ -262,7 +263,7 @@ public class StockDataForNinety {
 
                 for (int inx = 0; inx < adjCloses.length; inx++) {
                     output.write(dates[inx].toString());
-                    output.write(";");
+                    output.write(":");
                     output.write(Double.toString(adjCloses[inx]));
                     output.newLine();
                 }
@@ -331,13 +332,13 @@ public class StockDataForNinety {
                 StockIndicatorsForNinety indicators = entry.getValue();
                 output.newLine();
                 output.write(entry.getKey());
-                output.append(';');
+                output.append(':');
                 output.write(Double.toString(indicators.actValue));
-                output.append(';');
+                output.append(':');
                 output.write(Double.toString(indicators.sma200));
-                output.append(';');
+                output.append(':');
                 output.write(Double.toString(indicators.sma5));
-                output.append(';');
+                output.append(':');
                 output.write(Double.toString(indicators.rsi2));
             }
         } catch (IOException ex) {

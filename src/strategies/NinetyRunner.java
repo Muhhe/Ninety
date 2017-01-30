@@ -192,6 +192,8 @@ public class NinetyRunner implements Runnable {
             }
 
             statusData.heldStocks.remove(held.tickerSymbol);
+            statusData.CountInProfit(profit);
+            statusData.CountInOrderFee();
         } else {
             
             int newPortions = Ninety.GetNewPortionsToBuy(held.GetPortions());

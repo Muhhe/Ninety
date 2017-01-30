@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<HeldPositions heldStocks="2">
-  <heldStock ticker="TGT">
-    <purchase priceForOne="73.46" position="27" portions="1" date="2016-12-23T15:18:58.613-05:00[America/New_York]" />
-  </heldStock>
-  <heldStock ticker="CVX">
-    <purchase priceForOne="115.95" position="17" portions="1" date="2017-01-09T15:59:21.542-05:00[America/New_York]" />
-  </heldStock>
-</HeldPositions>

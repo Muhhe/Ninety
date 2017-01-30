@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<status>
+  <money currentCash="40000.0" />
+  <heldPositions heldStocks="2">
+    <heldStock ticker="PYPL">
+      <purchase priceForOne="40.19" position="49" portions="1" date="2017-01-27T15:59:05.917-05:00[America/New_York]" />
+    </heldStock>
+    <heldStock ticker="RTN">
+      <purchase priceForOne="143.02" position="13" portions="1" date="2017-01-26T15:59:07.339-05:00[America/New_York]" />
+    </heldStock>
+  </heldPositions>
+</status>

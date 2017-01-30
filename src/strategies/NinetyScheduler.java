@@ -6,18 +6,13 @@
 package strategies;
 
 import communication.IBBroker;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.Semaphore;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-import static tradingapp.MainWindow.LOGGER_TADELOG_NAME;
 import tradingapp.TradeLogger;
 import tradingapp.TradingTimer;
 
@@ -150,6 +145,7 @@ public class NinetyScheduler {
                     dataMutex.release();
                     logger.finer("Released lock for trading run.");
                     Thread.sleep(5000);
+                    statusData.UpdateEquityFile();
                     ScheduleForTomorrow();
                 } catch (InterruptedException ex) {
                     throw new IllegalStateException("InterruptedException");
@@ -171,23 +167,4 @@ public class NinetyScheduler {
         logger.info("Execution of Ninety strategy is stopped.");
         isStartScheduled = false;
     }
-    
-    /*private static void copyLogFileToDataLog() {
-        
-        String todayString = LocalDate.now().toString();
-        File newLogFile = new File("dataLog/" + todayString + "/log.txt");
-        File directory = new File(newLogFile.getParentFile().getAbsolutePath());
-        directory.mkdirs();
-        
-        try {
-            newLogFile.delete();
-
-            File localLog = new File("Logging.txt");
-            Files.copy(localLog.toPath(), newLogFile.toPath());
-            localLog.delete();
-            
-        } catch (IOException ex) {
-            logger.severe("Cannot copy local log to dataLog. " + ex);
-        }
-    }*/
 }
