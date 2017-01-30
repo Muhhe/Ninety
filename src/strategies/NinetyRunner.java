@@ -174,6 +174,7 @@ public class NinetyRunner implements Runnable {
             held.purchases.add(purchase);
 
             statusData.heldStocks.put(held.tickerSymbol, held);
+            statusData.CountInOrderFee();
             logger.finer("New stock added: " + held.toString());
             return;
         }
@@ -209,6 +210,7 @@ public class NinetyRunner implements Runnable {
             purchase.priceForOne = order.fillPrice;
 
             held.purchases.add(purchase);
+            statusData.CountInOrderFee();
             logger.info("More stock bought - " + held.toString());
             
             loggerTradeLog.info(order.toString());
