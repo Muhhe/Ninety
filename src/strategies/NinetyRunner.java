@@ -135,86 +135,14 @@ public class NinetyRunner implements Runnable {
 
             if (order.status != OrderStatus.Status.FILLED) {
                 logger.severe("Order NOT closed - " + order.toString());
-                UpdateHeldByOrderStatus(order);
+                statusData.UpdateHeldByOrderStatus(order);
                 continue;
             }
 
             logger.info("Order closed - " + order.toString());
-            UpdateHeldByOrderStatus(order);
+            statusData.UpdateHeldByOrderStatus(order);
 
             it.remove();
-        }
-    }
-    
-    private void UpdateHeldByOrderStatus(OrderStatus order) {
-        HeldStock held = statusData.heldStocks.get(order.order.tickerSymbol);
-        
-        if (order.filled == 0) {
-            return;
-        }
-        
-        // Add new stock
-        if (held == null) {
-            if (order.order.orderType == TradeOrder.OrderType.SELL) {
-                logger.severe("Trying to sell not held stock: " + order.order.tickerSymbol);
-                return;
-            }
-
-            loggerTradeLog.info(order.toString());
-            //TODO: doplnit indicatory atd.
-            held = new HeldStock();
-            held.tickerSymbol = order.order.tickerSymbol;
-
-            StockPurchase purchase = new StockPurchase();
-            purchase.date = order.timestampFilled;
-            purchase.portions = 1;
-            purchase.position = order.filled;
-            purchase.priceForOne = order.fillPrice;
-
-            held.purchases.add(purchase);
-
-            statusData.heldStocks.put(held.tickerSymbol, held);
-            statusData.CountInOrderFee();
-            logger.finer("New stock added: " + held.toString());
-            return;
-        }
-
-        if (order.order.orderType == TradeOrder.OrderType.SELL) {
-            double profit = (order.fillPrice - held.GetAvgPrice()) * held.GetPosition();
-            logger.info("Stock removed - profit: " + profit + ", " + order.toString());
-            
-            loggerTradeLog.info(order.toString() + ", profit: " + profit);
-            //TODO: doplnit indicatory atd.
-            
-            if (order.filled != held.GetPosition()) {
-                logger.severe("Not all position has been sold for: " + held.tickerSymbol);
-                // TODO: nejak poresit
-                return;
-            }
-
-            statusData.heldStocks.remove(held.tickerSymbol);
-            statusData.CountInProfit(profit);
-            statusData.CountInOrderFee();
-        } else {
-            
-            int newPortions = Ninety.GetNewPortionsToBuy(held.GetPortions());
-            if (newPortions == 0) {
-                logger.severe("Bought stock '" + held.tickerSymbol + "' has somehow " + held.GetPortions() + " bought portions!!!");
-                //TODO: dafuq?
-            }
-            
-            StockPurchase purchase = new StockPurchase();
-            purchase.date = order.timestampFilled;
-            purchase.portions = newPortions;
-            purchase.position = order.filled;
-            purchase.priceForOne = order.fillPrice;
-
-            held.purchases.add(purchase);
-            statusData.CountInOrderFee();
-            logger.info("More stock bought - " + held.toString());
-            
-            loggerTradeLog.info(order.toString());
-            //TODO: doplnit indicatory atd.
         }
     }
 

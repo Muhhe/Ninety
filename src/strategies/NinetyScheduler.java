@@ -13,6 +13,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Logger;
+import tradingapp.MailSender;
 import tradingapp.TradeLogger;
 import tradingapp.TradingTimer;
 
@@ -147,6 +148,7 @@ public class NinetyScheduler {
                     Thread.sleep(5000);
                     statusData.UpdateEquityFile();
                     ScheduleForTomorrow();
+                    MailSender.getInstance().Send();
                 } catch (InterruptedException ex) {
                     throw new IllegalStateException("InterruptedException");
                 }

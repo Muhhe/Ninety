@@ -141,7 +141,7 @@ public class IBBroker extends BaseIBConnectionImpl {
         ibOrder.m_tif = "DAY";
         
         ibClientSocket.placeOrder(ibOrder.m_orderId, contract, ibOrder);
-        logger.info("Placing order - ID: " + ibOrder.m_orderId + ", Ticker :" + tradeOrder.tickerSymbol + ", " + ibOrder.m_action);
+        logger.fine("Placing order - ID: " + ibOrder.m_orderId + ", Ticker: " + tradeOrder.tickerSymbol + ", " + ibOrder.m_action);
         loggerComm.info("Placing order - ID: " + ibOrder.m_orderId + ", " + tradeOrder.toString());
         
         synchronized(activeOrdersMap) {

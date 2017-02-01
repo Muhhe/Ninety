@@ -353,7 +353,7 @@ public class MainWindow extends javax.swing.JFrame {
     }//GEN-LAST:event_portTextFieldActionPerformed
 
     private void connectButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_connectButtonActionPerformed
-        //m_comm.connect(Integer.parseInt(portTextField.getText()));
+        /*//m_comm.connect(Integer.parseInt(portTextField.getText()));
         //m_connected = true;
         
         ninetyScheduler.broker.connect();
@@ -372,7 +372,11 @@ public class MainWindow extends javax.swing.JFrame {
         
         logger.info("Price of " + tickSymbolTextField.getText() + " is " + ninetyScheduler.broker.GetLastPrice(tickSymbolTextField.getText()));
         
-        ninetyScheduler.broker.CancelAllRealtimeData();
+        ninetyScheduler.broker.CancelAllRealtimeData();*/
+        
+        MailSender.getInstance().AddLineToMail("Cau sraci");
+        MailSender.getInstance().AddLineToMail("Chcipni");
+        MailSender.getInstance().Send();
     }//GEN-LAST:event_connectButtonActionPerformed
 
     private void buyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buyButtonActionPerformed

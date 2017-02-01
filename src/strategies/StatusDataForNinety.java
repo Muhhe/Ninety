@@ -5,6 +5,7 @@
  */
 package strategies;
 
+import communication.OrderStatus;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -25,6 +26,8 @@ import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
+import tradingapp.MailSender;
+import tradingapp.TradeOrder;
 
 /**
  *
@@ -38,6 +41,73 @@ public class StatusDataForNinety {
     public double moneyToInvest = 40000;
     public double investCash = 40000;
     public double currentCash = 40000;
+    
+    public void UpdateHeldByOrderStatus(OrderStatus order) {
+        HeldStock held = heldStocks.get(order.order.tickerSymbol);
+        
+        if (order.filled == 0) {
+            return;
+        }
+        
+        // Add new stock
+        if (held == null) {
+            if (order.order.orderType == TradeOrder.OrderType.SELL) {
+                logger.severe("Trying to sell not held stock: " + order.order.tickerSymbol);
+                return;
+            }
+
+            held = new HeldStock();
+            held.tickerSymbol = order.order.tickerSymbol;
+
+            StockPurchase purchase = new StockPurchase();
+            purchase.date = order.timestampFilled;
+            purchase.portions = 1;
+            purchase.position = order.filled;
+            purchase.priceForOne = order.fillPrice;
+
+            held.purchases.add(purchase);
+
+            heldStocks.put(held.tickerSymbol, held);
+            CountInOrderFee();
+            logger.finer("New stock added: " + held.toString());
+            MailSender.getInstance().AddLineToMail("New stock added: " + held.toString());
+            return;
+        }
+
+        if (order.order.orderType == TradeOrder.OrderType.SELL) {
+            double profit = (order.fillPrice - held.GetAvgPrice()) * held.GetPosition();
+            logger.info("Stock removed - profit: " + profit + ", " + order.toString());
+            MailSender.getInstance().AddLineToMail("Stock removed - profit: " + profit + ", " + order.toString());
+            
+            if (order.filled != held.GetPosition()) {
+                logger.severe("Not all position has been sold for: " + held.tickerSymbol);
+                // TODO: nejak poresit
+                return;
+            }
+
+            heldStocks.remove(held.tickerSymbol);
+            CountInProfit(profit);
+            CountInOrderFee();
+        } else {
+            
+            int newPortions = Ninety.GetNewPortionsToBuy(held.GetPortions());
+            if (newPortions == 0) {
+                logger.severe("Bought stock '" + held.tickerSymbol + "' has somehow " + held.GetPortions() + " bought portions!!!");
+                //TODO: dafuq?
+            }
+            
+            StockPurchase purchase = new StockPurchase();
+            purchase.date = order.timestampFilled;
+            purchase.portions = newPortions;
+            purchase.position = order.filled;
+            purchase.priceForOne = order.fillPrice;
+
+            held.purchases.add(purchase);
+            CountInOrderFee();
+            logger.fine("More stock bought - " + held.toString());
+            MailSender.getInstance().AddLineToMail("More stock bought - " + held.toString());
+        }
+    }
 
     public void SaveHeldPositionsToFile() {
         try {
