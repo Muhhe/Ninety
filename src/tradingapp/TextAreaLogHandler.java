@@ -21,12 +21,15 @@ public class TextAreaLogHandler extends Handler {
     private final JTextArea m_textArea;
     private final int m_fromLevel;
     private final int m_toLevel;
+    private final boolean m_mailErrors;
 
-    TextAreaLogHandler(JTextArea textArea, Level fromLevel, Level toLevel)
+    TextAreaLogHandler(JTextArea textArea, Level fromLevel, Level toLevel, boolean mailErrors)
     {
         m_textArea = textArea;
         m_fromLevel = fromLevel.intValue();
         m_toLevel = toLevel.intValue();
+        
+        m_mailErrors = mailErrors;
     }
     
     @Override
@@ -36,12 +39,25 @@ public class TextAreaLogHandler extends Handler {
             return;
         }
         
+        StringBuilder msg = new StringBuilder();
+        
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
         ZonedDateTime now = TradingTimer.GetNYTimeNow();
-        m_textArea.append( formatter.format(now) );
-        m_textArea.append(": ");
-        m_textArea.append(record.getMessage());
-        m_textArea.append("\r\n");
+        msg.append( formatter.format(now) );
+        msg.append(": ");
+        
+        if (level > Level.INFO.intValue()) {
+            msg.append("[" + record.getLevel().getName() + "] ");
+        }
+        
+        msg.append(record.getMessage());
+        msg.append("\r\n");
+        
+        m_textArea.append(msg.toString());
+        
+        if ((level > Level.INFO.intValue()) && m_mailErrors) {
+            MailSender.getInstance().AddErrorLineToMail(msg.toString());
+        }
     }
 
     @Override

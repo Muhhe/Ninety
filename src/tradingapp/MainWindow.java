@@ -5,23 +5,15 @@
  */
 package tradingapp;
 
-import communication.IBCommunication;
 import communication.OrderStatus;
 import communication.Position;
-import java.io.File;
-import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 import strategies.BackTesterNinety;
 import strategies.NinetyChecker;
 import strategies.NinetyScheduler;
-import strategies.RunnerNinety;
-import strategies.StockDataForNinety;
 
 /**
  *
@@ -33,7 +25,6 @@ public class MainWindow extends javax.swing.JFrame {
     public final static String LOGGER_TADELOG_NAME = "TradeLogLogger";
     private final static Logger logger = Logger.getLogger( Logger.GLOBAL_LOGGER_NAME );
     private final static Logger loggerComm = Logger.getLogger(LOGGER_COMM_NAME );
-    private final static Logger loggerTradeLog = Logger.getLogger(LOGGER_TADELOG_NAME );
     
     NinetyScheduler ninetyScheduler;
     //private boolean m_connected = false;
@@ -374,9 +365,9 @@ public class MainWindow extends javax.swing.JFrame {
         
         ninetyScheduler.broker.CancelAllRealtimeData();*/
         
-        MailSender.getInstance().AddLineToMail("Cau sraci");
-        MailSender.getInstance().AddLineToMail("Chcipni");
-        MailSender.getInstance().Send();
+        MailSender.getInstance().AddLineToMail("Test mail");
+        MailSender.getInstance().AddLineToMail("next line");
+        MailSender.getInstance().SendTradingLog();
     }//GEN-LAST:event_connectButtonActionPerformed
 
     private void buyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buyButtonActionPerformed
@@ -462,8 +453,9 @@ public class MainWindow extends javax.swing.JFrame {
     }//GEN-LAST:event_sellButtonActionPerformed
 
     private void loadStatusButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadStatusButtonActionPerformed
-        //ninetyRunner.m_statusDataFor90.LoadStatus();
-        ninetyScheduler.statusData.PrintStatus();
+        ninetyScheduler.broker.connect();
+        ninetyScheduler.broker.RequestAccountSummary();
+        //ninetyScheduler.broker.connect();
     }//GEN-LAST:event_loadStatusButtonActionPerformed
 
     private void buyStatusButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buyStatusButtonActionPerformed

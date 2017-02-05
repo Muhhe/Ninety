@@ -12,6 +12,7 @@ import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.Semaphore;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import tradingapp.MailSender;
 import tradingapp.TradeLogger;
@@ -40,6 +41,7 @@ public class NinetyScheduler {
     public NinetyScheduler() {
         statusData.ReadHeldPositions();
         statusData.PrintStatus();
+        MailSender.getInstance().ReadSettings();
     }
 
     public void RunNow() {
@@ -68,47 +70,68 @@ public class NinetyScheduler {
         
         logger.info("Next check is scheduled for " + tomorrowCheck.format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
         logger.info("Starting in " + durationToNextRun.toString());
+        
+        MailSender.getInstance().SendErrors();
     }
 
     public void ScheduleFirstCheck() {
-        TradeLogger.getInstance().clearLogs();
-        TradeLogger.getInstance().initializeFiles(LocalDate.now());
-        TradingTimer.LoadSpecialTradingDays();
+        try {
+            TradeLogger.getInstance().clearLogs();
+            TradeLogger.getInstance().initializeFiles(LocalDate.now());
+            TradingTimer.LoadSpecialTradingDays();
 
-        ZonedDateTime now = TradingTimer.GetNYTimeNow();
-        LocalTime closeTimeLocal = TradingTimer.GetTodayCloseTime();
+            statusData.ReadHeldPositions();
+            statusData.PrintStatus();
+            MailSender.getInstance().ReadSettings();
 
-        if (closeTimeLocal == null) {
-            logger.info("No trading today.");
-            ScheduleForTomorrow();
-            return;
+            ZonedDateTime now = TradingTimer.GetNYTimeNow();
+            LocalTime closeTimeLocal = TradingTimer.GetTodayCloseTime();
+
+            if (closeTimeLocal == null) {
+                logger.info("No trading today.");
+                ScheduleForTomorrow();
+                return;
+            }
+
+            logger.info("Time in NY now: " + now);
+            logger.info("Closing at: " + closeTimeLocal);
+
+            ZonedDateTime lastCall = now.with(closeTimeLocal).minus(DURATION_BEFORECLOSE_HISTDATA);
+            logger.info("LastCall: " + lastCall);
+
+            if (now.compareTo(lastCall) > 0) {
+                logger.info("Not enough time today.");
+                ScheduleForTomorrow();
+                return;
+            }
+
+            isStartScheduled = true;
+
+            ZonedDateTime closeTimeZoned = now.with(closeTimeLocal);
+
+            ScheduleLoadingHistData(closeTimeZoned.minus(DURATION_BEFORECLOSE_HISTDATA));
+
+            ScheduleTradingRun(closeTimeZoned.minus(DURATION_BEFORECLOSE_RUNSTRATEGY));
+
+            if (!broker.connect() ) {
+                logger.severe("Cannot connect to IB");
+            }
+            NinetyChecker.CheckHeldPositions(statusData, broker);
+            
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+                    throw new IllegalStateException("InterruptedException");
+            }
+            logger.info(broker.accountSummary.toString());
+            broker.disconnect();
         }
-
-        logger.info("Time in NY now: " + now);
-        logger.info("Closing at: " + closeTimeLocal);
-
-        ZonedDateTime lastCall = now.with(closeTimeLocal).minus(DURATION_BEFORECLOSE_HISTDATA);
-        logger.info("LastCall: " + lastCall);
-
-        if (now.compareTo(lastCall) > 0) {
-            logger.info("Not enough time today.");
-            ScheduleForTomorrow();
-            return;
+        finally {
+            if (!MailSender.getInstance().SendErrors()) {
+                MailSender.getInstance().AddLineToMail("Check complete");
+                MailSender.getInstance().SendCheckResult();
+            }
         }
-
-        isStartScheduled = true;
-        
-        ZonedDateTime closeTimeZoned = now.with(closeTimeLocal);
-        
-        ScheduleLoadingHistData(closeTimeZoned.minus(DURATION_BEFORECLOSE_HISTDATA));
-        
-        ScheduleTradingRun(closeTimeZoned.minus(DURATION_BEFORECLOSE_RUNSTRATEGY));
-                
-        if (!broker.connect() ) {
-            logger.severe("Cannot connect to IB");
-        }
-        NinetyChecker.CheckHeldPositions(statusData, broker);
-        broker.disconnect();
     }
     
     public void ScheduleLoadingHistData(ZonedDateTime runTime) {
@@ -121,6 +144,8 @@ public class NinetyScheduler {
                     new NinetyDataPreparator(stockData, broker).run();
                     dataMutex.release();
                     logger.finer("Released lock for LoadingHistData run.");
+                    
+                    MailSender.getInstance().SendErrors();
                 } catch (InterruptedException ex) {
                     throw new IllegalStateException("InterruptedException");
                 }
@@ -148,7 +173,8 @@ public class NinetyScheduler {
                     Thread.sleep(5000);
                     statusData.UpdateEquityFile();
                     ScheduleForTomorrow();
-                    MailSender.getInstance().Send();
+                    MailSender.getInstance().SendTradingLog();
+                    MailSender.getInstance().SendErrors();
                 } catch (InterruptedException ex) {
                     throw new IllegalStateException("InterruptedException");
                 }

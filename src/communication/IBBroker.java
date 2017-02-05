@@ -47,6 +47,21 @@ public class IBBroker extends BaseIBConnectionImpl {
     protected List<Position> positionsList = new ArrayList<>();
     private int nextOrderId = -1;
     
+    public AccountSummary accountSummary = new AccountSummary();
+    private boolean accountSummarySubscribed = false;
+    
+    public class AccountSummary
+    {
+        public double totalCashValue = 0;
+        public double netLiquidation = 0;
+        public double availableFunds = 0;
+        
+        @Override
+        public String toString() {
+            return "AccountSummary - totalCashValue: " + totalCashValue + ", netLiquidation: " + netLiquidation + ", availableFunds: " + availableFunds;
+        }
+    }
+    
     public boolean connect() {
         if( !connected ) {
             loggerComm.info("Connecting to IB.");
@@ -61,6 +76,8 @@ public class IBBroker extends BaseIBConnectionImpl {
                 loggerComm.log(Level.SEVERE, null, ex);
             }
         }
+        
+        RequestAccountSummary();
         return true;
     }
     
@@ -69,6 +86,7 @@ public class IBBroker extends BaseIBConnectionImpl {
             loggerComm.info("Disconnecting from IB.");
             ibClientSocket.eDisconnect();
             connected = false;
+            accountSummarySubscribed = false;
         }
     }
     
@@ -76,6 +94,7 @@ public class IBBroker extends BaseIBConnectionImpl {
     public void connectionClosed() {
         loggerComm.info("Connection to IB closed.");
         connected = false;
+        accountSummarySubscribed = false;
     }
     
     @Override
@@ -303,5 +322,28 @@ public class IBBroker extends BaseIBConnectionImpl {
         }
 
         return contract;
+    }
+
+    public void RequestAccountSummary() {
+        if (!accountSummarySubscribed) {
+            ibClientSocket.reqAccountSummary(getNextOrderId(), "All", "TotalCashValue,NetLiquidation,SettledCash,AccruedCash,BuyingPower,"
+                    + "EquityWithLoanValue,RegTEquity,RegTMargin,AvailableFunds,Leverage");
+            accountSummarySubscribed = true;
+        }
+    }
+
+    @Override
+    public void accountSummary(int reqId, String account, String tag, String value, String currency) {
+        loggerComm.fine("accountSummary - reqId: " + reqId + ", account: " + account + ", tag: " + tag + ", value: " + value + ", currency: " + currency);
+
+        if (tag.compareTo("AvailableFunds") == 0) {
+            accountSummary.availableFunds = Double.valueOf(value);
+        }
+        if (tag.compareTo("NetLiquidation") == 0) {
+            accountSummary.netLiquidation = Double.valueOf(value);
+        }
+        if (tag.compareTo("TotalCashValue") == 0) {
+            accountSummary.totalCashValue = Double.valueOf(value);
+        }
     }
 }

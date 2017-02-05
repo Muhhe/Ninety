@@ -250,7 +250,11 @@ public class BaseIBConnectionImpl  implements EWrapper {
 
     @Override
     public void error(int id, int errorCode, String errorMsg) {
-        logger.severe("Comm error - id:" + id + ", errorCode: " + errorCode + ", errorMsg: " + errorMsg );
+        if ((id == 2104) || (id == 2106)) {
+            logger.info("Comm info - id:" + id + ", errorCode: " + errorCode + ", errorMsg: " + errorMsg );
+        } else {
+            logger.severe("Comm error - id:" + id + ", errorCode: " + errorCode + ", errorMsg: " + errorMsg );
+        }
     }
 
     @Override

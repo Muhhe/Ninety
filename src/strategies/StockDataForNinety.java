@@ -112,7 +112,7 @@ public class StockDataForNinety {
 
     public void UpdateDataWithActValuesIB(IBBroker broker) {
         if (!TradingTimer.IsTradingDay(LocalDate.now())) {
-            logger.fine("Today is not a trading day. Cannot update with actual values.");
+            logger.warning("Today is not a trading day. Cannot update with actual values.");
             return;
         }
 
@@ -263,7 +263,7 @@ public class StockDataForNinety {
 
                 for (int inx = 0; inx < adjCloses.length; inx++) {
                     output.write(dates[inx].toString());
-                    output.write(":");
+                    output.write(",");
                     output.write(Double.toString(adjCloses[inx]));
                     output.newLine();
                 }
@@ -327,18 +327,18 @@ public class StockDataForNinety {
             file.createNewFile();
             output = new BufferedWriter(new FileWriter(file));
 
-            output.write("Ticker;ActValue;SMA200;SMA5;RSI2");
+            output.write("Ticker,ActValue,SMA200,SMA5,RSI2");
             for (Map.Entry<String, StockIndicatorsForNinety> entry : indicatorsMap.entrySet()) {
                 StockIndicatorsForNinety indicators = entry.getValue();
                 output.newLine();
                 output.write(entry.getKey());
-                output.append(':');
+                output.append(',');
                 output.write(Double.toString(indicators.actValue));
-                output.append(':');
+                output.append(',');
                 output.write(Double.toString(indicators.sma200));
-                output.append(':');
+                output.append(',');
                 output.write(Double.toString(indicators.sma5));
-                output.append(':');
+                output.append(',');
                 output.write(Double.toString(indicators.rsi2));
             }
         } catch (IOException ex) {

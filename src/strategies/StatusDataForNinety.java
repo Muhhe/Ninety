@@ -192,7 +192,7 @@ public class StatusDataForNinety {
             
             moneyToInvest = investCash * leverage;
             
-            logger.fine("Loaded settings. InvestCash: " + investCash + ", leverage: " + leverage);
+            logger.fine("Loaded status settings. InvestCash: " + investCash + ", leverage: " + leverage);
         } catch (JDOMException e) {
             e.printStackTrace();
             logger.severe("Error in loading from XML: JDOMException.\r\n" + e);
@@ -242,7 +242,7 @@ public class StatusDataForNinety {
             File equityFile = new File("Equity.csv");
             equityFile.createNewFile();
             writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(equityFile, true), "UTF-8"));
-            String line = LocalDate.now().toString() + ":" + currentCash + "\r\n";
+            String line = LocalDate.now().toString() + "," + currentCash + "\r\n";
             writer.append(line);
             
             logger.fine("Updated equity file with value " + currentCash);

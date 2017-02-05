@@ -99,7 +99,6 @@ public class DataGetterHistYahoo {
         return retData;
     }
 
-    @SuppressWarnings("UnusedAssignment")
     public static CloseData readData(LocalDate lastDate, int daysToRead, String tickerSymbol) {
         
         CloseData data = new CloseData(daysToRead);

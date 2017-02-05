@@ -8,7 +8,6 @@ package strategies;
 import communication.IBBroker;
 import java.time.LocalDate;
 import java.util.logging.Logger;
-import static tradingapp.MainWindow.LOGGER_TADELOG_NAME;
 
 /**
  *

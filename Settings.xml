@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <status>
 	<money investCash="20000" leverage="2" />
+	<mail addressTradeLog="svoboda77@volny.cz" addressCheck="svoboda77@volny.cz" addressError="svoboda77@volny.cz" />
 </status>

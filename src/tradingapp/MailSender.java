@@ -1,10 +1,7 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package tradingapp;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -22,13 +19,23 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import org.jdom2.Attribute;
+import org.jdom2.Document;
+import org.jdom2.Element;
+import org.jdom2.JDOMException;
+import org.jdom2.input.SAXBuilder;
 
 public class MailSender {
 
     private static MailSender instance = null;
 
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
-    public StringBuilder m_mailBody = new StringBuilder();
+    private StringBuilder m_mailBody = new StringBuilder();
+    private StringBuilder m_mailBodyError = new StringBuilder();
+    
+    private String m_mailAddressTradeLog = new String();
+    private String m_mailAddressCheck = new String();
+    private String m_mailAddressError = new String();
 
     protected MailSender() {
         // Exists only to defeat instantiation.
@@ -45,7 +52,11 @@ public class MailSender {
         m_mailBody.append(str + "\r\n");
     }
 
-    public void Send() {
+    public void AddErrorLineToMail(String str) {
+        m_mailBodyError.append(str + "\r\n");
+    }
+    
+    private Properties SetupProperties() {
         Properties props = new Properties();
         props.put("mail.smtp.host", "smtp.gmail.com");
         props.put("mail.smtp.socketFactory.port", "465");
@@ -53,6 +64,12 @@ public class MailSender {
                 "javax.net.ssl.SSLSocketFactory");
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.port", "465");
+        
+        return props;
+    }
+
+    private Session SetupSession() {
+        Properties props = SetupProperties();
 
         Session session = Session.getDefaultInstance(props,
                 new javax.mail.Authenticator() {
@@ -62,18 +79,48 @@ public class MailSender {
             }
         });
 
+        return session;
+    }
+
+    public void SendTradingLog() {
+        
+        if (m_mailBody.length() == 0) {
+            m_mailBody.append("No trades today!");
+        }
+        
+        Send("Trading log 90", m_mailAddressTradeLog, m_mailBody.toString());
+        m_mailBody.setLength(0);
+    }
+
+    public void SendCheckResult() {
+        Send("Check 90", m_mailAddressCheck, m_mailBody.toString());
+        m_mailBody.setLength(0);
+    }
+
+    public boolean SendErrors() {
+        if (m_mailBodyError.length() > 0) {
+            Send("Errors!!!", m_mailAddressError, m_mailBodyError.toString());
+            m_mailBodyError.setLength(0);
+            return true;
+        }
+        return false;
+    }
+
+    private void Send(String subject, String address, String mailBody) {
+        Session session = SetupSession();
+
         try {
 
             Message message = new MimeMessage(session);
             message.setFrom(new InternetAddress("svoboded@gmail.com"));
-            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse("svoboda77@volny.cz,dedinam@gmail.com"));
-            message.setSubject("Trading log 90");
+            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(address));
+            message.setSubject(subject);
             
             // Create the message part
             BodyPart messageBodyPart = new MimeBodyPart();
 
             // Now set the actual message
-            messageBodyPart.setText(m_mailBody.toString());
+            messageBodyPart.setText(mailBody);
 
             // Create a multipar message
             Multipart multipart = new MimeMultipart();
@@ -101,8 +148,6 @@ public class MailSender {
             message.setContent(multipart);
 
             Transport.send(message);
-
-            m_mailBody.setLength(0);
             logger.info("Mail sent!");
 
         } catch (MessagingException e) {
@@ -123,6 +168,36 @@ public class MailSender {
         } catch (MessagingException ex) {
             logger.severe("Failed to add attachment to mail: " + ex);
             throw new RuntimeException(ex);
+        }
+    }
+    
+    
+    public void ReadSettings() {
+        try {
+            File inputFile = new File("Settings.xml");
+            SAXBuilder saxBuilder = new SAXBuilder();
+            Document document = saxBuilder.build(inputFile);
+
+            Element rootElement = document.getRootElement();
+            
+            Element moneyElement = rootElement.getChild("mail");
+            
+            Attribute attribute = moneyElement.getAttribute("addressTradeLog");
+            m_mailAddressTradeLog = attribute.getValue();
+            
+            attribute = moneyElement.getAttribute("addressCheck");
+            m_mailAddressCheck = attribute.getValue();
+            
+            attribute = moneyElement.getAttribute("addressError");
+            m_mailAddressError = attribute.getValue();
+            
+            logger.fine("Loaded mail settings. Address trade log: " + m_mailAddressTradeLog + " check: " + m_mailAddressCheck + " error: " + m_mailAddressError);
+        } catch (JDOMException e) {
+            e.printStackTrace();
+            logger.severe("Error in loading from XML: JDOMException.\r\n" + e);
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+            logger.severe("Error in loading from XML: IOException.\r\n" + ioe);
         }
     }
 }

@@ -7,14 +7,10 @@ package strategies;
 
 import communication.IBBroker;
 import communication.OrderStatus;
-import java.io.File;
-import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.FileHandler;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import static tradingapp.MainWindow.LOGGER_TADELOG_NAME;
 import tradingapp.TradeOrder;
@@ -26,7 +22,6 @@ import tradingapp.TradeOrder;
 public class NinetyRunner implements Runnable {
     
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
-    private final static Logger loggerTradeLog = Logger.getLogger(LOGGER_TADELOG_NAME);
     
     private final StockDataForNinety stockData;
     private final StatusDataForNinety statusData;
@@ -51,6 +46,8 @@ public class NinetyRunner implements Runnable {
             Thread.sleep(1000);
         } catch (InterruptedException ex) {
         }
+        
+        logger.info(broker.accountSummary.toString());
 
         stockData.UpdateDataWithActValuesIB(broker);
         stockData.CalculateIndicators();
@@ -87,6 +84,7 @@ public class NinetyRunner implements Runnable {
 
         logger.info("Trading day finished");
         statusData.PrintStatus();
+        logger.info(broker.accountSummary.toString());
 
         broker.disconnect();
     }

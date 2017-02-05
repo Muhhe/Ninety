@@ -412,7 +412,7 @@ public class BackTesterNinety {
                 LocalDate date = equityInTime.date;
 
                 output.write(date.toString());
-                output.write(":");
+                output.write(",");
                 output.write(Double.toString(profit));
                 output.newLine();
             }
