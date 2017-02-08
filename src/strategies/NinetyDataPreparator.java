@@ -39,13 +39,10 @@ public class NinetyDataPreparator implements Runnable {
 
         stockData.PrepareHistData();
         stockData.UpdateDataWithActValuesIB(broker);
-        stockData.SaveHistDataToFiles();
 
         stockData.UnSubscribeRealtimeData(broker);
 
         stockData.CalculateIndicators();
-        stockData.SaveStockIndicatorsToFiles();
-        stockData.SaveIndicatorsToCSVFile();
         stockData.CheckHistData(LocalDate.now());
 
         broker.disconnect();

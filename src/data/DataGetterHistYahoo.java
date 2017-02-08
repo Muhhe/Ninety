@@ -84,8 +84,8 @@ public class DataGetterHistYahoo {
             }
 
         } catch (Exception ex) {
-            logger.log(Level.SEVERE, "Failed to read data from Yahoo.");
-            logger.log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, "Failed to read data from Yahoo - '" + tickerSymbol + "'");
+            logger.severe(ex.toString());
             
             return null;
         }

@@ -39,7 +39,7 @@ public class IBBroker extends BaseIBConnectionImpl {
     public final RealtimeDataIB realtimeData = new RealtimeDataIB();
     
     public EClientSocket ibClientSocket = new EClientSocket(this);
-    boolean connected = false;
+    public boolean connected = false;
     protected BlockingQueue<Integer> nextIdQueue = new LinkedBlockingQueue<>();
     protected CountDownLatch getPositionsCountdownLatch = null;
     protected CountDownLatch ordersClosedWaitCountdownLatch = null;
@@ -64,12 +64,13 @@ public class IBBroker extends BaseIBConnectionImpl {
     
     public boolean connect() {
         if( !connected ) {
-            loggerComm.info("Connecting to IB.");
+            logger.fine("Connecting to IB.");
+            loggerComm.fine("Connecting to IB.");
             ibClientSocket.eConnect(null, 4001, 1 );
             connectiongLatch = new CountDownLatch(1);
             try {
                 if (!connectiongLatch.await(10, TimeUnit.SECONDS)) {
-                    loggerComm.severe("Cannot connect to IB");
+                    logger.severe("Cannot connect to IB");
                     return false;
                 }
             } catch (InterruptedException ex) {
@@ -102,13 +103,12 @@ public class IBBroker extends BaseIBConnectionImpl {
         try {
             loggerComm.info("Puting nextValidId: " + orderId);
             nextIdQueue.put(orderId);
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        } catch (InterruptedException ex) {
             loggerComm.severe("Comm Error: nextValidId " + ex);
         }
         if (!connected) {
             connected = true;
-            loggerComm.info("Connection to IB successful.");
+            logger.fine("Connection to IB successful.");
             connectiongLatch.countDown();
         }
     }

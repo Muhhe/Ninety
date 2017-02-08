@@ -65,6 +65,7 @@ public class NinetyRunner implements Runnable {
         NinetyChecker.CheckHeldPositions(statusData, broker);
 
         stockData.UpdateDataWithActValuesIB(broker);
+        stockData.CalculateIndicators();
         stockData.CheckHistData(LocalDate.now());
 
         stockData.UnSubscribeRealtimeData(broker);

@@ -36,6 +36,9 @@ public class MailSender {
     private String m_mailAddressTradeLog = new String();
     private String m_mailAddressCheck = new String();
     private String m_mailAddressError = new String();
+    
+    private String m_mailFrom = new String();
+    private String m_mailPassword = new String();
 
     protected MailSender() {
         // Exists only to defeat instantiation.
@@ -75,7 +78,7 @@ public class MailSender {
                 new javax.mail.Authenticator() {
             @Override
             protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication("svoboded@gmail.com", "svob4ded");
+                return new PasswordAuthentication(m_mailFrom, m_mailPassword);
             }
         });
 
@@ -112,7 +115,7 @@ public class MailSender {
         try {
 
             Message message = new MimeMessage(session);
-            message.setFrom(new InternetAddress("svoboded@gmail.com"));
+            message.setFrom(new InternetAddress(m_mailFrom));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(address));
             message.setSubject(subject);
             
@@ -190,6 +193,12 @@ public class MailSender {
             
             attribute = moneyElement.getAttribute("addressError");
             m_mailAddressError = attribute.getValue();
+            
+            attribute = moneyElement.getAttribute("from");
+            m_mailFrom = attribute.getValue();
+            
+            attribute = moneyElement.getAttribute("password");
+            m_mailPassword = attribute.getValue();
             
             logger.fine("Loaded mail settings. Address trade log: " + m_mailAddressTradeLog + " check: " + m_mailAddressCheck + " error: " + m_mailAddressError);
         } catch (JDOMException e) {

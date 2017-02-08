@@ -12,7 +12,6 @@ import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.Semaphore;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import tradingapp.MailSender;
 import tradingapp.TradeLogger;
@@ -109,12 +108,14 @@ public class NinetyScheduler {
 
             ZonedDateTime closeTimeZoned = now.with(closeTimeLocal);
 
-            ScheduleLoadingHistData(closeTimeZoned.minus(DURATION_BEFORECLOSE_HISTDATA));
+            // TODO: Asi muzem nacitat rovnou. Kdyz bude problem tak cim driv tim lip.
+            //ScheduleLoadingHistData(ZonedDateTime.now().plusSeconds(10));
+            LoadHistData();
 
             ScheduleTradingRun(closeTimeZoned.minus(DURATION_BEFORECLOSE_RUNSTRATEGY));
 
             if (!broker.connect() ) {
-                logger.severe("Cannot connect to IB");
+                return;
             }
             NinetyChecker.CheckHeldPositions(statusData, broker);
             
@@ -133,22 +134,27 @@ public class NinetyScheduler {
             }
         }
     }
-    
+
+    public void LoadHistData() {
+        try {
+            logger.finer("Acquiring lock for LoadingHistData run.");
+            dataMutex.acquire();
+            new NinetyDataPreparator(stockData, broker).run();
+            stockData.SaveHistDataToFiles();
+            dataMutex.release();
+            logger.finer("Released lock for LoadingHistData run.");
+
+            MailSender.getInstance().SendErrors();
+        } catch (InterruptedException ex) {
+            throw new IllegalStateException("InterruptedException");
+        }
+    }
+
     public void ScheduleLoadingHistData(ZonedDateTime runTime) {
         Runnable taskWrapper = new Runnable() {
             @Override
             public void run() {
-                try {
-                    logger.finer("Acquiring lock for LoadingHistData run.");
-                    dataMutex.acquire();
-                    new NinetyDataPreparator(stockData, broker).run();
-                    dataMutex.release();
-                    logger.finer("Released lock for LoadingHistData run.");
-                    
-                    MailSender.getInstance().SendErrors();
-                } catch (InterruptedException ex) {
-                    throw new IllegalStateException("InterruptedException");
-                }
+                LoadHistData();
             }
         };
         
@@ -173,6 +179,9 @@ public class NinetyScheduler {
                     Thread.sleep(5000);
                     statusData.UpdateEquityFile();
                     ScheduleForTomorrow();
+                    stockData.SaveHistDataToFiles();
+                    stockData.SaveIndicatorsToCSVFile();
+                    stockData.SaveStockIndicatorsToFiles();
                     MailSender.getInstance().SendTradingLog();
                     MailSender.getInstance().SendErrors();
                 } catch (InterruptedException ex) {
