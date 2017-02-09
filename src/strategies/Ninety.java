@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.Map;
+import tradingapp.Formatter;
 import tradingapp.TradingTimer;
 import tradingapp.TradeOrder;
 
@@ -27,17 +28,6 @@ public class Ninety {
         return (data.actValue > data.sma5);
     }
 
-    private static double CalculateProfitPercent(HeldStock heldStock, double actValue) {
-        double profit = 0;
-        double totalPrice = 0;
-        for (StockPurchase purchase : heldStock.purchases) {
-            profit += (actValue - purchase.priceForOne) * purchase.position;
-            totalPrice += purchase.priceForOne * purchase.position;
-        }
-
-        return (profit / totalPrice) * 100;
-    }
-
     public static List<TradeOrder> ComputeStocksToSell(Map<String, StockIndicatorsForNinety> dataFor90Map, StatusDataForNinety statusDataFor90) {
 
         logger.fine("Started to compute stocks to sell.");
@@ -49,11 +39,13 @@ public class Ninety {
             if (tickerIndicators != null) {
                 if (ComputeIfSellStock(tickerIndicators)) {
                     stocksToSell.add(heldStock);
-                    double profit = CalculateProfitPercent(heldStock, tickerIndicators.actValue);
-                    logger.info("SELL: " + heldStock.tickerSymbol + ", profit: " + profit + "%, actValue: " + tickerIndicators.actValue + ", SMA5: " + tickerIndicators.sma5);
+                    double profit = heldStock.CalculatePercentProfitIfSold(tickerIndicators.actValue);
+                    logger.info("SELL: " + heldStock.tickerSymbol + ", profit: " + Formatter.toString(profit)
+                            + "%, actValue: " + Formatter.toString(tickerIndicators.actValue) + ", SMA5: " + Formatter.toString(tickerIndicators.sma5));
                 }
                 else {
-                    logger.info("Not selling: " + heldStock.tickerSymbol + ", actValue: " + tickerIndicators.actValue + ", SMA5: " + tickerIndicators.sma5);
+                    logger.info("Not selling: " + heldStock.tickerSymbol + ", actValue: " + Formatter.toString(tickerIndicators.actValue)
+                            + ", SMA5: " + Formatter.toString(tickerIndicators.sma5));
                 }
             } else {
                 logger.severe("ComputeStocksToSell: Data for bought stock '" + heldStock.tickerSymbol + "' not found!!!");
@@ -61,7 +53,7 @@ public class Ninety {
             }
         }
 
-        return ProcessStocksToSellIntoOrders(stocksToSell, dataFor90Map, statusDataFor90);
+        return ProcessStocksToSellIntoOrders(stocksToSell, dataFor90Map);
     }
 
     private static boolean computeIfBuyMoreStock(HeldStock heldStock, double actValue) {
@@ -116,7 +108,10 @@ public class Ninety {
 
             if (computeBuyTicker(tickerIndicators)) {
 
-                logger.info("Possible BUY: " + tickerSymbol + ", actValue: " + tickerIndicators.actValue + ", SMA200: " + tickerIndicators.sma200 + ", SMA5: " + tickerIndicators.sma5 + ", RSI2: " + tickerIndicators.rsi2);
+                logger.info("Possible BUY: " + tickerSymbol + ", actValue: " + Formatter.toString(tickerIndicators.actValue)
+                        + ", SMA200: " + Formatter.toString(tickerIndicators.sma200)
+                        + ", SMA5: " + Formatter.toString(tickerIndicators.sma5)
+                        + ", RSI2: " + Formatter.toString(tickerIndicators.rsi2));
 
                 if (stockToBuy == null) {
                     stockToBuy = new String();
@@ -130,13 +125,13 @@ public class Ninety {
         }
 
         if (stockToBuy != null) {
-            logger.info("FINAL BUY: " + stockToBuy + ", RSI2: " + rsi2ToBuy);
+            logger.info("FINAL BUY: " + stockToBuy + ", RSI2: " + Formatter.toString(rsi2ToBuy));
         }
 
         return ProcessStockToBuyIntoOrder(stockToBuy, recentlySoldStocks, dataFor90Map, statusDataFor90);
     }
 
-    private static List<TradeOrder> ProcessStocksToSellIntoOrders(List<HeldStock> stocksToSell, Map<String, StockIndicatorsForNinety> dataFor90Map, StatusDataForNinety statusDataFor90) {
+    private static List<TradeOrder> ProcessStocksToSellIntoOrders(List<HeldStock> stocksToSell, Map<String, StockIndicatorsForNinety> dataFor90Map) {
         List<TradeOrder> tradeOrders = new ArrayList<TradeOrder>();
 
         for (HeldStock heldStock : stocksToSell) {
@@ -245,7 +240,7 @@ public class Ninety {
 
                 tradeOrders.add(order);
 
-                logger.info("Buying " + order.position + " more stock '" + heldStock.tickerSymbol + "' for " + (stockIndicator.actValue * order.position) + ". " + newPortions + " new portions. RSI2: " + stockIndicator.rsi2);
+                logger.info("Buying " + order.position + " more stock '" + heldStock.tickerSymbol + "' for " + Formatter.toString(stockIndicator.actValue * order.position) + ". " + newPortions + " new portions. RSI2: " + Formatter.toString(stockIndicator.rsi2));
 
             } else {
                 logger.info("Stock '" + heldStock.tickerSymbol + "' is at max limit, cannot BUY more!");

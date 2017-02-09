@@ -70,22 +70,23 @@ public class TradeLogger {
         String todayString = date.toString();
         String pathDir = "dataLog/" + todayString + "/";
         File file = new File(pathDir);
-        if (!file.mkdirs()) {
+        
+        if (!file.exists() && !file.mkdirs()) {
             logger.warning("Failed to create directory for logs.");
         }
         try {
-            m_infoLogFile = new FileHandler(pathDir + "Log.txt");
+            m_infoLogFile = new FileHandler(pathDir + "Log.txt", true);
             SimpleFormatter formatterTxt = new SimpleFormatter();
             m_infoLogFile.setFormatter(formatterTxt);
             logger.addHandler(m_infoLogFile);
             m_infoLogFile.setLevel(Level.INFO);
 
-            m_commLogFile = new FileHandler(pathDir + "LogComm.txt");
+            m_commLogFile = new FileHandler(pathDir + "LogComm.txt", true);
             m_commLogFile.setFormatter(formatterTxt);
             loggerComm.addHandler(m_commLogFile);
             m_infoLogFile.setLevel(Level.FINE);
             
-            m_detailedLogFile = new FileHandler(pathDir + "LogDetailed.txt");
+            m_detailedLogFile = new FileHandler(pathDir + "LogDetailed.txt", true);
             m_detailedLogFile.setFormatter(formatterTxt);
             m_detailedLogFile.setLevel(Level.ALL);
             logger.addHandler(m_detailedLogFile);
@@ -102,7 +103,7 @@ public class TradeLogger {
     public void clearLogs() {
         closeFiles();
         
-        //m_infoArea.setText("");
+        m_infoArea.setText("");
         m_fineArea.setText("");
         m_commArea.setText("");
     }

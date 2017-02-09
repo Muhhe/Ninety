@@ -26,6 +26,7 @@ import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
+import tradingapp.Formatter;
 import tradingapp.MailSender;
 import tradingapp.TradeOrder;
 
@@ -70,14 +71,15 @@ public class StatusDataForNinety {
             heldStocks.put(held.tickerSymbol, held);
             CountInOrderFee();
             logger.finer("New stock added: " + held.toString());
-            MailSender.getInstance().AddLineToMail("New stock added: " + held.toString());
+            MailSender.getInstance().AddLineToMail("New stock bought: " + held.toString());
             return;
         }
 
         if (order.order.orderType == TradeOrder.OrderType.SELL) {
-            double profit = (order.fillPrice - held.GetAvgPrice()) * held.GetPosition();
-            logger.info("Stock removed - profit: " + profit + ", " + order.toString());
-            MailSender.getInstance().AddLineToMail("Stock removed - profit: " + profit + ", " + order.toString());
+            double profit = (order.fillPrice * held.GetPosition()) - held.GetTotalPricePaid();
+            double profitPercent = held.CalculatePercentProfitIfSold(order.fillPrice);
+            logger.info("Stock removed - profit: " + Formatter.toString(profit) + " = " + profitPercent + "%, " + order.toString());
+            MailSender.getInstance().AddLineToMail("Stock sold - profit: " + Formatter.toString(profit) + " = " + profitPercent + "%, " + order.toString());
             
             if (order.filled != held.GetPosition()) {
                 logger.severe("Not all position has been sold for: " + held.tickerSymbol);
@@ -105,7 +107,7 @@ public class StatusDataForNinety {
             held.purchases.add(purchase);
             CountInOrderFee();
             logger.fine("More stock bought - " + held.toString());
-            MailSender.getInstance().AddLineToMail("More stock bought - " + held.toString());
+            MailSender.getInstance().AddLineToMail("Stock scaled up - " + held.toString());
         }
     }
 
@@ -115,7 +117,7 @@ public class StatusDataForNinety {
             Document doc = new Document(rootElement);
             
             Element moneyElement = new Element("money");
-            moneyElement.setAttribute("currentCash", Double.toString(currentCash));
+            moneyElement.setAttribute("currentCash", Formatter.toString(currentCash));
             rootElement.addContent(moneyElement);
             
             Element heldPosElement = new Element("heldPositions");

@@ -39,6 +39,7 @@ import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
+import tradingapp.Formatter;
 
 /**
  *
@@ -102,7 +103,7 @@ public class BackTesterNinety {
                 for (int inx = 0; inx < adjCloses.length; inx++) {
                     output.write(dates[inx].toString());
                     output.write(";");
-                    output.write(Double.toString(adjCloses[inx]));
+                    output.write(Formatter.toString(adjCloses[inx]));
                     output.newLine();
                 }
 
@@ -312,7 +313,7 @@ public class BackTesterNinety {
             
             for (TradeOrder tradeOrder : toSell) {
                 HeldStock held = statusData.heldStocks.get(tradeOrder.tickerSymbol);
-                double profit = (tradeOrder.expectedPrice - held.GetAvgPrice()) * held.GetPosition();
+                double profit = (tradeOrder.expectedPrice - held.GetAvgPricePaid()) * held.GetPosition();
                 logger.info("Stock sold - profit: " + profit + ", " + tradeOrder.toString());
 
                 profit -= 1;
@@ -413,7 +414,7 @@ public class BackTesterNinety {
 
                 output.write(date.toString());
                 output.write(",");
-                output.write(Double.toString(profit));
+                output.write(Formatter.toString(profit));
                 output.newLine();
             }
 

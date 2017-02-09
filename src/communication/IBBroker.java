@@ -34,11 +34,11 @@ public class IBBroker extends BaseIBConnectionImpl {
     private final static Logger loggerComm = Logger.getLogger(LOGGER_COMM_NAME );
     
     public final Map<Integer, OrderStatus> orderStatusMap = new ConcurrentHashMap<>();
-    public final Map<Integer, OrderStatus> activeOrdersMap = new HashMap<>();
+    private final Map<Integer, OrderStatus> activeOrdersMap = new HashMap<>();
     
-    public final RealtimeDataIB realtimeData = new RealtimeDataIB();
+    private final RealtimeDataIB realtimeData = new RealtimeDataIB();
     
-    public EClientSocket ibClientSocket = new EClientSocket(this);
+    private EClientSocket ibClientSocket = new EClientSocket(this);
     public boolean connected = false;
     protected BlockingQueue<Integer> nextIdQueue = new LinkedBlockingQueue<>();
     protected CountDownLatch getPositionsCountdownLatch = null;

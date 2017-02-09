@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import org.jdom2.Attribute;
 import org.jdom2.Element;
+import tradingapp.Formatter;
 
 /**
  *
@@ -35,13 +36,17 @@ public class HeldStock {
         }
         return portions;
     }
-
-    double GetAvgPrice() {
-        double avgPrice = 0;
+    
+    double GetTotalPricePaid() {
+        double price = 0;
         for (StockPurchase purchase : purchases) {
-            avgPrice += purchase.priceForOne * purchase.position;
+            price += purchase.priceForOne * purchase.position;
         }
-        return avgPrice / GetPosition();
+        return price;
+    }
+
+    double GetAvgPricePaid() {
+        return GetTotalPricePaid() / GetPosition();
     }
 
     void AddToXml(Element rootElement) {
@@ -79,13 +84,24 @@ public class HeldStock {
         return str.toString();
     }
     
+    public double CalculateProfitIfSold(double actValue) {
+        return (actValue * GetPosition()) - GetTotalPricePaid();
+    }
+    
+    public double CalculatePercentProfitIfSold(double actValue) {
+        double profit = CalculateProfitIfSold(actValue);
+        double totalPrice = GetTotalPricePaid();
+
+        return (profit / totalPrice) * 100;
+    }
+    
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(tickerSymbol);
         sb.append(", position: ").append(GetPosition());
         sb.append(", portions: ").append(GetPortions());
-        sb.append(", avgPrice: ").append(GetAvgPrice()).append("$");
+        sb.append(", avgPrice: ").append(Formatter.toString(GetAvgPricePaid())).append("$");
 
         return sb.toString();
     }

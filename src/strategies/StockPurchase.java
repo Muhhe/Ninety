@@ -6,11 +6,11 @@
 package strategies;
 
 import java.time.ZonedDateTime;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jdom2.Attribute;
 import org.jdom2.DataConversionException;
 import org.jdom2.Element;
+import tradingapp.Formatter;
 import tradingapp.TradingTimer;
 
 /**
@@ -29,7 +29,7 @@ public class StockPurchase {
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder();
-        str.append("Stock purchase - priceForOne ").append(priceForOne);
+        str.append("Stock purchase - priceForOne ").append(Formatter.toString(priceForOne));
         str.append(", position ").append(position);
         str.append(", portions ").append(portions);
         str.append(", date ").append(date).append("\r\n");
@@ -37,15 +37,9 @@ public class StockPurchase {
         return str.toString();
     }
 
-    /*void LoadFromStrings(String[] strs) {
-        priceForOne = Double.parseDouble(strs[1]);
-        position = Integer.parseInt(strs[3]);
-        portions = Integer.parseInt(strs[5]);
-    }*/
-
     void AddToXml(Element heldElement) {
         Element purchaseElement = new Element("purchase");
-        purchaseElement.setAttribute(new Attribute("priceForOne", Double.toString(priceForOne)));
+        purchaseElement.setAttribute(new Attribute("priceForOne", Formatter.toString(priceForOne)));
         purchaseElement.setAttribute(new Attribute("position", Integer.toString(position)));
         purchaseElement.setAttribute(new Attribute("portions", Integer.toString(portions)));
         purchaseElement.setAttribute(new Attribute("date", date.toString()));

@@ -7,6 +7,7 @@ package communication;
 
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import tradingapp.Formatter;
 import tradingapp.TradeOrder;
 import tradingapp.TradingTimer;
 
@@ -66,9 +67,9 @@ public class OrderStatus {
         sb.append(order.toString());
         sb.append(", id: " + orderId );
         sb.append(", status: " + status );
-        sb.append(", fillPrice: " + fillPrice).append("$");;
+        sb.append(", fillPrice: " + Formatter.toString(fillPrice)).append("$");;
         sb.append(", timeToFill: " + timestampIssued.until(timestampFilled, ChronoUnit.SECONDS) + "s");
-        sb.append(", priceDiff: " + (fillPrice - order.expectedPrice)).append("$");;
+        sb.append(", priceDiff: " + Formatter.toString(fillPrice - order.expectedPrice)).append("$");;
         
         return sb.toString();
     }

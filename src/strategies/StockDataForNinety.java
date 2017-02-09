@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import tradingapp.Formatter;
 import tradingapp.TradingTimer;
 
 /**
@@ -32,7 +33,7 @@ public class StockDataForNinety {
 
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
-    public Map<String, CloseData> closeDataMap = new HashMap<>(getSP100().length);
+    private Map<String, CloseData> closeDataMap = new HashMap<>(getSP100().length);
     public Map<String, StockIndicatorsForNinety> indicatorsMap = new HashMap<>(getSP100().length);
 
     public final Semaphore histDataMutex = new Semaphore(1);
@@ -264,7 +265,7 @@ public class StockDataForNinety {
                 for (int inx = 0; inx < adjCloses.length; inx++) {
                     output.write(dates[inx].toString());
                     output.write(",");
-                    output.write(Double.toString(adjCloses[inx]));
+                    output.write(Formatter.toString(adjCloses[inx]));
                     output.newLine();
                 }
 
@@ -295,13 +296,13 @@ public class StockDataForNinety {
                 output = new BufferedWriter(new FileWriter(file));
 
                 StockIndicatorsForNinety indicators = entry.getValue();
-                output.write("ActValue: " + Double.toString(indicators.actValue));
+                output.write("ActValue: " + Formatter.toString(indicators.actValue));
                 output.newLine();
-                output.write("SMA200: " + Double.toString(indicators.sma200));
+                output.write("SMA200: " + Formatter.toString(indicators.sma200));
                 output.newLine();
-                output.write("SMA5: " + Double.toString(indicators.sma5));
+                output.write("SMA5: " + Formatter.toString(indicators.sma5));
                 output.newLine();
-                output.write("RSI2: " + Double.toString(indicators.rsi2));
+                output.write("RSI2: " + Formatter.toString(indicators.rsi2));
 
             } catch (IOException ex) {
                 logger.warning("Cannot create indicators log for: " + entry.getKey());
@@ -333,16 +334,16 @@ public class StockDataForNinety {
                 output.newLine();
                 output.write(entry.getKey());
                 output.append(',');
-                output.write(Double.toString(indicators.actValue));
+                output.write(Formatter.toString(indicators.actValue));
                 output.append(',');
-                output.write(Double.toString(indicators.sma200));
+                output.write(Formatter.toString(indicators.sma200));
                 output.append(',');
-                output.write(Double.toString(indicators.sma5));
+                output.write(Formatter.toString(indicators.sma5));
                 output.append(',');
-                output.write(Double.toString(indicators.rsi2));
+                output.write(Formatter.toString(indicators.rsi2));
             }
         } catch (IOException ex) {
-            logger.warning("Cannot create indicator CSV  log file.");
+            logger.warning("Cannot create indicator CSV log file.");
         } finally {
             if (output != null) {
                 try {
@@ -372,25 +373,8 @@ public class StockDataForNinety {
                 checkDate = checkDate.minusDays(1);
             }
             for (LocalDate date : data.dates) {
-                boolean isLocalOk = true;
-                switch (date.compareTo(checkDate)) {
-                    case 0:
-                        //logger.finest("Date OK. Date should be " + checkDate + " and is " + date);
-                        break;
-                    case 1:
-                        logger.severe("Failed check hist data for: " + ticker + ". Date should be " + checkDate + " but is " + date);
-                        isLocalOk = false;
-                        break;
-                    case -1:
-                        logger.severe("Failed check hist data for: " + ticker + ". Date should be " + checkDate + " but is " + date);
-                        isLocalOk = false;
-                        break;
-                    default:    //TODO: cislo znamena posun dnu - predelat switch
-                        logger.severe("Failed check hist data for: " + ticker + ". Unknown compare value. Date should be " + checkDate + " but is " + date);
-                        isLocalOk = false;
-                }
-                if (!isLocalOk) {
-                    isOk = false;
+                if (date.compareTo(checkDate) != 0) {
+                    logger.severe("Failed check hist data for: " + ticker + ". Date should be " + checkDate + " but is " + date);
                     break;
                 }
 
