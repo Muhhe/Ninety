@@ -6,6 +6,7 @@
 package data;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.time.LocalDate;
@@ -134,7 +135,7 @@ public class DataGetterHistYahoo {
             BufferedReader br = new BufferedReader(
                     new InputStreamReader(urlYahoo.openStream()));
 
-            line = br.readLine(); // skip first line
+            br.readLine(); // skip first line
                 
             int totalCount = 1;
             
@@ -156,7 +157,7 @@ public class DataGetterHistYahoo {
                 }
             }
 
-        } catch (Exception ex) {
+        } catch (IOException | NumberFormatException ex) {
             logger.log(Level.SEVERE, "Failed to read data from Yahoo.");
             logger.log(Level.SEVERE, null, ex);
             

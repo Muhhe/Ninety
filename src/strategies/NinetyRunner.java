@@ -72,7 +72,7 @@ public class NinetyRunner implements Runnable {
 
         RunNinetyBuys(sells);
 
-        if (!broker.waitUntilOrdersClosed(60)) {
+        if (!broker.waitUntilOrdersClosed(40)) {
             logger.severe("Some orders were not closed on time.");
         }
 
@@ -81,7 +81,7 @@ public class NinetyRunner implements Runnable {
 
         NinetyChecker.CheckHeldPositions(statusData, broker);
 
-        statusData.SaveHeldPositionsToFile();
+        statusData.SaveHeldPositionsToXML();
 
         logger.info("Trading day finished");
         statusData.PrintStatus();

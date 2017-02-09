@@ -277,7 +277,7 @@ public class BackTesterNinety {
             int testingDayInx = size - 1 - dayInx;
             
             LocalDate date = dataMap.entrySet().iterator().next().getValue().dates[testingDayInx];
-            logger.info("Starting to compute day " + date.toString() + ", index: " + dayInx + "/" + size + ". Profit so far = " + totalProfit);
+            logger.info("Starting to compute day " + date.toString() + ", index: " + dayInx + "/" + (size-1) + ". Profit so far = " + totalProfit);
             
             EquityInTime eq = new EquityInTime();
             eq.date = date;
@@ -389,6 +389,8 @@ public class BackTesterNinety {
         logger.info("TestCompleted. Profit = " + totalProfit + ", succesful = " + (double)profitSells/(double)totalSells*100 + "%");
         logger.info("Highest DD = " + highestDD + "$, " + highestDDproc + "%, date = " + dateOfHighestDD.toString());
         logger.info("Paid on fees = " + fees + "$");
+        
+        double years = (size-1.0)/365.0;
         
         SaveEquityToCsv(equityList);
 

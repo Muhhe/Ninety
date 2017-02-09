@@ -71,15 +71,13 @@ public class StatusDataForNinety {
             heldStocks.put(held.tickerSymbol, held);
             CountInOrderFee();
             logger.finer("New stock added: " + held.toString());
-            MailSender.getInstance().AddLineToMail("New stock bought: " + held.toString());
+            MailSender.AddLineToMail("OPEN new - " + held.toString());
             return;
         }
 
         if (order.order.orderType == TradeOrder.OrderType.SELL) {
-            double profit = (order.fillPrice * held.GetPosition()) - held.GetTotalPricePaid();
+            double profit = held.CalculateProfitIfSold(order.fillPrice);
             double profitPercent = held.CalculatePercentProfitIfSold(order.fillPrice);
-            logger.info("Stock removed - profit: " + Formatter.toString(profit) + " = " + profitPercent + "%, " + order.toString());
-            MailSender.getInstance().AddLineToMail("Stock sold - profit: " + Formatter.toString(profit) + " = " + profitPercent + "%, " + order.toString());
             
             if (order.filled != held.GetPosition()) {
                 logger.severe("Not all position has been sold for: " + held.tickerSymbol);
@@ -90,6 +88,10 @@ public class StatusDataForNinety {
             heldStocks.remove(held.tickerSymbol);
             CountInProfit(profit);
             CountInOrderFee();
+            
+            logger.info("Stock removed - profit: " + Formatter.toString(profit) + " = " + Formatter.toString(profitPercent) + "%, " + order.toString());
+            MailSender.AddLineToMail("SELL - profit: " + Formatter.toString(profit) + " = " + Formatter.toString(profitPercent) + "%, " + order.toString());
+            UpdateTradeLogFile(order, held);
         } else {
             
             int newPortions = Ninety.GetNewPortionsToBuy(held.GetPortions());
@@ -107,11 +109,11 @@ public class StatusDataForNinety {
             held.purchases.add(purchase);
             CountInOrderFee();
             logger.fine("More stock bought - " + held.toString());
-            MailSender.getInstance().AddLineToMail("Stock scaled up - " + held.toString());
+            MailSender.AddLineToMail("SCALE up - " + held.toString());
         }
     }
 
-    public void SaveHeldPositionsToFile() {
+    public void SaveHeldPositionsToXML() {
         try {
             Element rootElement = new Element("status");
             Document doc = new Document(rootElement);
@@ -138,7 +140,7 @@ public class StatusDataForNinety {
             xmlOutput.output(doc, oFile);
 
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.severe("Failed to save held positions to XML file - " + e.toString());
         }
     }
 
@@ -166,10 +168,8 @@ public class StatusDataForNinety {
                 heldStocks.put(held.tickerSymbol, held);
             }
         } catch (JDOMException e) {
-            e.printStackTrace();
             logger.severe("Error in loading from XML: JDOMException.\r\n" + e);
         } catch (IOException ioe) {
-            ioe.printStackTrace();
             logger.severe("Error in loading from XML: IOException.\r\n" + ioe);
         }
     }
@@ -196,10 +196,8 @@ public class StatusDataForNinety {
             
             logger.fine("Loaded status settings. InvestCash: " + investCash + ", leverage: " + leverage);
         } catch (JDOMException e) {
-            e.printStackTrace();
             logger.severe("Error in loading from XML: JDOMException.\r\n" + e);
         } catch (IOException ioe) {
-            ioe.printStackTrace();
             logger.severe("Error in loading from XML: IOException.\r\n" + ioe);
         }
     }
@@ -248,6 +246,44 @@ public class StatusDataForNinety {
             writer.append(line);
             
             logger.fine("Updated equity file with value " + currentCash);
+        } catch (FileNotFoundException ex) {
+            logger.severe("Cannot find equity file: " + ex);
+        } catch (IOException ex) {
+            logger.severe("Error updating equity file: " + ex);
+        } finally {
+            try {
+                if (writer != null) {
+                    writer.close();
+                }
+            } catch (IOException ex) {
+                logger.severe("Error updating equity file: " + ex);
+            }
+        }
+    }
+    
+    static public void UpdateTradeLogFile(OrderStatus order, HeldStock held) {
+        if (order.order.orderType != TradeOrder.OrderType.SELL) {
+            logger.warning("Trying to add BUY order to trade log.");
+            return;
+        }
+        
+        Writer writer = null;
+        try {
+            File equityFile = new File("TradeLog.csv");
+            equityFile.createNewFile();
+            writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(equityFile, true), "UTF-8"));
+            
+            double profit = held.CalculateProfitIfSold(order.fillPrice);
+            double profitPercent = held.CalculatePercentProfitIfSold(order.fillPrice);
+            
+            writer.append(LocalDate.now().toString() + ",");
+            writer.append(held.tickerSymbol + ",");
+            writer.append(profit + ",");
+            writer.append(profitPercent + ",");
+            writer.append(held.GetPortions()+ ",");
+            writer.append(held.GetTotalPricePaid()+ "\r\n");
+            
+            logger.finer("Updated trade log file.");
         } catch (FileNotFoundException ex) {
             logger.severe("Cannot find equity file: " + ex);
         } catch (IOException ex) {

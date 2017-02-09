@@ -96,7 +96,7 @@ public class NinetyScheduler {
             logger.info("Closing at: " + closeTimeLocal);
 
             ZonedDateTime lastCall = now.with(closeTimeLocal).minus(DURATION_BEFORECLOSE_HISTDATA);
-            logger.info("LastCall: " + lastCall);
+            logger.fine("LastCall: " + lastCall);
 
             if (now.compareTo(lastCall) > 0) {
                 logger.info("Not enough time today.");
@@ -108,8 +108,6 @@ public class NinetyScheduler {
 
             ZonedDateTime closeTimeZoned = now.with(closeTimeLocal);
 
-            // TODO: Asi muzem nacitat rovnou. Kdyz bude problem tak cim driv tim lip.
-            //ScheduleLoadingHistData(ZonedDateTime.now().plusSeconds(10));
             LoadHistData();
 
             ScheduleTradingRun(closeTimeZoned.minus(DURATION_BEFORECLOSE_RUNSTRATEGY));
@@ -129,7 +127,7 @@ public class NinetyScheduler {
         }
         finally {
             if (!MailSender.getInstance().SendErrors()) {
-                MailSender.getInstance().AddLineToMail("Check complete");
+                MailSender.AddLineToMail("Check complete");
                 MailSender.getInstance().SendCheckResult();
             }
         }

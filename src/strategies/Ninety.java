@@ -70,10 +70,16 @@ public class Ninety {
             if (tickerIndicators != null) {
                 if (computeIfBuyMoreStock(heldStock, tickerIndicators.actValue)) {
                     stocksToBuyMore.add(heldStock);
-                    logger.info("BUY MORE: " + heldStock.tickerSymbol + ", actValue: " + tickerIndicators.actValue + ", lastBuyValue: " + heldStock.purchases.get(heldStock.purchases.size() - 1).priceForOne + ", SMA5: " + tickerIndicators.sma5);
+                    logger.info("BUY MORE: " + heldStock.tickerSymbol + 
+                            ", actValue: " + tickerIndicators.actValue + 
+                            ", lastBuyValue: " + Formatter.toString(heldStock.purchases.get(heldStock.purchases.size() - 1).priceForOne) + 
+                            ", SMA5: " + Formatter.toString(tickerIndicators.sma5));
                 }
                 else {
-                    logger.info("Not buying more: " + heldStock.tickerSymbol + ", actValue: " + tickerIndicators.actValue + ", lastBuyValue: " + heldStock.purchases.get(heldStock.purchases.size() - 1).priceForOne + ", SMA5: " + tickerIndicators.sma5);
+                    logger.info("Not buying more: " + heldStock.tickerSymbol + 
+                            ", actValue: " + Formatter.toString(tickerIndicators.actValue) + 
+                            ", lastBuyValue: " + Formatter.toString(heldStock.purchases.get(heldStock.purchases.size() - 1).priceForOne) + 
+                            ", SMA5: " + Formatter.toString(tickerIndicators.sma5));
                 }
             } else {
                 logger.severe("ComputeStocksToBuyMore: Data for bought stock '" + heldStock.tickerSymbol + "' not found!!!");
@@ -229,7 +235,8 @@ public class Ninety {
                 }
 
                 if (remainingPortions - newPortions < 0) {
-                    logger.info("Cannot buy " + newPortions + " more portions of '" + heldStock.tickerSymbol + "' because we currently hold " + statusDataFor90.GetBoughtPortions() + "/20 portions.");
+                    logger.info("Cannot buy " + newPortions + " more portions of '" + heldStock.tickerSymbol + 
+                            "' because we currently hold " + statusDataFor90.GetBoughtPortions() + "/20 portions.");
                     continue;
                 }
 
@@ -240,7 +247,9 @@ public class Ninety {
 
                 tradeOrders.add(order);
 
-                logger.info("Buying " + order.position + " more stock '" + heldStock.tickerSymbol + "' for " + Formatter.toString(stockIndicator.actValue * order.position) + ". " + newPortions + " new portions. RSI2: " + Formatter.toString(stockIndicator.rsi2));
+                logger.info("Buying " + order.position + " more stock '" + heldStock.tickerSymbol + 
+                        "' for " + Formatter.toString(stockIndicator.actValue * order.position) + ". " + newPortions + 
+                        " new portions. RSI2: " + Formatter.toString(stockIndicator.rsi2));
 
             } else {
                 logger.info("Stock '" + heldStock.tickerSymbol + "' is at max limit, cannot BUY more!");

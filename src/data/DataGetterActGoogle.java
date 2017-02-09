@@ -13,7 +13,6 @@ import java.net.URL;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
-import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -31,11 +30,6 @@ public class DataGetterActGoogle {
         private String l;
     }
     
-    /*public class StockValue {
-        public String tickerSymbol;
-        public double value;
-    }*/
-    
     public static double readActualData(String tickerSymbol) throws IOException, NumberFormatException {
         StringBuilder urlBuilder = new StringBuilder();
 
@@ -44,19 +38,17 @@ public class DataGetterActGoogle {
         urlBuilder.append(tickerSymbol);
 
         URL urlGoogle = new URL(urlBuilder.toString());
-        BufferedReader in = new BufferedReader(
-                new InputStreamReader(urlGoogle.openStream()));
+        DataGSON[] entryArray;
+        try (BufferedReader in = new BufferedReader(
+                new InputStreamReader(urlGoogle.openStream()))) {
+            in.skip(3);
+            Gson gson = new GsonBuilder().create();
+            JsonReader reader = new JsonReader(in);
+            reader.setLenient(true);
+            entryArray = gson.fromJson(reader, DataGSON[].class);
+        }
 
-        in.skip(3);
-
-        Gson gson = new GsonBuilder().create();
-        JsonReader reader = new JsonReader(in);
-        reader.setLenient(true);
-        DataGSON[] p = gson.fromJson(reader, DataGSON[].class);
-
-        in.close();
-
-        return Double.parseDouble(p[0].l.replaceAll(",", ""));
+        return Double.parseDouble(entryArray[0].l.replaceAll(",", ""));
     }
     
     public static  Map<String, Double> readActualData(String[] tickerSymbols) throws IOException, NumberFormatException {
@@ -71,16 +63,14 @@ public class DataGetterActGoogle {
         urlBuilder.deleteCharAt(urlBuilder.length() - 1); //remove last ,
 
         URL urlGoogle = new URL(urlBuilder.toString());
-        BufferedReader in = new BufferedReader(new InputStreamReader(urlGoogle.openStream()));
-
-        in.skip(3);
-
-        Gson gson = new GsonBuilder().create();
-        JsonReader reader = new JsonReader(in);
-        reader.setLenient(true);
-        DataGSON[] dataFromGSON = gson.fromJson(reader, DataGSON[].class);
-
-        in.close();
+        DataGSON[] dataFromGSON;
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(urlGoogle.openStream()))) {
+            in.skip(3);
+            Gson gson = new GsonBuilder().create();
+            JsonReader reader = new JsonReader(in);
+            reader.setLenient(true);
+            dataFromGSON = gson.fromJson(reader, DataGSON[].class);
+        }
         
         Map<String, Double> valuesMap;
         valuesMap = new HashMap(dataFromGSON.length);

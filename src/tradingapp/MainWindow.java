@@ -5,13 +5,7 @@
  */
 package tradingapp;
 
-import communication.OrderStatus;
-import communication.Position;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-import strategies.BackTesterNinety;
 import strategies.NinetyChecker;
 import strategies.NinetyScheduler;
 

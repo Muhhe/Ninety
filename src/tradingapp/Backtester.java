@@ -25,7 +25,7 @@ public class Backtester extends javax.swing.JFrame {
         initComponents();
         
         logger.setLevel(Level.INFO);
-        TextAreaLogHandler textHandlerInfo = new TextAreaLogHandler(logArea, Level.INFO, Level.SEVERE, true);
+        TextAreaLogHandler textHandlerInfo = new TextAreaLogHandler(logArea, Level.INFO, Level.SEVERE, false);
         logger.addHandler(textHandlerInfo);
     }
 

@@ -56,7 +56,7 @@ public class TextAreaLogHandler extends Handler {
         m_textArea.append(msg.toString());
         
         if ((level > Level.INFO.intValue()) && m_mailErrors) {
-            MailSender.getInstance().AddErrorLineToMail(msg.toString());
+            MailSender.AddErrorLineToMail(msg.toString());
         }
     }
 

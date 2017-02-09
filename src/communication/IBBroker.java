@@ -317,7 +317,7 @@ public class IBBroker extends BaseIBConnectionImpl {
 
         if ((ticker == "MSFT")
                 || (ticker == "CSCO")
-                || (ticker == "INTC")) {
+                || (ticker == "INTC")) {    // TODO: failed to buy INTC - No security definition has been found for the request
             contract.m_exchange = "BATS";
         }
 

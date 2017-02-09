@@ -250,7 +250,10 @@ public class BaseIBConnectionImpl  implements EWrapper {
 
     @Override
     public void error(int id, int errorCode, String errorMsg) {
-        if ((id == 2104) || (id == 2106)) {
+        if ((errorCode == 2104)             // Market data farm connection is OK:usfarm.us
+                || (errorCode == 2106)
+                || (errorCode == 2119)      // Market data farm is connecting:usfarm.us
+                ) {
             logger.info("Comm info - id:" + id + ", errorCode: " + errorCode + ", errorMsg: " + errorMsg );
         } else {
             logger.severe("Comm error - id:" + id + ", errorCode: " + errorCode + ", errorMsg: " + errorMsg );

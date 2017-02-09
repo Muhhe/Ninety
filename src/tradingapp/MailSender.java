@@ -19,7 +19,6 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
-import org.jdom2.Attribute;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
@@ -51,12 +50,12 @@ public class MailSender {
         return instance;
     }
 
-    public void AddLineToMail(String str) {
-        m_mailBody.append(str + "\r\n");
+    static public void AddLineToMail(String str) {
+        getInstance().m_mailBody.append(str + "\r\n");
     }
 
-    public void AddErrorLineToMail(String str) {
-        m_mailBodyError.append(str + "\r\n");
+    static public void AddErrorLineToMail(String str) {
+        getInstance().m_mailBodyError.append(str + "\r\n");
     }
     
     private Properties SetupProperties() {
@@ -161,7 +160,6 @@ public class MailSender {
     
     public void AddAttachment(String filename, Multipart multipart) {
         try {
-            // Part two is attachment
             MimeBodyPart messageBodyPart = new MimeBodyPart();
 
             DataSource source = new FileDataSource(filename);
@@ -185,22 +183,13 @@ public class MailSender {
             
             Element moneyElement = rootElement.getChild("mail");
             
-            Attribute attribute = moneyElement.getAttribute("addressTradeLog");
-            m_mailAddressTradeLog = attribute.getValue();
+            m_mailAddressTradeLog = moneyElement.getAttribute("addressTradeLog").getValue();
+            m_mailAddressCheck = moneyElement.getAttribute("addressCheck").getValue();
+            m_mailAddressError = moneyElement.getAttribute("addressError").getValue();
+            m_mailFrom = moneyElement.getAttribute("from").getValue();
+            m_mailPassword = moneyElement.getAttribute("password").getValue();
             
-            attribute = moneyElement.getAttribute("addressCheck");
-            m_mailAddressCheck = attribute.getValue();
-            
-            attribute = moneyElement.getAttribute("addressError");
-            m_mailAddressError = attribute.getValue();
-            
-            attribute = moneyElement.getAttribute("from");
-            m_mailFrom = attribute.getValue();
-            
-            attribute = moneyElement.getAttribute("password");
-            m_mailPassword = attribute.getValue();
-            
-            logger.fine("Loaded mail settings. Address trade log: " + m_mailAddressTradeLog + " check: " + m_mailAddressCheck + " error: " + m_mailAddressError);
+            logger.fine("Loaded mail settings. Address trade log: " + m_mailAddressTradeLog + " check: " + m_mailAddressCheck + " error: " + m_mailAddressError + " from: " + m_mailFrom);
         } catch (JDOMException e) {
             e.printStackTrace();
             logger.severe("Error in loading from XML: JDOMException.\r\n" + e);
