@@ -33,6 +33,9 @@ public class IBBroker extends BaseIBConnectionImpl {
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     private final static Logger loggerComm = Logger.getLogger(LOGGER_COMM_NAME );
     
+    public int port;
+    public int clientId;
+    
     public final Map<Integer, OrderStatus> orderStatusMap = new ConcurrentHashMap<>();
     private final Map<Integer, OrderStatus> activeOrdersMap = new HashMap<>();
     
@@ -58,15 +61,20 @@ public class IBBroker extends BaseIBConnectionImpl {
         
         @Override
         public String toString() {
-            return "AccountSummary - totalCashValue: " + totalCashValue + ", netLiquidation: " + netLiquidation + ", availableFunds: " + availableFunds;
+            return "IB AccountSummary - totalCashValue: " + totalCashValue + ", netLiquidation: " + netLiquidation + ", availableFunds: " + availableFunds;
         }
+    }
+
+    public IBBroker(int port, int clientId) {
+        this.port = port;
+        this.clientId = clientId;
     }
     
     public boolean connect() {
         if( !connected ) {
             logger.fine("Connecting to IB.");
             loggerComm.fine("Connecting to IB.");
-            ibClientSocket.eConnect(null, 4001, 1 );
+            ibClientSocket.eConnect(null, port, clientId );
             connectiongLatch = new CountDownLatch(1);
             try {
                 if (!connectiongLatch.await(10, TimeUnit.SECONDS)) {
@@ -138,7 +146,7 @@ public class IBBroker extends BaseIBConnectionImpl {
             return false;
         }
         
-        Contract contract = CreateContract(tradeOrder.tickerSymbol);
+        Contract contract = CreateOrderContract(tradeOrder.tickerSymbol);
         
         Order ibOrder = new Order();
         if (tradeOrder.orderType == TradeOrder.OrderType.BUY) {
@@ -159,9 +167,7 @@ public class IBBroker extends BaseIBConnectionImpl {
         ibOrder.m_orderType = "MKT";
         ibOrder.m_tif = "DAY";
         
-        ibClientSocket.placeOrder(ibOrder.m_orderId, contract, ibOrder);
         logger.fine("Placing order - ID: " + ibOrder.m_orderId + ", Ticker: " + tradeOrder.tickerSymbol + ", " + ibOrder.m_action);
-        loggerComm.info("Placing order - ID: " + ibOrder.m_orderId + ", " + tradeOrder.toString());
         
         synchronized(activeOrdersMap) {
             if (activeOrdersMap.isEmpty()) {
@@ -172,6 +178,9 @@ public class IBBroker extends BaseIBConnectionImpl {
             OrderStatus orderStatus = new OrderStatus(tradeOrder, ibOrder.m_orderId);
             orderStatusMap.put(ibOrder.m_orderId, orderStatus);
             activeOrdersMap.put(ibOrder.m_orderId, orderStatus);
+        
+            loggerComm.info("Placing order - ID: " + ibOrder.m_orderId + ", " + tradeOrder.toString());
+            ibClientSocket.placeOrder(ibOrder.m_orderId, contract, ibOrder);
         }
         
         return true;
@@ -268,8 +277,7 @@ public class IBBroker extends BaseIBConnectionImpl {
             return;
         }
         
-        Contract contract = CreateContract(ticker);
-        contract.m_secType = "STK"; //Cannot be CFD for req data
+        Contract contract = CreateDataContract(ticker);
         
         int orderId = getNextOrderId();
     
@@ -308,16 +316,26 @@ public class IBBroker extends BaseIBConnectionImpl {
         return realtimeData.GetLastPrice(ticker);
     }
 
-    private Contract CreateContract(String ticker) {
+    private Contract CreateOrderContract(String ticker) {
         Contract contract = new Contract();
         contract.m_symbol = ticker;
         contract.m_exchange = "SMART";
         contract.m_secType = "CFD";
         contract.m_currency = "USD";
 
+        return contract;
+    }
+    
+    private Contract CreateDataContract(String ticker) {
+        Contract contract = new Contract();
+        contract.m_symbol = ticker;
+        contract.m_exchange = "SMART";
+        contract.m_secType = "STK"; //Cannot be CFD for req data
+        contract.m_currency = "USD";
+
         if ((ticker == "MSFT")
-                || (ticker == "CSCO")
-                || (ticker == "INTC")) {    // TODO: failed to buy INTC - No security definition has been found for the request
+            || (ticker == "CSCO")
+            || (ticker == "INTC")) {
             contract.m_exchange = "BATS";
         }
 

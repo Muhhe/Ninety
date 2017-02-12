@@ -39,7 +39,7 @@ import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
-import tradingapp.Formatter;
+import tradingapp.TradeFormatter;
 
 /**
  *
@@ -103,7 +103,7 @@ public class BackTesterNinety {
                 for (int inx = 0; inx < adjCloses.length; inx++) {
                     output.write(dates[inx].toString());
                     output.write(";");
-                    output.write(Formatter.toString(adjCloses[inx]));
+                    output.write(TradeFormatter.toString(adjCloses[inx]));
                     output.newLine();
                 }
 
@@ -416,7 +416,7 @@ public class BackTesterNinety {
 
                 output.write(date.toString());
                 output.write(",");
-                output.write(Formatter.toString(profit));
+                output.write(TradeFormatter.toString(profit));
                 output.newLine();
             }
 

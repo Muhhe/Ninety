@@ -26,8 +26,9 @@ import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
-import tradingapp.Formatter;
+import tradingapp.TradeFormatter;
 import tradingapp.MailSender;
+import tradingapp.Settings;
 import tradingapp.TradeOrder;
 
 /**
@@ -39,9 +40,8 @@ public class StatusDataForNinety {
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     public Map<String, HeldStock> heldStocks = new HashMap<>();
-    public double moneyToInvest = 40000;
-    public double investCash = 40000;
-    public double currentCash = 40000;
+    public double moneyToInvest = 40000.0;
+    public double currentCash = 20000.0;
     
     public void UpdateHeldByOrderStatus(OrderStatus order) {
         HeldStock held = heldStocks.get(order.order.tickerSymbol);
@@ -89,8 +89,13 @@ public class StatusDataForNinety {
             CountInProfit(profit);
             CountInOrderFee();
             
-            logger.info("Stock removed - profit: " + Formatter.toString(profit) + " = " + Formatter.toString(profitPercent) + "%, " + order.toString());
-            MailSender.AddLineToMail("SELL - profit: " + Formatter.toString(profit) + " = " + Formatter.toString(profitPercent) + "%, " + order.toString());
+            logger.info("Stock removed - profit: " + TradeFormatter.toString(profit) + " = " + TradeFormatter.toString(profitPercent) + "%, " + order.toString());
+            
+            MailSender.AddLineToMail("SELL - " + held.tickerSymbol + 
+                    ", profit: " + TradeFormatter.toString(profit) + " = " + TradeFormatter.toString(profitPercent) + 
+                    "%, sellPrice: " + (order.fillPrice * order.filled) + 
+                    ", portions: " + held.GetPortions());
+            
             UpdateTradeLogFile(order, held);
         } else {
             
@@ -119,7 +124,7 @@ public class StatusDataForNinety {
             Document doc = new Document(rootElement);
             
             Element moneyElement = new Element("money");
-            moneyElement.setAttribute("currentCash", Formatter.toString(currentCash));
+            moneyElement.setAttribute("currentCash", TradeFormatter.toString(currentCash));
             rootElement.addContent(moneyElement);
             
             Element heldPosElement = new Element("heldPositions");
@@ -174,32 +179,12 @@ public class StatusDataForNinety {
         }
     }
     
-    public void ReadSettings() {
+    public void UpdateCashSettings() {
 
         heldStocks.clear();
-        try {
-            File inputFile = new File("Settings.xml");
-            SAXBuilder saxBuilder = new SAXBuilder();
-            Document document = saxBuilder.build(inputFile);
-
-            Element rootElement = document.getRootElement();
-            
-            Element moneyElement = rootElement.getChild("money");
-            
-            Attribute attribute = moneyElement.getAttribute("investCash");
-            investCash = attribute.getDoubleValue();
-            
-            attribute = moneyElement.getAttribute("leverage");
-            double leverage = attribute.getDoubleValue();
-            
-            moneyToInvest = investCash * leverage;
-            
-            logger.fine("Loaded status settings. InvestCash: " + investCash + ", leverage: " + leverage);
-        } catch (JDOMException e) {
-            logger.severe("Error in loading from XML: JDOMException.\r\n" + e);
-        } catch (IOException ioe) {
-            logger.severe("Error in loading from XML: IOException.\r\n" + ioe);
-        }
+        moneyToInvest = Settings.getInstance().investCash * Settings.getInstance().leverage;
+        
+        logger.fine("Updated cash settings - moneyToInvest: " + moneyToInvest);
     }
 
     public int GetBoughtPortions() {
@@ -216,15 +201,15 @@ public class StatusDataForNinety {
     }
 
     public double GetOnePortionValue() {
-        return moneyToInvest / 20;
+        return moneyToInvest / 20.0;
     }
 
     public void PrintStatus() {
-        logger.info("Status report - currentCash: " + currentCash + " number of held stock: " + heldStocks.size());
+        logger.fine("Status report - currentCash: " + currentCash + " number of held stock: " + heldStocks.size());
         logger.fine("Held portions: " + GetBoughtPortions() + "/20");
 
         for (HeldStock heldStock : heldStocks.values()) {
-            logger.fine(heldStock.toStringLong());
+            logger.fine(heldStock.toString());
         }
     }
 

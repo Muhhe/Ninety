@@ -253,6 +253,7 @@ public class BaseIBConnectionImpl  implements EWrapper {
         if ((errorCode == 2104)             // Market data farm connection is OK:usfarm.us
                 || (errorCode == 2106)
                 || (errorCode == 2119)      // Market data farm is connecting:usfarm.us
+                || (errorCode == 2108)      // Market data farm connection is inactive but should be available upon demand.usfarm.us
                 ) {
             logger.info("Comm info - id:" + id + ", errorCode: " + errorCode + ", errorMsg: " + errorMsg );
         } else {

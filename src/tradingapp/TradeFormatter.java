@@ -11,18 +11,18 @@ import java.text.DecimalFormat;
  *
  * @author E0375631
  */
-public class Formatter {
-    private static Formatter instance = new Formatter();
+public class TradeFormatter {
+    private static TradeFormatter instance = new TradeFormatter();
     
     private final DecimalFormat decim = new DecimalFormat("0.00#");
     
-    protected Formatter() {
+    protected TradeFormatter() {
         // Exists only to defeat instantiation.
     }
 
-    public static Formatter getInstance() {
+    public static TradeFormatter getInstance() {
         if (instance == null) {
-            instance = new Formatter();
+            instance = new TradeFormatter();
         }
         return instance;
     }

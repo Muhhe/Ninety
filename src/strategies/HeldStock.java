@@ -11,7 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import org.jdom2.Attribute;
 import org.jdom2.Element;
-import tradingapp.Formatter;
+import tradingapp.TradeFormatter;
 
 /**
  *
@@ -101,7 +101,7 @@ public class HeldStock {
         sb.append(tickerSymbol);
         sb.append(", position: ").append(GetPosition());
         sb.append(", portions: ").append(GetPortions());
-        sb.append(", avgPrice: ").append(Formatter.toString(GetAvgPricePaid())).append("$");
+        sb.append(", avgPrice: ").append(TradeFormatter.toString(GetAvgPricePaid())).append("$");
 
         return sb.toString();
     }

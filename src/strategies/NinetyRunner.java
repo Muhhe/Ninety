@@ -62,7 +62,7 @@ public class NinetyRunner implements Runnable {
         }
 
         ProcessSubmittedOrders();
-        NinetyChecker.CheckHeldPositions(statusData, broker);
+        NinetyChecker.PerformChecks(statusData, broker);
 
         stockData.UpdateDataWithActValuesIB(broker);
         stockData.CalculateIndicators();
@@ -79,7 +79,7 @@ public class NinetyRunner implements Runnable {
         ProcessSubmittedOrders();
         broker.clearOrderMaps();
 
-        NinetyChecker.CheckHeldPositions(statusData, broker);
+        NinetyChecker.PerformChecks(statusData, broker);
 
         statusData.SaveHeldPositionsToXML();
 

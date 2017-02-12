@@ -8,6 +8,7 @@ package tradingapp;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.logging.Formatter;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -70,19 +71,19 @@ public class TradeLogger {
         String todayString = date.toString();
         String pathDir = "dataLog/" + todayString + "/";
         File file = new File(pathDir);
-        
+                
         if (!file.exists() && !file.mkdirs()) {
             logger.warning("Failed to create directory for logs.");
         }
         try {
             m_infoLogFile = new FileHandler(pathDir + "Log.txt", true);
             SimpleFormatter formatterTxt = new SimpleFormatter();
-            m_infoLogFile.setFormatter(formatterTxt);
+            m_infoLogFile.setFormatter(new LogFileFormatter());
             logger.addHandler(m_infoLogFile);
             m_infoLogFile.setLevel(Level.INFO);
 
             m_commLogFile = new FileHandler(pathDir + "LogComm.txt", true);
-            m_commLogFile.setFormatter(formatterTxt);
+            m_commLogFile.setFormatter(new LogFileFormatter());
             loggerComm.addHandler(m_commLogFile);
             m_infoLogFile.setLevel(Level.FINE);
             

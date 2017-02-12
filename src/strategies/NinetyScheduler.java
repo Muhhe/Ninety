@@ -13,7 +13,9 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Logger;
+import tradingapp.TradeFormatter;
 import tradingapp.MailSender;
+import tradingapp.Settings;
 import tradingapp.TradeLogger;
 import tradingapp.TradingTimer;
 
@@ -32,7 +34,7 @@ public class NinetyScheduler {
     public StockDataForNinety stockData = new StockDataForNinety();
     public StatusDataForNinety statusData = new StatusDataForNinety();
 
-    public final IBBroker broker = new IBBroker();
+    public final IBBroker broker;
     public boolean isStartScheduled = false;
     
     public final Semaphore dataMutex = new Semaphore(1);
@@ -40,7 +42,10 @@ public class NinetyScheduler {
     public NinetyScheduler() {
         statusData.ReadHeldPositions();
         statusData.PrintStatus();
-        MailSender.getInstance().ReadSettings();
+        
+        Settings.getInstance().ReadSettings();
+        
+        broker = new IBBroker(Settings.getInstance().port, Settings.getInstance().clientId);
     }
 
     public void RunNow() {
@@ -79,9 +84,11 @@ public class NinetyScheduler {
             TradeLogger.getInstance().initializeFiles(LocalDate.now());
             TradingTimer.LoadSpecialTradingDays();
 
+            Settings.getInstance().ReadSettings();
+            
             statusData.ReadHeldPositions();
             statusData.PrintStatus();
-            MailSender.getInstance().ReadSettings();
+            statusData.UpdateCashSettings();
 
             ZonedDateTime now = TradingTimer.GetNYTimeNow();
             LocalTime closeTimeLocal = TradingTimer.GetTodayCloseTime();
@@ -180,6 +187,10 @@ public class NinetyScheduler {
                     stockData.SaveHistDataToFiles();
                     stockData.SaveIndicatorsToCSVFile();
                     stockData.SaveStockIndicatorsToFiles();
+                    
+                    MailSender.AddLineToMail(broker.accountSummary.toString());
+                    MailSender.AddLineToMail("Saved current cash: " + TradeFormatter.toString(statusData.currentCash));
+                    
                     MailSender.getInstance().SendTradingLog();
                     MailSender.getInstance().SendErrors();
                 } catch (InterruptedException ex) {

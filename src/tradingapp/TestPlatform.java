@@ -14,18 +14,15 @@ import strategies.NinetyScheduler;
  *
  * @author Muhe
  */
-public class MainWindow extends javax.swing.JFrame {
-
-    public final static String LOGGER_COMM_NAME = "CommLogger";
-    public final static String LOGGER_TADELOG_NAME = "TradeLogLogger";
+public class TestPlatform extends javax.swing.JFrame {
     private final static Logger logger = Logger.getLogger( Logger.GLOBAL_LOGGER_NAME );
     
     NinetyScheduler ninetyScheduler;
-    
+
     /**
-     * Creates new form MainWindow
+     * Creates new form TestPlatform
      */
-    public MainWindow() {
+    public TestPlatform() {
         initComponents();
         
         TradeLogger.getInstance().initializeTextAreas(logArea, fineLogArea, commArea);
@@ -42,8 +39,6 @@ public class MainWindow extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        startButton = new javax.swing.JButton();
-        isOnCheckbox = new javax.swing.JCheckBox();
         logTabbedPane = new javax.swing.JTabbedPane();
         logScrollPane = new javax.swing.JScrollPane();
         logArea = new javax.swing.JTextArea();
@@ -51,22 +46,14 @@ public class MainWindow extends javax.swing.JFrame {
         fineLogArea = new javax.swing.JTextArea();
         commScrollPane = new javax.swing.JScrollPane();
         commArea = new javax.swing.JTextArea();
-        startNowButton = new javax.swing.JButton();
+        startButton = new javax.swing.JButton();
+        isOnCheckbox = new javax.swing.JCheckBox();
         checkPositionsButton = new javax.swing.JButton();
+        startNowButton = new javax.swing.JButton();
+        tickerField = new javax.swing.JTextField();
+        buyButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setMinimumSize(new java.awt.Dimension(300, 300));
-
-        startButton.setText("Start");
-        startButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                startButtonActionPerformed(evt);
-            }
-        });
-
-        isOnCheckbox.setText("on");
-        isOnCheckbox.setEnabled(false);
-        isOnCheckbox.setFocusable(false);
 
         logScrollPane.setAutoscrolls(true);
 
@@ -90,6 +77,24 @@ public class MainWindow extends javax.swing.JFrame {
 
         logTabbedPane.addTab("Communication", commScrollPane);
 
+        startButton.setText("Start");
+        startButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                startButtonActionPerformed(evt);
+            }
+        });
+
+        isOnCheckbox.setText("on");
+        isOnCheckbox.setEnabled(false);
+        isOnCheckbox.setFocusable(false);
+
+        checkPositionsButton.setText("CheckPositions");
+        checkPositionsButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                checkPositionsButtonActionPerformed(evt);
+            }
+        });
+
         startNowButton.setText("StartNow");
         startNowButton.setMaximumSize(new java.awt.Dimension(80, 23));
         startNowButton.setMinimumSize(new java.awt.Dimension(80, 23));
@@ -100,10 +105,12 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
 
-        checkPositionsButton.setText("CheckPositions");
-        checkPositionsButton.addActionListener(new java.awt.event.ActionListener() {
+        tickerField.setText("INTC");
+
+        buyButton.setText("Buy");
+        buyButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                checkPositionsButtonActionPerformed(evt);
+                buyButtonActionPerformed(evt);
             }
         });
 
@@ -114,29 +121,44 @@ public class MainWindow extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(logTabbedPane)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(startButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(isOnCheckbox)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 416, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 389, Short.MAX_VALUE)
                         .addComponent(checkPositionsButton)
                         .addGap(5, 5, 5)
-                        .addComponent(startNowButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(startNowButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(tickerField, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(buyButton)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(logTabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 673, Short.MAX_VALUE)
+                    .addContainerGap()))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(startButton)
                     .addComponent(startNowButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(isOnCheckbox)
                     .addComponent(checkPositionsButton))
-                .addGap(18, 18, 18)
-                .addComponent(logTabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 584, Short.MAX_VALUE)
-                .addContainerGap())
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(tickerField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(buyButton))
+                .addGap(0, 538, Short.MAX_VALUE))
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                    .addContainerGap(95, Short.MAX_VALUE)
+                    .addComponent(logTabbedPane, javax.swing.GroupLayout.PREFERRED_SIZE, 491, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap()))
         );
 
         pack();
@@ -164,14 +186,8 @@ public class MainWindow extends javax.swing.JFrame {
             if (!connected) {
                 ninetyScheduler.broker.connect();
             }
-            
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
-            }
 
-            NinetyChecker.PerformChecks(ninetyScheduler.statusData, ninetyScheduler.broker);
+            NinetyChecker.CheckHeldPositions(ninetyScheduler.statusData, ninetyScheduler.broker);
 
             if (!connected) {
                 ninetyScheduler.broker.disconnect();
@@ -193,6 +209,32 @@ public class MainWindow extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_startNowButtonActionPerformed
 
+    private void buyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buyButtonActionPerformed
+        new Thread(() -> {
+            boolean connected = ninetyScheduler.broker.connected;
+            if (!connected) {
+                ninetyScheduler.broker.connect();
+            }
+            
+            TradeOrder tradeOrder = new TradeOrder();
+            tradeOrder.tickerSymbol = tickerField.getText();
+            tradeOrder.position = 10;
+            tradeOrder.orderType = TradeOrder.OrderType.BUY;
+            
+            ninetyScheduler.broker.PlaceOrder(tradeOrder);
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(TestPlatform.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+            if (!connected) {
+                ninetyScheduler.broker.disconnect();
+            }
+        }).start();
+    }//GEN-LAST:event_buyButtonActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -210,25 +252,26 @@ public class MainWindow extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(TestPlatform.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(TestPlatform.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(TestPlatform.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(TestPlatform.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new MainWindow().setVisible(true);
+                new TestPlatform().setVisible(true);
             }
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton buyButton;
     private javax.swing.JButton checkPositionsButton;
     private javax.swing.JTextArea commArea;
     private javax.swing.JScrollPane commScrollPane;
@@ -240,5 +283,6 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JTabbedPane logTabbedPane;
     private javax.swing.JButton startButton;
     private javax.swing.JButton startNowButton;
+    private javax.swing.JTextField tickerField;
     // End of variables declaration//GEN-END:variables
 }

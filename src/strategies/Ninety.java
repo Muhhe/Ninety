@@ -12,7 +12,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.Map;
-import tradingapp.Formatter;
+import tradingapp.TradeFormatter;
 import tradingapp.TradingTimer;
 import tradingapp.TradeOrder;
 
@@ -40,12 +40,12 @@ public class Ninety {
                 if (ComputeIfSellStock(tickerIndicators)) {
                     stocksToSell.add(heldStock);
                     double profit = heldStock.CalculatePercentProfitIfSold(tickerIndicators.actValue);
-                    logger.info("SELL: " + heldStock.tickerSymbol + ", profit: " + Formatter.toString(profit)
-                            + "%, actValue: " + Formatter.toString(tickerIndicators.actValue) + ", SMA5: " + Formatter.toString(tickerIndicators.sma5));
+                    logger.info("SELL: " + heldStock.tickerSymbol + ", profit: " + TradeFormatter.toString(profit)
+                            + "%, actValue: " + TradeFormatter.toString(tickerIndicators.actValue) + ", SMA5: " + TradeFormatter.toString(tickerIndicators.sma5));
                 }
                 else {
-                    logger.info("Not selling: " + heldStock.tickerSymbol + ", actValue: " + Formatter.toString(tickerIndicators.actValue)
-                            + ", SMA5: " + Formatter.toString(tickerIndicators.sma5));
+                    logger.info("Not selling: " + heldStock.tickerSymbol + ", actValue: " + TradeFormatter.toString(tickerIndicators.actValue)
+                            + ", SMA5: " + TradeFormatter.toString(tickerIndicators.sma5));
                 }
             } else {
                 logger.severe("ComputeStocksToSell: Data for bought stock '" + heldStock.tickerSymbol + "' not found!!!");
@@ -72,14 +72,14 @@ public class Ninety {
                     stocksToBuyMore.add(heldStock);
                     logger.info("BUY MORE: " + heldStock.tickerSymbol + 
                             ", actValue: " + tickerIndicators.actValue + 
-                            ", lastBuyValue: " + Formatter.toString(heldStock.purchases.get(heldStock.purchases.size() - 1).priceForOne) + 
-                            ", SMA5: " + Formatter.toString(tickerIndicators.sma5));
+                            ", lastBuyValue: " + TradeFormatter.toString(heldStock.purchases.get(heldStock.purchases.size() - 1).priceForOne) + 
+                            ", SMA5: " + TradeFormatter.toString(tickerIndicators.sma5));
                 }
                 else {
                     logger.info("Not buying more: " + heldStock.tickerSymbol + 
-                            ", actValue: " + Formatter.toString(tickerIndicators.actValue) + 
-                            ", lastBuyValue: " + Formatter.toString(heldStock.purchases.get(heldStock.purchases.size() - 1).priceForOne) + 
-                            ", SMA5: " + Formatter.toString(tickerIndicators.sma5));
+                            ", actValue: " + TradeFormatter.toString(tickerIndicators.actValue) + 
+                            ", lastBuyValue: " + TradeFormatter.toString(heldStock.purchases.get(heldStock.purchases.size() - 1).priceForOne) + 
+                            ", SMA5: " + TradeFormatter.toString(tickerIndicators.sma5));
                 }
             } else {
                 logger.severe("ComputeStocksToBuyMore: Data for bought stock '" + heldStock.tickerSymbol + "' not found!!!");
@@ -114,10 +114,10 @@ public class Ninety {
 
             if (computeBuyTicker(tickerIndicators)) {
 
-                logger.info("Possible BUY: " + tickerSymbol + ", actValue: " + Formatter.toString(tickerIndicators.actValue)
-                        + ", SMA200: " + Formatter.toString(tickerIndicators.sma200)
-                        + ", SMA5: " + Formatter.toString(tickerIndicators.sma5)
-                        + ", RSI2: " + Formatter.toString(tickerIndicators.rsi2));
+                logger.info("Possible BUY: " + tickerSymbol + ", actValue: " + TradeFormatter.toString(tickerIndicators.actValue)
+                        + ", SMA200: " + TradeFormatter.toString(tickerIndicators.sma200)
+                        + ", SMA5: " + TradeFormatter.toString(tickerIndicators.sma5)
+                        + ", RSI2: " + TradeFormatter.toString(tickerIndicators.rsi2));
 
                 if (stockToBuy == null) {
                     stockToBuy = new String();
@@ -131,7 +131,7 @@ public class Ninety {
         }
 
         if (stockToBuy != null) {
-            logger.info("FINAL BUY: " + stockToBuy + ", RSI2: " + Formatter.toString(rsi2ToBuy));
+            logger.info("FINAL BUY: " + stockToBuy + ", RSI2: " + TradeFormatter.toString(rsi2ToBuy));
         }
 
         return ProcessStockToBuyIntoOrder(stockToBuy, recentlySoldStocks, dataFor90Map, statusDataFor90);
@@ -248,8 +248,8 @@ public class Ninety {
                 tradeOrders.add(order);
 
                 logger.info("Buying " + order.position + " more stock '" + heldStock.tickerSymbol + 
-                        "' for " + Formatter.toString(stockIndicator.actValue * order.position) + ". " + newPortions + 
-                        " new portions. RSI2: " + Formatter.toString(stockIndicator.rsi2));
+                        "' for " + TradeFormatter.toString(stockIndicator.actValue * order.position) + ". " + newPortions + 
+                        " new portions. RSI2: " + TradeFormatter.toString(stockIndicator.rsi2));
 
             } else {
                 logger.info("Stock '" + heldStock.tickerSymbol + "' is at max limit, cannot BUY more!");

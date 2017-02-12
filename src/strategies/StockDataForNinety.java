@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import tradingapp.Formatter;
+import tradingapp.TradeFormatter;
 import tradingapp.TradingTimer;
 
 /**
@@ -66,7 +66,9 @@ public class StockDataForNinety {
             for (String ticker : tickers) {
                 logger.finest("Loading hist data for " + ticker);
                 CloseData data = DataGetterHistYahoo.readData(LocalDate.now(), 200, ticker);
-                closeDataMap.put(ticker, data);
+                if (data != null) {
+                    closeDataMap.put(ticker, data);
+                }
             }
 
             logger.info("Finished to load historic data");
@@ -86,6 +88,7 @@ public class StockDataForNinety {
                 broker.RequestRealtimeData(ticker);
             }
             isRealtimeDataSubscribed = true;
+            logger.fine("Subscribed actual IB data.");
         }
     }
 
@@ -93,6 +96,7 @@ public class StockDataForNinety {
         if (isRealtimeDataSubscribed) {
             broker.CancelAllRealtimeData();
             isRealtimeDataSubscribed = false;
+            logger.fine("Unubscribed actual IB data.");
         }
     }
 
@@ -107,8 +111,10 @@ public class StockDataForNinety {
                 tickersFilled++;
             }
         }
-
-        return tickersFilled > closeDataMap.size()/2;
+        
+        logger.fine("Actual IB data - loaded " + tickersFilled + " out of " + closeDataMap.size());
+            
+        return tickersFilled >= closeDataMap.size()/2;
     }
 
     public void UpdateDataWithActValuesIB(IBBroker broker) {
@@ -240,9 +246,6 @@ public class StockDataForNinety {
             histDataMutex.release();
             logger.finer("CalculateIndicators: Released lock on hist data.");
             logger.fine("Finished to compute indicators");
-
-            //SaveStockIndicatorsToFiles();
-            //SaveIndicatorsToCSVFile();
         }
     }
 
@@ -265,7 +268,7 @@ public class StockDataForNinety {
                 for (int inx = 0; inx < adjCloses.length; inx++) {
                     output.write(dates[inx].toString());
                     output.write(",");
-                    output.write(Formatter.toString(adjCloses[inx]));
+                    output.write(TradeFormatter.toString(adjCloses[inx]));
                     output.newLine();
                 }
 
@@ -296,13 +299,13 @@ public class StockDataForNinety {
                 output = new BufferedWriter(new FileWriter(file));
 
                 StockIndicatorsForNinety indicators = entry.getValue();
-                output.write("ActValue: " + Formatter.toString(indicators.actValue));
+                output.write("ActValue: " + TradeFormatter.toString(indicators.actValue));
                 output.newLine();
-                output.write("SMA200: " + Formatter.toString(indicators.sma200));
+                output.write("SMA200: " + TradeFormatter.toString(indicators.sma200));
                 output.newLine();
-                output.write("SMA5: " + Formatter.toString(indicators.sma5));
+                output.write("SMA5: " + TradeFormatter.toString(indicators.sma5));
                 output.newLine();
-                output.write("RSI2: " + Formatter.toString(indicators.rsi2));
+                output.write("RSI2: " + TradeFormatter.toString(indicators.rsi2));
 
             } catch (IOException ex) {
                 logger.warning("Cannot create indicators log for: " + entry.getKey());
@@ -334,13 +337,13 @@ public class StockDataForNinety {
                 output.newLine();
                 output.write(entry.getKey());
                 output.append(',');
-                output.write(Formatter.toString(indicators.actValue));
+                output.write(TradeFormatter.toString(indicators.actValue));
                 output.append(',');
-                output.write(Formatter.toString(indicators.sma200));
+                output.write(TradeFormatter.toString(indicators.sma200));
                 output.append(',');
-                output.write(Formatter.toString(indicators.sma5));
+                output.write(TradeFormatter.toString(indicators.sma5));
                 output.append(',');
-                output.write(Formatter.toString(indicators.rsi2));
+                output.write(TradeFormatter.toString(indicators.rsi2));
             }
         } catch (IOException ex) {
             logger.warning("Cannot create indicator CSV log file.");

@@ -31,13 +31,6 @@ public class MailSender {
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     private StringBuilder m_mailBody = new StringBuilder();
     private StringBuilder m_mailBodyError = new StringBuilder();
-    
-    private String m_mailAddressTradeLog = new String();
-    private String m_mailAddressCheck = new String();
-    private String m_mailAddressError = new String();
-    
-    private String m_mailFrom = new String();
-    private String m_mailPassword = new String();
 
     protected MailSender() {
         // Exists only to defeat instantiation.
@@ -77,7 +70,7 @@ public class MailSender {
                 new javax.mail.Authenticator() {
             @Override
             protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(m_mailFrom, m_mailPassword);
+                return new PasswordAuthentication(Settings.getInstance().mailFrom, Settings.getInstance().mailPassword);
             }
         });
 
@@ -90,18 +83,18 @@ public class MailSender {
             m_mailBody.append("No trades today!");
         }
         
-        Send("Trading log 90", m_mailAddressTradeLog, m_mailBody.toString());
+        Send("Trading log 90", Settings.getInstance().mailAddressTradeLog, m_mailBody.toString());
         m_mailBody.setLength(0);
     }
 
     public void SendCheckResult() {
-        Send("Check 90", m_mailAddressCheck, m_mailBody.toString());
+        Send("Check 90", Settings.getInstance().mailAddressCheck, m_mailBody.toString());
         m_mailBody.setLength(0);
     }
 
     public boolean SendErrors() {
         if (m_mailBodyError.length() > 0) {
-            Send("Errors!!!", m_mailAddressError, m_mailBodyError.toString());
+            Send("Errors!!!", Settings.getInstance().mailAddressError, m_mailBodyError.toString());
             m_mailBodyError.setLength(0);
             return true;
         }
@@ -114,7 +107,7 @@ public class MailSender {
         try {
 
             Message message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(m_mailFrom));
+            message.setFrom(new InternetAddress(Settings.getInstance().mailFrom));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(address));
             message.setSubject(subject);
             
@@ -169,33 +162,6 @@ public class MailSender {
         } catch (MessagingException ex) {
             logger.severe("Failed to add attachment to mail: " + ex);
             throw new RuntimeException(ex);
-        }
-    }
-    
-    
-    public void ReadSettings() {
-        try {
-            File inputFile = new File("Settings.xml");
-            SAXBuilder saxBuilder = new SAXBuilder();
-            Document document = saxBuilder.build(inputFile);
-
-            Element rootElement = document.getRootElement();
-            
-            Element moneyElement = rootElement.getChild("mail");
-            
-            m_mailAddressTradeLog = moneyElement.getAttribute("addressTradeLog").getValue();
-            m_mailAddressCheck = moneyElement.getAttribute("addressCheck").getValue();
-            m_mailAddressError = moneyElement.getAttribute("addressError").getValue();
-            m_mailFrom = moneyElement.getAttribute("from").getValue();
-            m_mailPassword = moneyElement.getAttribute("password").getValue();
-            
-            logger.fine("Loaded mail settings. Address trade log: " + m_mailAddressTradeLog + " check: " + m_mailAddressCheck + " error: " + m_mailAddressError + " from: " + m_mailFrom);
-        } catch (JDOMException e) {
-            e.printStackTrace();
-            logger.severe("Error in loading from XML: JDOMException.\r\n" + e);
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-            logger.severe("Error in loading from XML: IOException.\r\n" + ioe);
         }
     }
 }
