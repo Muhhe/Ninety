@@ -9,6 +9,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import strategies.NinetyChecker;
 import strategies.NinetyScheduler;
+import strategies.StockPurchase;
 
 /**
  *
@@ -18,18 +19,26 @@ public class MainWindow extends javax.swing.JFrame {
 
     public final static String LOGGER_COMM_NAME = "CommLogger";
     public final static String LOGGER_TADELOG_NAME = "TradeLogLogger";
-    private final static Logger logger = Logger.getLogger( Logger.GLOBAL_LOGGER_NAME );
-    
+    private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+
     NinetyScheduler ninetyScheduler;
-    
+
     /**
      * Creates new form MainWindow
      */
     public MainWindow() {
         initComponents();
-        
+
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                logger.log(Level.SEVERE, "Uncaught Exception!!!", e);
+            }
+
+        });
+
         TradeLogger.getInstance().initializeTextAreas(logArea, fineLogArea, commArea);
-        
+
         ninetyScheduler = new NinetyScheduler();
     }
 
@@ -159,12 +168,13 @@ public class MainWindow extends javax.swing.JFrame {
     }//GEN-LAST:event_startButtonActionPerformed
 
     private void checkPositionsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkPositionsButtonActionPerformed
+
         new Thread(() -> {
             boolean connected = ninetyScheduler.broker.connected;
             if (!connected) {
                 ninetyScheduler.broker.connect();
             }
-            
+
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException ex) {

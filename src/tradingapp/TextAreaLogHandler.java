@@ -5,6 +5,8 @@
  */
 package tradingapp;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.logging.Handler;
@@ -51,6 +53,19 @@ public class TextAreaLogHandler extends Handler {
         }
         
         msg.append(record.getMessage());
+        
+        String throwable = "";
+        if (record.getThrown() != null) {
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            pw.println();
+            record.getThrown().printStackTrace(pw);
+            pw.close();
+            throwable = sw.toString();
+            
+            msg.append(throwable);
+        }
+        
         msg.append("\r\n");
         
         m_textArea.append(msg.toString());

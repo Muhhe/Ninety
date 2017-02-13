@@ -50,7 +50,7 @@ public class MailSender {
     static public void AddErrorLineToMail(String str) {
         getInstance().m_mailBodyError.append(str + "\r\n");
     }
-    
+
     private Properties SetupProperties() {
         Properties props = new Properties();
         props.put("mail.smtp.host", "smtp.gmail.com");
@@ -59,7 +59,7 @@ public class MailSender {
                 "javax.net.ssl.SSLSocketFactory");
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.port", "465");
-        
+
         return props;
     }
 
@@ -78,24 +78,30 @@ public class MailSender {
     }
 
     public void SendTradingLog() {
-        
+
         if (m_mailBody.length() == 0) {
             m_mailBody.append("No trades today!");
         }
-        
+
+        logger.fine("Sending trade log mail!");
         Send("Trading log 90", Settings.getInstance().mailAddressTradeLog, m_mailBody.toString());
         m_mailBody.setLength(0);
+        logger.info("Trade log mail sent!");
     }
 
     public void SendCheckResult() {
+        logger.fine("Sending check mail!");
         Send("Check 90", Settings.getInstance().mailAddressCheck, m_mailBody.toString());
         m_mailBody.setLength(0);
+        logger.info("Check mail sent!");
     }
 
     public boolean SendErrors() {
         if (m_mailBodyError.length() > 0) {
+            logger.fine("Sending error mail!");
             Send("Errors!!!", Settings.getInstance().mailAddressError, m_mailBodyError.toString());
             m_mailBodyError.setLength(0);
+            logger.info("Error mail sent!");
             return true;
         }
         return false;
@@ -105,12 +111,11 @@ public class MailSender {
         Session session = SetupSession();
 
         try {
-
             Message message = new MimeMessage(session);
             message.setFrom(new InternetAddress(Settings.getInstance().mailFrom));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(address));
             message.setSubject(subject);
-            
+
             // Create the message part
             BodyPart messageBodyPart = new MimeBodyPart();
 
@@ -126,16 +131,16 @@ public class MailSender {
             String todayString = LocalDate.now().toString();
             String pathDir = "dataLog/" + todayString + "/Log.txt";
             AddAttachment(pathDir, multipart);
-            
+
             pathDir = "dataLog/" + todayString + "/LogComm.txt";
             AddAttachment(pathDir, multipart);
-            
+
             pathDir = "dataLog/" + todayString + "/LogDetailed.txt";
             AddAttachment(pathDir, multipart);
-            
+
             pathDir = "Equity.csv";
             AddAttachment(pathDir, multipart);
-            
+
             pathDir = "TradingStatus.xml";
             AddAttachment(pathDir, multipart);
 
@@ -143,14 +148,12 @@ public class MailSender {
             message.setContent(multipart);
 
             Transport.send(message);
-            logger.info("Mail sent!");
 
         } catch (MessagingException e) {
             logger.severe("Failed to send mail: " + e);
-            throw new RuntimeException(e);
         }
     }
-    
+
     public void AddAttachment(String filename, Multipart multipart) {
         try {
             MimeBodyPart messageBodyPart = new MimeBodyPart();
@@ -161,7 +164,6 @@ public class MailSender {
             multipart.addBodyPart(messageBodyPart);
         } catch (MessagingException ex) {
             logger.severe("Failed to add attachment to mail: " + ex);
-            throw new RuntimeException(ex);
         }
     }
 }

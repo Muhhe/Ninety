@@ -118,7 +118,7 @@ public class NinetyScheduler {
             LoadHistData();
 
             ScheduleTradingRun(closeTimeZoned.minus(DURATION_BEFORECLOSE_RUNSTRATEGY));
-
+            
             if (!broker.connect() ) {
                 return;
             }

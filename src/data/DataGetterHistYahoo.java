@@ -85,9 +85,7 @@ public class DataGetterHistYahoo {
             }
 
         } catch (Exception ex) {
-            logger.log(Level.SEVERE, "Failed to read data from Yahoo - '" + tickerSymbol + "'");
-            logger.severe(ex.toString());
-            
+            logger.log(Level.SEVERE, "Failed to read data from Yahoo - '" + tickerSymbol + "'", ex);
             return null;
         }
         CloseData retData = new CloseData(0);
@@ -158,9 +156,7 @@ public class DataGetterHistYahoo {
             }
 
         } catch (IOException | NumberFormatException ex) {
-            logger.log(Level.SEVERE, "Failed to read data from Yahoo.");
-            logger.log(Level.SEVERE, null, ex);
-            
+            logger.log(Level.SEVERE, "Failed to read data from Yahoo - '" + tickerSymbol + "'", ex);
             return null;
         }
         

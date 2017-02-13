@@ -76,19 +76,21 @@ public class TradeLogger {
             logger.warning("Failed to create directory for logs.");
         }
         try {
+            Formatter formatterSimple = new LogFileFormatter("[%1$tH:%1$tM:%1$tS.%1$tL] %4$s: %5$s %6$s %n");
+            Formatter formatterDetailed = new LogFileFormatter("[%1$tH:%1$tM:%1$tS.%1$tL] %4$s: %5$s [%2$s] [%6$s]%n");
+            
             m_infoLogFile = new FileHandler(pathDir + "Log.txt", true);
-            SimpleFormatter formatterTxt = new SimpleFormatter();
-            m_infoLogFile.setFormatter(new LogFileFormatter());
+            m_infoLogFile.setFormatter(formatterSimple);
             logger.addHandler(m_infoLogFile);
             m_infoLogFile.setLevel(Level.INFO);
 
             m_commLogFile = new FileHandler(pathDir + "LogComm.txt", true);
-            m_commLogFile.setFormatter(new LogFileFormatter());
+            m_commLogFile.setFormatter(formatterSimple);
             loggerComm.addHandler(m_commLogFile);
             m_infoLogFile.setLevel(Level.FINE);
             
             m_detailedLogFile = new FileHandler(pathDir + "LogDetailed.txt", true);
-            m_detailedLogFile.setFormatter(formatterTxt);
+            m_detailedLogFile.setFormatter(formatterDetailed);
             m_detailedLogFile.setLevel(Level.ALL);
             logger.addHandler(m_detailedLogFile);
             loggerComm.addHandler(m_detailedLogFile);

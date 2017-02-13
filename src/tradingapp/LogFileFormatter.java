@@ -16,9 +16,14 @@ import java.util.logging.LogRecord;
  */
 public class LogFileFormatter extends Formatter {
     
-    private static final String format = "[%1$tH:%1$tM:%1$tS.%1$tL] %4$s: %5$s %n";
+    private final String format;
     private final Date dat = new Date();
     
+    LogFileFormatter(String format) {
+        this.format = format;
+    }
+    
+    @Override
     public synchronized String format(LogRecord record) {
         dat.setTime(record.getMillis());
         String source;
