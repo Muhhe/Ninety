@@ -86,9 +86,9 @@ public class NinetyScheduler {
 
             Settings.getInstance().ReadSettings();
             
+            statusData.UpdateCashSettings();
             statusData.ReadHeldPositions();
             statusData.PrintStatus();
-            statusData.UpdateCashSettings();
 
             ZonedDateTime now = TradingTimer.GetNYTimeNow();
             LocalTime closeTimeLocal = TradingTimer.GetTodayCloseTime();
