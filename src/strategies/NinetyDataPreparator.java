@@ -43,7 +43,6 @@ public class NinetyDataPreparator implements Runnable {
         stockData.UnSubscribeRealtimeData(broker);
 
         stockData.CalculateIndicators();
-        stockData.CheckHistData(LocalDate.now());
 
         broker.disconnect();
     }

@@ -33,7 +33,7 @@ public class StockDataForNinety {
 
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
-    private Map<String, CloseData> closeDataMap = new HashMap<>(getSP100().length);
+    public Map<String, CloseData> closeDataMap = new HashMap<>(getSP100().length);
     public Map<String, StockIndicatorsForNinety> indicatorsMap = new HashMap<>(getSP100().length);
 
     public final Semaphore histDataMutex = new Semaphore(1);
@@ -355,50 +355,6 @@ public class StockDataForNinety {
                     logger.log(Level.SEVERE, null, ex);
                 }
             }
-        }
-    }
-
-    // TODO: kontrolovat velikost closeDataMap != GetSP100().lenght
-    public void CheckHistData(final LocalDate uptoDay) {
-        logger.fine("Starting history data check.");
-        boolean isOk = true;
-        for (Map.Entry<String, CloseData> entry : closeDataMap.entrySet()) {
-            String ticker = entry.getKey();
-            CloseData data = entry.getValue();
-
-            if ((data.adjCloses.length != 200)
-                    || (data.dates.length != 200)) {
-                logger.severe("Failed check hist data for: " + ticker + ". Length is not 200 but " + data.adjCloses.length);
-                isOk = false;
-            }
-            LocalDate checkDate = uptoDay;
-            while (!TradingTimer.IsTradingDay(checkDate)) {
-                checkDate = checkDate.minusDays(1);
-            }
-            for (LocalDate date : data.dates) {
-                if (date.compareTo(checkDate) != 0) {
-                    logger.severe("Failed check hist data for: " + ticker + ". Date should be " + checkDate + " but is " + date);
-                    break;
-                }
-
-                checkDate = checkDate.minusDays(1);
-                while (!TradingTimer.IsTradingDay(checkDate)) {
-                    checkDate = checkDate.minusDays(1);
-                }
-            }
-
-            for (double adjClose : data.adjCloses) {
-                if (adjClose == 0) {
-                    logger.severe("Failed check hist data for: " + ticker + ". AdjClose value is 0");
-                    isOk = false;
-                }
-            }
-        }
-
-        if (isOk) {
-            logger.fine("History data check - OK");
-        } else {
-            logger.warning("History data check - FAILED");
         }
     }
 }

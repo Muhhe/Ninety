@@ -77,7 +77,7 @@ public class TradeLogger {
         }
         try {
             Formatter formatterSimple = new LogFileFormatter("[%1$tH:%1$tM:%1$tS.%1$tL] %4$s: %5$s %6$s %n");
-            Formatter formatterDetailed = new LogFileFormatter("[%1$tH:%1$tM:%1$tS.%1$tL] %4$s: %5$s [%2$s] [%6$s]%n");
+            Formatter formatterDetailed = new LogFileFormatter("[%1$tH:%1$tM:%1$tS.%1$tL] %4$s: %5$s [%2$s] %6$s %n");
             
             m_infoLogFile = new FileHandler(pathDir + "Log.txt", true);
             m_infoLogFile.setFormatter(formatterSimple);

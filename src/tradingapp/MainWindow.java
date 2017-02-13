@@ -181,7 +181,8 @@ public class MainWindow extends javax.swing.JFrame {
                 Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
             }
 
-            NinetyChecker.PerformChecks(ninetyScheduler.statusData, ninetyScheduler.broker);
+            NinetyChecker.CheckHeldPositions(ninetyScheduler.statusData, ninetyScheduler.broker);
+            NinetyChecker.CheckCash(ninetyScheduler.statusData, ninetyScheduler.broker);
 
             if (!connected) {
                 ninetyScheduler.broker.disconnect();

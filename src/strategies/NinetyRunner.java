@@ -51,7 +51,7 @@ public class NinetyRunner implements Runnable {
 
         stockData.UpdateDataWithActValuesIB(broker);
         stockData.CalculateIndicators();
-        stockData.CheckHistData(LocalDate.now());
+        NinetyChecker.CheckHistData(stockData, statusData);
 
         statusData.PrintStatus();
 
@@ -62,11 +62,10 @@ public class NinetyRunner implements Runnable {
         }
 
         ProcessSubmittedOrders();
-        NinetyChecker.PerformChecks(statusData, broker);
 
         stockData.UpdateDataWithActValuesIB(broker);
         stockData.CalculateIndicators();
-        stockData.CheckHistData(LocalDate.now());
+        NinetyChecker.PerformChecks(statusData, stockData, broker);
 
         stockData.UnSubscribeRealtimeData(broker);
 
@@ -79,13 +78,14 @@ public class NinetyRunner implements Runnable {
         ProcessSubmittedOrders();
         broker.clearOrderMaps();
 
-        NinetyChecker.PerformChecks(statusData, broker);
+        NinetyChecker.CheckHeldPositions(statusData, broker);
+        NinetyChecker.CheckCash(statusData, broker);
 
         statusData.SaveHeldPositionsToXML();
 
         logger.info("Trading day finished");
         statusData.PrintStatus();
-        logger.info(broker.accountSummary.toString());
+        logger.fine(broker.accountSummary.toString());
 
         broker.disconnect();
     }

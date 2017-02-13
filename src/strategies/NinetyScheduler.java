@@ -122,14 +122,16 @@ public class NinetyScheduler {
             if (!broker.connect() ) {
                 return;
             }
-            NinetyChecker.CheckHeldPositions(statusData, broker);
             
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException ex) {
                     throw new IllegalStateException("InterruptedException");
             }
-            logger.info(broker.accountSummary.toString());
+            
+            NinetyChecker.PerformChecks(statusData, stockData, broker);
+            
+            logger.fine(broker.accountSummary.toString());
             broker.disconnect();
         }
         finally {
