@@ -150,8 +150,6 @@ public class NinetyScheduler {
             stockData.SaveHistDataToFiles();
             dataMutex.release();
             logger.finer("Released lock for LoadingHistData run.");
-
-            MailSender.getInstance().SendErrors();
         } catch (InterruptedException ex) {
             throw new IllegalStateException("InterruptedException");
         }

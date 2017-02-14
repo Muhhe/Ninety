@@ -35,7 +35,14 @@ public class NinetyChecker {
     public static void CheckHeldPositions(StatusDataForNinety statusData, IBBroker broker) {
         List<Position> allPositions = broker.getAllPositions();
 
-        logger.fine("Held postions on IB: " + allPositions.size());
+        int posSize = 0;
+        for (Position position : allPositions) {
+            if (position.pos != 0) {    // IB keeps stock with 0 position
+                posSize++;
+            }
+        }
+        
+        logger.fine("Held postions on IB: " + posSize);
         for (Position position : allPositions) {
             if (position.pos == 0) {    // IB keeps stock with 0 position
                 continue;
@@ -43,7 +50,7 @@ public class NinetyChecker {
             logger.fine("Stock: " + position.toString());
 
             if (!statusData.heldStocks.containsKey(position.tickerSymbol)) {
-                logger.warning("Stock " + position.tickerSymbol + " found on IB but it's not locally saved. Position " + position.pos);
+                logger.warning("Stock '" + position.tickerSymbol + "' found on IB but it's not locally saved. Position " + position.pos);
             }
         }
 
