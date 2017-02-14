@@ -7,12 +7,10 @@ package strategies;
 
 import communication.IBBroker;
 import communication.OrderStatus;
-import java.time.LocalDate;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-import static tradingapp.MainWindow.LOGGER_TADELOG_NAME;
 import tradingapp.TradeOrder;
 
 /**
@@ -65,7 +63,8 @@ public class NinetyRunner implements Runnable {
 
         stockData.UpdateDataWithActValuesIB(broker);
         stockData.CalculateIndicators();
-        NinetyChecker.PerformChecks(statusData, stockData, broker);
+        NinetyChecker.CheckHeldPositions(statusData, broker);
+        NinetyChecker.CheckHistData(stockData, statusData);
 
         stockData.UnSubscribeRealtimeData(broker);
 

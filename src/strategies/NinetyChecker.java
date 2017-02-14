@@ -8,13 +8,13 @@ package strategies;
 import communication.IBBroker;
 import communication.Position;
 import data.CloseData;
+import static java.lang.Math.abs;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-import tradingapp.TradeFormatter;
-import static tradingapp.MainWindow.LOGGER_TADELOG_NAME;
 import tradingapp.Settings;
+import tradingapp.TradeFormatter;
 import tradingapp.TradingTimer;
 
 /**
@@ -24,7 +24,6 @@ import tradingapp.TradingTimer;
 public class NinetyChecker {
     
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
-    private final static Logger loggerTradeLog = Logger.getLogger(LOGGER_TADELOG_NAME);
 
     public static void PerformChecks(StatusDataForNinety statusData, StockDataForNinety stockData, IBBroker broker) {
         CheckHeldPositions(statusData, broker);
@@ -79,23 +78,41 @@ public class NinetyChecker {
             logger.severe("Check on held position - FAILED");
         }
     }
-    
+
     public static void CheckCash(StatusDataForNinety statusData, IBBroker broker) {
-        logger.info("Saved current cash: " + TradeFormatter.toString(statusData.currentCash) + ", liquidation on IB: " + TradeFormatter.toString(broker.accountSummary.netLiquidation));
-        
-        double cashDiff = statusData.currentCash - broker.accountSummary.netLiquidation;
-        double cashDiffPercent = cashDiff / statusData.currentCash * 100;
-        logger.info("Difference - " + TradeFormatter.toString(cashDiff) + "$ = " + TradeFormatter.toString(cashDiffPercent) + "%");
-        
+        logger.info("Saved current cash: " + TradeFormatter.toString(statusData.currentCash) + ", cash on IB: " + TradeFormatter.toString(broker.accountSummary.totalCashValue));
+
+        double cashDiff = broker.accountSummary.totalCashValue - statusData.currentCash;
+        double cashDiffPercent = abs(cashDiff / statusData.currentCash * 100);
+
         if (cashDiffPercent > 5.0) {
-            logger.warning("Difference between saved cash and liquidation on IB is " + cashDiff + "$ = " + cashDiffPercent + "%");
+            logger.warning("Difference between saved cash and cash on IB is " + TradeFormatter.toString(cashDiff) + 
+                    "$ = " + TradeFormatter.toString(cashDiffPercent) + "%");
+        } else {
+            logger.info("Difference - " + TradeFormatter.toString(cashDiff) + "$ = " + TradeFormatter.toString(cashDiffPercent) + "%");
+        }
+
+        int freePortions = 20 - statusData.GetBoughtPortions();
+        double availableCash = freePortions * statusData.GetOnePortionValue() / Settings.getInstance().leverage;
+
+        logger.info("Saved current available cash: " + TradeFormatter.toString(availableCash) + 
+                ", available funds on IB: " + TradeFormatter.toString(broker.accountSummary.availableFunds));
+
+        double availableCashDiff = broker.accountSummary.availableFunds - availableCash;
+        double availableCashDiffPercent = abs(availableCashDiff / availableCash * 100);
+
+        if (availableCashDiff < 0) {
+            logger.severe("Difference between saved available cash and available funds on IB is " + TradeFormatter.toString(availableCashDiff) + 
+                    "$ = " + TradeFormatter.toString(availableCashDiffPercent) + "%");
+        } else {
+            logger.info("Difference - " + TradeFormatter.toString(availableCashDiff) + "$ = " + TradeFormatter.toString(availableCashDiffPercent) + "%");
         }
     }
-    
+
     public static void CheckHistData(StockDataForNinety stockData, StatusDataForNinety statusData) {
         logger.fine("Starting history data check.");
         boolean isOk = true;
-        
+
         int tickerCount = StockDataForNinety.getSP100().length;
         int histCount = stockData.closeDataMap.size();
         int indicatorCount = stockData.indicatorsMap.size();
