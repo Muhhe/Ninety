@@ -8,6 +8,7 @@ package strategies;
 import communication.IBBroker;
 import data.CloseData;
 import data.DataGetterActGoogle;
+import data.DataGetterHistQuandl;
 import data.DataGetterHistYahoo;
 import data.IndicatorCalculator;
 import data.StockIndicatorsForNinety;
@@ -55,6 +56,13 @@ public class StockDataForNinety {
 
         return tickers;
     }
+    
+    private void FillFirstDato(CloseData data) {                
+        if ((data != null) && (data.adjCloses.length > 2)) {
+            data.adjCloses[0] = data.adjCloses[1];
+            data.dates[0] = LocalDate.now();
+        }
+    }
 
     public void PrepareHistData() {
 
@@ -65,8 +73,23 @@ public class StockDataForNinety {
             String[] tickers = getSP100();
             for (String ticker : tickers) {
                 logger.finest("Loading hist data for " + ticker);
+                
                 CloseData data = DataGetterHistYahoo.readData(LocalDate.now(), 200, ticker);
-                if (data != null) {
+                
+                FillFirstDato(data);
+
+                if ((data == null) || !NinetyChecker.CheckTickerData(data, ticker)) {
+                    logger.warning("Failed to load Yahoo hist data for " + ticker + ". Trying to load it from Quandl.");
+                    data = DataGetterHistQuandl.readData(LocalDate.now(), 200, ticker);
+                    FillFirstDato(data);
+                    
+                    if ((data != null) && NinetyChecker.CheckTickerData(data, ticker)) {
+                        logger.warning("Hist data from Quandl for " + ticker + " loaded successfuly.");
+                        closeDataMap.put(ticker, data);
+                    } else {
+                        logger.severe("Failed to load hist data for " + ticker);
+                    }
+                } else {
                     closeDataMap.put(ticker, data);
                 }
             }

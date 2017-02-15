@@ -6,19 +6,18 @@
 package strategies;
 
 import data.CloseData;
+import data.DataGetterHistQuandl;
 import data.DataGetterHistYahoo;
 import data.IndicatorCalculator;
 import data.StockIndicatorsForNinety;
 import java.io.BufferedReader;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.DoubleStream;
 import java.util.stream.Stream;
 import static strategies.StockDataForNinety.getSP100;
 import tradingapp.TradeOrder;
@@ -31,7 +30,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Iterator;
 import org.jdom2.Attribute;
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -180,7 +178,7 @@ public class BackTesterNinety {
                 map.put(ticker, retData);
                 
             } catch (FileNotFoundException ex) {
-                CloseData data = LoadTickerDataFromYahoo(ticker, startDate, endDate);
+                CloseData data = LoadTickerDataFromQuandl(ticker, startDate, endDate);
                 if (data == null) {
                     continue;
                 }
@@ -202,10 +200,36 @@ public class BackTesterNinety {
     }
     
     public static CloseData LoadTickerDataFromYahoo(String ticker, LocalDate startDate, LocalDate endDate) {
-        logger.info("Loading data for: " + ticker);
+        logger.info("Loading Yahoo data for: " + ticker);
             
         CloseData closeData = DataGetterHistYahoo.readRawAdjCloseData(startDate, endDate, ticker);
         CloseData first199 = DataGetterHistYahoo.readRawAdjCloseData(startDate.minusDays(300), startDate.minusDays(1), ticker, 199);
+        
+        if ((closeData == null) || (first199 == null)) {
+            return null;
+        }
+
+        Stream<LocalDate> stream1 = Arrays.stream(closeData.dates);
+        Stream<LocalDate> stream2 = Arrays.stream(first199.dates);
+        LocalDate[] dates = Stream.concat(stream1, stream2).toArray(LocalDate[]::new);
+
+        double[] closeValues = concat(closeData.adjCloses, first199.adjCloses);
+
+        assert(dates.length == closeValues.length);
+
+        CloseData data = new CloseData(dates.length);
+        data.adjCloses = closeValues;
+        data.dates = dates;
+        
+        return data;
+    }
+    
+    
+    public static CloseData LoadTickerDataFromQuandl(String ticker, LocalDate startDate, LocalDate endDate) {
+        logger.info("Loading Quandl data for: " + ticker);
+            
+        CloseData closeData = DataGetterHistQuandl.readRawAdjCloseData(startDate, endDate, ticker);
+        CloseData first199 = DataGetterHistQuandl.readRawAdjCloseData(startDate.minusDays(300), startDate.minusDays(1), ticker, 199);
         
         if ((closeData == null) || (first199 == null)) {
             return null;
@@ -229,6 +253,8 @@ public class BackTesterNinety {
     public static Map<String, CloseData> LoadData(LocalDate startDate, LocalDate endDate) {
 
         Map<String, CloseData> dataMap = new HashMap<>();
+        
+        int dataSize = 0;
 
         if (CheckBacktestSettingsInCache(startDate, endDate)) {
             dataMap = LoadBacktestCache(startDate, endDate);
@@ -239,13 +265,25 @@ public class BackTesterNinety {
                     continue;
                 }
 
+                if (data.dates.length > dataSize) {
+                    if (dataSize != 0) {
+                        logger.warning("Data size increased for " + ticker);
+                    }
+                    dataSize = data.dates.length;
+                }
+
+                if (data.dates.length < dataSize) {
+                    logger.warning("Data for " + ticker + " are not complete. Only " + data.dates.length + " out of " + dataSize + " loaded.");
+                    //continue;
+                }
+
                 dataMap.put(ticker, data);
             }
         }
         SaveLoadedData(dataMap, startDate, endDate);
         return dataMap;
     }
-    
+
     private static class EquityInTime {
         LocalDate date;
         double profit;

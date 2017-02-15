@@ -22,7 +22,7 @@ import tradingapp.TradingTimer;
  * @author Muhe
  */
 public class NinetyChecker {
-    
+
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     public static void PerformChecks(StatusDataForNinety statusData, StockDataForNinety stockData, IBBroker broker) {
@@ -30,7 +30,7 @@ public class NinetyChecker {
         CheckCash(statusData, broker);
         CheckHistData(stockData, statusData);
     }
-    
+
     public static void CheckHeldPositions(StatusDataForNinety statusData, IBBroker broker) {
         List<Position> allPositions = broker.getAllPositions();
 
@@ -40,7 +40,7 @@ public class NinetyChecker {
                 posSize++;
             }
         }
-        
+
         logger.fine("Held postions on IB: " + posSize);
         for (Position position : allPositions) {
             if (position.pos == 0) {    // IB keeps stock with 0 position
@@ -86,8 +86,8 @@ public class NinetyChecker {
         double cashDiffPercent = abs(cashDiff / statusData.currentCash * 100);
 
         if (cashDiffPercent > 5.0) {
-            logger.warning("Difference between saved cash and cash on IB is " + TradeFormatter.toString(cashDiff) + 
-                    "$ = " + TradeFormatter.toString(cashDiffPercent) + "%");
+            logger.warning("Difference between saved cash and cash on IB is " + TradeFormatter.toString(cashDiff)
+                    + "$ = " + TradeFormatter.toString(cashDiffPercent) + "%");
         } else {
             logger.info("Difference - " + TradeFormatter.toString(cashDiff) + "$ = " + TradeFormatter.toString(cashDiffPercent) + "%");
         }
@@ -95,15 +95,15 @@ public class NinetyChecker {
         int freePortions = 20 - statusData.GetBoughtPortions();
         double availableCash = freePortions * statusData.GetOnePortionValue() / Settings.getInstance().leverage;
 
-        logger.info("Saved current available cash: " + TradeFormatter.toString(availableCash) + 
-                ", available funds on IB: " + TradeFormatter.toString(broker.accountSummary.availableFunds));
+        logger.info("Saved current available cash: " + TradeFormatter.toString(availableCash)
+                + ", available funds on IB: " + TradeFormatter.toString(broker.accountSummary.availableFunds));
 
         double availableCashDiff = broker.accountSummary.availableFunds - availableCash;
         double availableCashDiffPercent = abs(availableCashDiff / availableCash * 100);
 
         if (availableCashDiff < 0) {
-            logger.severe("Difference between saved available cash and available funds on IB is " + TradeFormatter.toString(availableCashDiff) + 
-                    "$ = " + TradeFormatter.toString(availableCashDiffPercent) + "%");
+            logger.severe("Difference between saved available cash and available funds on IB is " + TradeFormatter.toString(availableCashDiff)
+                    + "$ = " + TradeFormatter.toString(availableCashDiffPercent) + "%");
         } else {
             logger.info("Difference - " + TradeFormatter.toString(availableCashDiff) + "$ = " + TradeFormatter.toString(availableCashDiffPercent) + "%");
         }
@@ -116,69 +116,29 @@ public class NinetyChecker {
         int tickerCount = StockDataForNinety.getSP100().length;
         int histCount = stockData.closeDataMap.size();
         int indicatorCount = stockData.indicatorsMap.size();
-        
+
         if (histCount != tickerCount) {
             logger.warning("Loaded hist data of only " + histCount + " out of " + tickerCount);
             isOk = false;
         }
-        
-        if (histCount != tickerCount) {
+
+        if (indicatorCount != tickerCount) {
             logger.warning("Indicators for only " + indicatorCount + " tickers out of " + tickerCount);
             isOk = false;
         }
-        
+
         for (HeldStock held : statusData.heldStocks.values()) {
             if (!stockData.indicatorsMap.containsKey(held.tickerSymbol)) {
-                logger.severe("Indicators for held stock '" + held.tickerSymbol+ "' is missing!!!");
+                logger.severe("Indicators for held stock '" + held.tickerSymbol + "' is missing!!!");
                 isOk = false;
             }
         }
-        
+
         for (Map.Entry<String, CloseData> entry : stockData.closeDataMap.entrySet()) {
             String ticker = entry.getKey();
             CloseData data = entry.getValue();
 
-            if ((data.adjCloses.length != 200)
-                    || (data.dates.length != 200)) {
-                logger.severe("Failed check hist data for: " + ticker + ". Length is not 200 but " + data.adjCloses.length);
-                isOk = false;
-            }
-            LocalDate checkDate = LocalDate.now();
-            while (!TradingTimer.IsTradingDay(checkDate)) {
-                checkDate = checkDate.minusDays(1);
-            }
-            for (LocalDate date : data.dates) {
-                if (date.compareTo(checkDate) != 0) {
-                    logger.severe("Failed check hist data for: " + ticker + ". Date should be " + checkDate + " but is " + date);
-                    break;
-                }
-
-                checkDate = checkDate.minusDays(1);
-                while (!TradingTimer.IsTradingDay(checkDate)) {
-                    checkDate = checkDate.minusDays(1);
-                }
-            }
-
-            double lastAdjClose = 0;
-            for (int i = 0; i < data.adjCloses.length; i++) {
-                if (data.adjCloses[i] == 0) {
-                    logger.severe("Failed check hist data for: " + ticker + ". AdjClose value is 0");
-                    isOk = false;
-                }
-                
-                if (i < 1) {
-                    lastAdjClose = data.adjCloses[i];
-                    continue;
-                }
-                
-                double diffRatio = (lastAdjClose - data.adjCloses[i]) / lastAdjClose;
-                if (diffRatio > 0.3) {
-                    logger.warning("Failed check hist data for: " + ticker + ". AdjClose value for date " + data.dates[i] + " is " + data.adjCloses[i] + 
-                            ", for " + data.dates[i-1] + " it's " + data.adjCloses[i-1] + ". Difference " + diffRatio * 100 + "%.");
-                    isOk = false;
-                }
-                lastAdjClose = data.adjCloses[i];
-            }
+            isOk &= CheckTickerData(data, ticker);
         }
 
         if (isOk) {
@@ -186,5 +146,54 @@ public class NinetyChecker {
         } else {
             logger.warning("History data check - FAILED");
         }
+    }
+
+    public static boolean CheckTickerData(CloseData data, String ticker) {
+        if ((data.adjCloses.length != 200) || (data.dates.length != 200)) {
+            logger.severe("Failed check hist data for: " + ticker + ". Length is not 200 but " + data.adjCloses.length);
+            return false;
+        }
+        LocalDate checkDate = LocalDate.now();
+        while (!TradingTimer.IsTradingDay(checkDate)) {
+            checkDate = checkDate.minusDays(1);
+        }
+        for (LocalDate date : data.dates) {
+            if (date.compareTo(checkDate) != 0) {
+                logger.severe("Failed check hist data for: " + ticker + ". Date should be " + checkDate + " but is " + date);
+                break;
+            }
+
+            checkDate = checkDate.minusDays(1);
+            while (!TradingTimer.IsTradingDay(checkDate)) {
+                checkDate = checkDate.minusDays(1);
+            }
+        }
+
+        return CheckTickerAdjCloses(data, ticker);
+    }
+
+    public static boolean CheckTickerAdjCloses(CloseData data, String ticker) {
+        double lastAdjClose = 0;
+        for (int i = 0; i < data.adjCloses.length; i++) {
+            if (data.adjCloses[i] == 0) {
+                logger.severe("Failed check hist data for: " + ticker + ". AdjClose value is 0. Date " + data.dates[i]);
+                return false;
+            }
+
+            if (i < 1) {
+                lastAdjClose = data.adjCloses[i];
+                continue;
+            }
+
+            double diffRatio = (lastAdjClose - data.adjCloses[i]) / lastAdjClose;
+            if (diffRatio > 0.3) {
+                logger.warning("Failed check hist data for: " + ticker + ". AdjClose value for date " + data.dates[i] + " is " + data.adjCloses[i]
+                        + ", for " + data.dates[i - 1] + " it's " + data.adjCloses[i - 1] + ". Difference " + diffRatio * 100 + "%.");
+                return false;
+            }
+            lastAdjClose = data.adjCloses[i];
+        }
+
+        return true;
     }
 }
