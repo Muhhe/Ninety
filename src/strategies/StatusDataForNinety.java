@@ -93,7 +93,7 @@ public class StatusDataForNinety {
             
             MailSender.AddLineToMail("SELL - " + held.tickerSymbol + 
                     ", profit: " + TradeFormatter.toString(profit) + " = " + TradeFormatter.toString(profitPercent) + 
-                    "%, sellPrice: " + TradeFormatter.toString(order.fillPrice * order.filled) + 
+                    "%, sellPrice: " + TradeFormatter.toString(order.fillPrice) + 
                     ", portions: " + held.GetPortions());
             
             UpdateTradeLogFile(order, held);

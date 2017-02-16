@@ -29,6 +29,7 @@ public class NinetyDataPreparator implements Runnable {
     public void run() {
         if (!broker.connect() ) {
             logger.severe("Cannot connect to IB");
+            return;
         }
         logger.fine("Subscribing real-time data");
         stockData.SubscribeRealtimeData(broker);

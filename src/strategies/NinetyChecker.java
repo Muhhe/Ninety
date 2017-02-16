@@ -116,7 +116,7 @@ public class NinetyChecker {
         
         double buyingPowerLocal = freePortions * statusData.GetOnePortionValue();
         
-        if (buyingPowerLocal < broker.accountSummary.buyingPower) {
+        if (buyingPowerLocal > broker.accountSummary.buyingPower) {
             logger.severe("Not enough buying power on IB. Local buying power: " + buyingPowerLocal + ", on IB: " + broker.accountSummary.buyingPower);
             return false;
         }

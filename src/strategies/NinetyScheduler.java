@@ -28,7 +28,7 @@ public class NinetyScheduler {
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     private final static LocalTime FIRST_CHECK_TIME = LocalTime.of(10, 0);
-    private final static Duration DURATION_BEFORECLOSE_HISTDATA = Duration.ofMinutes(5);
+    private final static Duration DURATION_BEFORECLOSE_LASTCALL = Duration.ofMinutes(3);
     private final static Duration DURATION_BEFORECLOSE_RUNSTRATEGY = Duration.ofMinutes(1);
 
     public StockDataForNinety stockData = new StockDataForNinety();
@@ -79,6 +79,7 @@ public class NinetyScheduler {
     }
 
     public void ScheduleFirstCheck() {
+        boolean isCheckOk = true;
         try {
             TradeLogger.getInstance().clearLogs();
             TradeLogger.getInstance().initializeFiles(LocalDate.now());
@@ -102,7 +103,7 @@ public class NinetyScheduler {
             logger.info("Time in NY now: " + now);
             logger.info("Closing at: " + closeTimeLocal);
 
-            ZonedDateTime lastCall = now.with(closeTimeLocal).minus(DURATION_BEFORECLOSE_HISTDATA);
+            ZonedDateTime lastCall = now.with(closeTimeLocal).minus(DURATION_BEFORECLOSE_LASTCALL);
             logger.fine("LastCall: " + lastCall);
 
             if (now.compareTo(lastCall) > 0) {
@@ -118,6 +119,7 @@ public class NinetyScheduler {
             LoadHistData();
             
             if (!broker.connect() ) {
+                isCheckOk = false;
                 return;
             }
             
@@ -127,7 +129,7 @@ public class NinetyScheduler {
                     throw new IllegalStateException("InterruptedException");
             }
             
-            boolean isCheckOk = NinetyChecker.PerformChecks(statusData, stockData, broker);
+            isCheckOk &= NinetyChecker.PerformChecks(statusData, stockData, broker);
             
             logger.fine(broker.accountSummary.toString());
             broker.disconnect();
@@ -135,8 +137,18 @@ public class NinetyScheduler {
             if (isCheckOk) {
                 ScheduleTradingRun(closeTimeZoned.minus(DURATION_BEFORECLOSE_RUNSTRATEGY));
             }
-        }
-        finally {
+            
+        } finally {
+            if (!isCheckOk) {
+                logger.severe("Check failed. Scheduling check for next hour.");
+
+                TradingTimer.startTaskAt(ZonedDateTime.now().plusHours(1),
+                        () -> {
+                            ScheduleFirstCheck();
+                        });
+
+            }
+            
             if (!MailSender.getInstance().SendErrors()) {
                 MailSender.AddLineToMail("Check complete");
                 MailSender.getInstance().SendCheckResult();
