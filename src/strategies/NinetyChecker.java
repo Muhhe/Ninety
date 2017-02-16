@@ -25,13 +25,17 @@ public class NinetyChecker {
 
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
-    public static void PerformChecks(StatusDataForNinety statusData, StockDataForNinety stockData, IBBroker broker) {
-        CheckHeldPositions(statusData, broker);
-        CheckCash(statusData, broker);
-        CheckHistData(stockData, statusData);
+    public static boolean PerformChecks(StatusDataForNinety statusData, StockDataForNinety stockData, IBBroker broker) {
+        boolean isOk = true;
+        
+        isOk &= CheckHeldPositions(statusData, broker);
+        isOk &= CheckCash(statusData, broker);
+        isOk &= CheckStockData(stockData, statusData);
+        
+        return isOk;
     }
 
-    public static void CheckHeldPositions(StatusDataForNinety statusData, IBBroker broker) {
+    public static boolean CheckHeldPositions(StatusDataForNinety statusData, IBBroker broker) {
         List<Position> allPositions = broker.getAllPositions();
 
         int posSize = 0;
@@ -77,9 +81,11 @@ public class NinetyChecker {
         } else {
             logger.severe("Check on held position - FAILED");
         }
+        
+        return isOk;
     }
 
-    public static void CheckCash(StatusDataForNinety statusData, IBBroker broker) {
+    public static boolean CheckCash(StatusDataForNinety statusData, IBBroker broker) {
         logger.info("Saved current cash: " + TradeFormatter.toString(statusData.currentCash) + ", cash on IB: " + TradeFormatter.toString(broker.accountSummary.totalCashValue));
 
         double cashDiff = broker.accountSummary.totalCashValue - statusData.currentCash;
@@ -102,14 +108,23 @@ public class NinetyChecker {
         double availableCashDiffPercent = abs(availableCashDiff / availableCash * 100);
 
         if (availableCashDiff < 0) {
-            logger.severe("Difference between saved available cash and available funds on IB is " + TradeFormatter.toString(availableCashDiff)
+            logger.warning("Difference between saved available cash and available funds on IB is " + TradeFormatter.toString(availableCashDiff)
                     + "$ = " + TradeFormatter.toString(availableCashDiffPercent) + "%");
         } else {
             logger.info("Difference - " + TradeFormatter.toString(availableCashDiff) + "$ = " + TradeFormatter.toString(availableCashDiffPercent) + "%");
         }
+        
+        double buyingPowerLocal = freePortions * statusData.GetOnePortionValue();
+        
+        if (buyingPowerLocal < broker.accountSummary.buyingPower) {
+            logger.severe("Not enough buying power on IB. Local buying power: " + buyingPowerLocal + ", on IB: " + broker.accountSummary.buyingPower);
+            return false;
+        }
+        
+        return true;
     }
 
-    public static void CheckHistData(StockDataForNinety stockData, StatusDataForNinety statusData) {
+    public static boolean CheckStockData(StockDataForNinety stockData, StatusDataForNinety statusData) {
         logger.fine("Starting history data check.");
         boolean isOk = true;
 
@@ -119,12 +134,10 @@ public class NinetyChecker {
 
         if (histCount != tickerCount) {
             logger.warning("Loaded hist data of only " + histCount + " out of " + tickerCount);
-            isOk = false;
         }
 
         if (indicatorCount != tickerCount) {
             logger.warning("Indicators for only " + indicatorCount + " tickers out of " + tickerCount);
-            isOk = false;
         }
 
         for (HeldStock held : statusData.heldStocks.values()) {
@@ -146,6 +159,8 @@ public class NinetyChecker {
         } else {
             logger.warning("History data check - FAILED");
         }
+        
+        return isOk;
     }
 
     public static boolean CheckTickerData(CloseData data, String ticker) {
@@ -153,6 +168,8 @@ public class NinetyChecker {
             logger.severe("Failed check hist data for: " + ticker + ". Length is not 200 but " + data.adjCloses.length);
             return false;
         }
+        
+        boolean isOk = true;
         LocalDate checkDate = LocalDate.now();
         while (!TradingTimer.IsTradingDay(checkDate)) {
             checkDate = checkDate.minusDays(1);
@@ -160,6 +177,7 @@ public class NinetyChecker {
         for (LocalDate date : data.dates) {
             if (date.compareTo(checkDate) != 0) {
                 logger.severe("Failed check hist data for: " + ticker + ". Date should be " + checkDate + " but is " + date);
+                isOk = false;
                 break;
             }
 
@@ -169,7 +187,9 @@ public class NinetyChecker {
             }
         }
 
-        return CheckTickerAdjCloses(data, ticker);
+        isOk &= CheckTickerAdjCloses(data, ticker);
+        
+        return isOk;
     }
 
     public static boolean CheckTickerAdjCloses(CloseData data, String ticker) {

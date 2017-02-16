@@ -36,7 +36,8 @@ public class NinetyRunner implements Runnable {
         logger.info("Starting Ninety strategy");
         
         if (!broker.connect() ) {
-            logger.severe("Cannot connect to IB");
+            logger.severe("Cannot connect to IB. Exiting trading!");
+            return;
         }
 
         stockData.SubscribeRealtimeData(broker);
@@ -49,29 +50,43 @@ public class NinetyRunner implements Runnable {
 
         stockData.UpdateDataWithActValuesIB(broker);
         stockData.CalculateIndicators();
-        NinetyChecker.CheckHistData(stockData, statusData);
+        
+        if (!NinetyChecker.CheckStockData(stockData, statusData)) {
+            logger.severe("Currupted stock data. Exiting trading!");
+            broker.disconnect();
+            return;
+        }
 
         statusData.PrintStatus();
 
         List<TradeOrder> sells = RunNinetySells();
 
         if (!broker.waitUntilOrdersClosed(20)) {
-            logger.severe("Some SELL orders were not closed on time.");
+            logger.warning("Some SELL orders were not closed on time.");
         }
 
         ProcessSubmittedOrders();
 
         stockData.UpdateDataWithActValuesIB(broker);
         stockData.CalculateIndicators();
-        NinetyChecker.CheckHeldPositions(statusData, broker);
-        NinetyChecker.CheckHistData(stockData, statusData);
+        
+        if (!NinetyChecker.CheckHeldPositions(statusData, broker)) {
+            logger.severe("Failed check positions after sell.");
+        }
+        
+        if (!NinetyChecker.CheckStockData(stockData, statusData)) {
+            logger.severe("Currupted stock data after sell. Exiting trading!");
+            statusData.SaveHeldPositionsToXML();
+            broker.disconnect();
+            return;
+        }
 
         stockData.UnSubscribeRealtimeData(broker);
 
         RunNinetyBuys(sells);
 
         if (!broker.waitUntilOrdersClosed(40)) {
-            logger.severe("Some orders were not closed on time.");
+            logger.warning("Some orders were not closed on time.");
         }
 
         ProcessSubmittedOrders();

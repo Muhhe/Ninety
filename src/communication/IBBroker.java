@@ -58,10 +58,12 @@ public class IBBroker extends BaseIBConnectionImpl {
         public double totalCashValue = 0;
         public double netLiquidation = 0;
         public double availableFunds = 0;
+        public double buyingPower = 0;
         
         @Override
         public String toString() {
-            return "IB AccountSummary - totalCashValue: " + totalCashValue + ", netLiquidation: " + netLiquidation + ", availableFunds: " + availableFunds;
+            return "IB AccountSummary - totalCashValue: " + totalCashValue + ", netLiquidation: " + netLiquidation + 
+                    ", \r\n availableFunds: " + availableFunds + ", buyingPower: " + buyingPower;
         }
     }
 
@@ -79,6 +81,7 @@ public class IBBroker extends BaseIBConnectionImpl {
             try {
                 if (!connectiongLatch.await(10, TimeUnit.SECONDS)) {
                     logger.severe("Cannot connect to IB");
+                    loggerComm.severe("Cannot connect to IB");
                     return false;
                 }
             } catch (InterruptedException ex) {
@@ -104,6 +107,7 @@ public class IBBroker extends BaseIBConnectionImpl {
         loggerComm.info("Connection to IB closed.");
         connected = false;
         accountSummarySubscribed = false;
+        clearOrderMaps();
     }
     
     @Override
@@ -142,7 +146,7 @@ public class IBBroker extends BaseIBConnectionImpl {
     
     public synchronized boolean PlaceOrder(TradeOrder tradeOrder) {        
         if (!connected) {
-            loggerComm.severe("IB not connected. Cannot place order.");
+            logger.severe("IB not connected. Cannot place order.");
             return false;
         }
         
@@ -158,7 +162,7 @@ public class IBBroker extends BaseIBConnectionImpl {
         ibOrder.m_orderId = getNextOrderId();
         
         if (orderStatusMap.containsKey(ibOrder.m_orderId)) {
-            loggerComm.severe("Trying to use duplicate ID for order: " + tradeOrder.tickerSymbol + ", " + ibOrder.m_action);
+            logger.severe("Trying to use duplicate ID for order: " + tradeOrder.tickerSymbol + ", " + ibOrder.m_action);
             return false;
             //TODO: co s tim? omezenej while?
         }
@@ -220,7 +224,7 @@ public class IBBroker extends BaseIBConnectionImpl {
     public List<Position> getAllPositions() {
         positionsList.clear();
         if (!connected) {
-            loggerComm.severe("IB not connected. Cannot get positions.");
+            logger.severe("IB not connected. Cannot get positions.");
             return positionsList;
         }
         
@@ -273,7 +277,7 @@ public class IBBroker extends BaseIBConnectionImpl {
     
     public void RequestRealtimeData(String ticker) {
         if (!connected) {
-            loggerComm.severe("IB not connected. Cannot RequestRealtimeData.");
+            logger.severe("IB not connected. Cannot RequestRealtimeData.");
             return;
         }
         
@@ -362,6 +366,9 @@ public class IBBroker extends BaseIBConnectionImpl {
         }
         if (tag.compareTo("TotalCashValue") == 0) {
             accountSummary.totalCashValue = Double.valueOf(value);
+        }
+        if (tag.compareTo("BuyingPower") == 0) {
+            accountSummary.buyingPower = Double.valueOf(value);
         }
     }
 }

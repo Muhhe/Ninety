@@ -116,8 +116,6 @@ public class NinetyScheduler {
             ZonedDateTime closeTimeZoned = now.with(closeTimeLocal);
 
             LoadHistData();
-
-            ScheduleTradingRun(closeTimeZoned.minus(DURATION_BEFORECLOSE_RUNSTRATEGY));
             
             if (!broker.connect() ) {
                 return;
@@ -129,10 +127,14 @@ public class NinetyScheduler {
                     throw new IllegalStateException("InterruptedException");
             }
             
-            NinetyChecker.PerformChecks(statusData, stockData, broker);
+            boolean isCheckOk = NinetyChecker.PerformChecks(statusData, stockData, broker);
             
             logger.fine(broker.accountSummary.toString());
             broker.disconnect();
+
+            if (isCheckOk) {
+                ScheduleTradingRun(closeTimeZoned.minus(DURATION_BEFORECLOSE_RUNSTRATEGY));
+            }
         }
         finally {
             if (!MailSender.getInstance().SendErrors()) {
