@@ -84,30 +84,43 @@ public class MailSender {
         }
 
         logger.fine("Sending trade log mail!");
-        Send("Trading log 90", Settings.getInstance().mailAddressTradeLog, m_mailBody.toString());
-        m_mailBody.setLength(0);
-        logger.info("Trade log mail sent!");
+        
+        if (Send("Trading log 90", Settings.getInstance().mailAddressTradeLog, m_mailBody.toString())) {
+            m_mailBodyError.setLength(0);
+            logger.info("Trade mail sent!");
+        } else {
+            logger.info("Trade mail NOT sent!");
+        }
     }
 
     public void SendCheckResult() {
         logger.fine("Sending check mail!");
-        Send("Check 90", Settings.getInstance().mailAddressCheck, m_mailBody.toString());
-        m_mailBody.setLength(0);
-        logger.info("Check mail sent!");
+        
+        if (Send("Check 90", Settings.getInstance().mailAddressCheck, m_mailBody.toString())) {
+            m_mailBodyError.setLength(0);
+            logger.info("Check mail sent!");
+        } else {
+            logger.info("Check mail NOT sent!");
+        }
     }
 
     public boolean SendErrors() {
         if (m_mailBodyError.length() > 0) {
             logger.fine("Sending error mail!");
-            Send("Errors!!!", Settings.getInstance().mailAddressError, m_mailBodyError.toString());
-            m_mailBodyError.setLength(0);
-            logger.info("Error mail sent!");
+
+            if (Send("Errors!!!", Settings.getInstance().mailAddressError, m_mailBodyError.toString())) {
+                m_mailBodyError.setLength(0);
+                logger.info("Error mail sent!");
+            } else {
+                logger.info("Error mail NOT sent!");
+            }
             return true;
         }
+
         return false;
     }
 
-    private void Send(String subject, String address, String mailBody) {
+    private boolean Send(String subject, String address, String mailBody) {
         Session session = SetupSession();
 
         try {
@@ -151,7 +164,10 @@ public class MailSender {
 
         } catch (MessagingException e) {
             logger.severe("Failed to send mail: " + e);
+            return false;
         }
+        
+        return true;
     }
 
     public void AddAttachment(String filename, Multipart multipart) {

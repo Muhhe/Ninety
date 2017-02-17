@@ -46,7 +46,7 @@ public class IBBroker extends BaseIBConnectionImpl {
     protected BlockingQueue<Integer> nextIdQueue = new LinkedBlockingQueue<>();
     protected CountDownLatch getPositionsCountdownLatch = null;
     protected CountDownLatch ordersClosedWaitCountdownLatch = null;
-    protected CountDownLatch connectiongLatch = null;
+    protected CountDownLatch connectionLatch = null;
     protected List<Position> positionsList = new ArrayList<>();
     private int nextOrderId = -1;
     
@@ -77,9 +77,9 @@ public class IBBroker extends BaseIBConnectionImpl {
             logger.fine("Connecting to IB.");
             loggerComm.fine("Connecting to IB.");
             ibClientSocket.eConnect(null, port, clientId );
-            connectiongLatch = new CountDownLatch(1);
+            connectionLatch = new CountDownLatch(1);
             try {
-                if (!connectiongLatch.await(10, TimeUnit.SECONDS)) {
+                if (!connectionLatch.await(5, TimeUnit.SECONDS) || !connected) {
                     logger.severe("Cannot connect to IB");
                     loggerComm.severe("Cannot connect to IB");
                     return false;
@@ -87,9 +87,10 @@ public class IBBroker extends BaseIBConnectionImpl {
             } catch (InterruptedException ex) {
                 loggerComm.log(Level.SEVERE, null, ex);
             }
+            
+            RequestAccountSummary();
         }
         
-        RequestAccountSummary();
         return true;
     }
     
@@ -108,6 +109,7 @@ public class IBBroker extends BaseIBConnectionImpl {
         connected = false;
         accountSummarySubscribed = false;
         clearOrderMaps();
+        connectionLatch.countDown();    // if connection fails
     }
     
     @Override
@@ -121,7 +123,7 @@ public class IBBroker extends BaseIBConnectionImpl {
         if (!connected) {
             connected = true;
             logger.fine("Connection to IB successful.");
-            connectiongLatch.countDown();
+            connectionLatch.countDown();
         }
     }
     

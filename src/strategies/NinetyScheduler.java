@@ -63,22 +63,29 @@ public class NinetyScheduler {
         logger.info("Scheduling for tomorrow!");
         isStartScheduled = true;
         ZonedDateTime tomorrowCheck = TradingTimer.GetNYTimeNow().plusDays(1).with(FIRST_CHECK_TIME);
-        TradingTimer.startTaskAt(tomorrowCheck, new Runnable() {
-            @Override
-            public void run() {
-                ScheduleFirstCheck();
-            }
-        });
+        TradingTimer.startTaskAt(tomorrowCheck, this::DoInitialization);
 
         Duration durationToNextRun = Duration.ofSeconds(TradingTimer.computeTimeFromNowTo(tomorrowCheck));
         
         logger.info("Next check is scheduled for " + tomorrowCheck.format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
         logger.info("Starting in " + durationToNextRun.toString());
-        
+
         MailSender.getInstance().SendErrors();
     }
 
     public void ScheduleFirstCheck() {
+        ZonedDateTime earliestCheckTime = TradingTimer.GetNYTimeNow().with(FIRST_CHECK_TIME);
+        
+        ZonedDateTime checkTime = TradingTimer.GetNYTimeNow().plusSeconds(1);
+
+        if (checkTime.compareTo(earliestCheckTime) <= 0) {
+            checkTime = earliestCheckTime;
+        }
+
+        TradingTimer.startTaskAt(checkTime, this::DoInitialization);
+    }
+
+    public void DoInitialization() {
         boolean isCheckOk = true;
         try {
             TradeLogger.getInstance().clearLogs();
@@ -142,10 +149,7 @@ public class NinetyScheduler {
             if (!isCheckOk) {
                 logger.severe("Check failed. Scheduling check for next hour.");
 
-                TradingTimer.startTaskAt(ZonedDateTime.now().plusHours(1),
-                        () -> {
-                            ScheduleFirstCheck();
-                        });
+                TradingTimer.startTaskAt(ZonedDateTime.now().plusHours(1), this::DoInitialization);
 
             }
             

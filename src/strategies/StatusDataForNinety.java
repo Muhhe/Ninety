@@ -252,6 +252,11 @@ public class StatusDataForNinety {
             return;
         }
         
+        if (held.purchases.isEmpty()) {
+            logger.warning("Trying to add empty held stock to trade log.");
+            return;
+        }
+        
         Writer writer = null;
         try {
             File equityFile = new File("TradeLog.csv");
@@ -262,11 +267,13 @@ public class StatusDataForNinety {
             double profitPercent = held.CalculatePercentProfitIfSold(order.fillPrice);
             
             writer.append(LocalDate.now().toString() + ",");
+            writer.append(held.purchases.get(0).date + ",");
             writer.append(held.tickerSymbol + ",");
             writer.append(profit + ",");
             writer.append(profitPercent + ",");
-            writer.append(held.GetPortions()+ ",");
-            writer.append(held.GetTotalPricePaid()+ "\r\n");
+            writer.append(held.GetPortions() + ",");
+            writer.append(held.GetTotalPricePaid() + ",");
+            writer.append((held.purchases.size() + 1) + "\r\n");
             
             logger.finer("Updated trade log file.");
         } catch (FileNotFoundException ex) {
