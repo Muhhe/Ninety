@@ -80,6 +80,11 @@ public class NinetyScheduler {
 
         if (checkTime.compareTo(earliestCheckTime) <= 0) {
             checkTime = earliestCheckTime;
+        
+            Duration durationToNextRun = Duration.ofSeconds(TradingTimer.computeTimeFromNowTo(checkTime));
+
+            logger.info("First check is scheduled for " + checkTime.format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
+            logger.info("Starting in " + durationToNextRun.toString());
         }
 
         TradingTimer.startTaskAt(checkTime, this::DoInitialization);
@@ -190,6 +195,11 @@ public class NinetyScheduler {
     }
     
     public void ScheduleTradingRun(ZonedDateTime runTime) {
+        Duration timeToStart = Duration.ofSeconds(TradingTimer.computeTimeFromNowTo(runTime));
+
+        logger.info("Starting Ninety strategy is scheduled for " + runTime.format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
+        logger.info("Starting in " + timeToStart.toString());
+        
         Runnable taskWrapper = new Runnable() {
             @Override
             public void run() {
@@ -218,11 +228,6 @@ public class NinetyScheduler {
         };
 
         TradingTimer.startTaskAt(runTime, taskWrapper);
-
-        Duration timeToStart = Duration.ofSeconds(TradingTimer.computeTimeFromNowTo(runTime));
-
-        logger.info("Starting Ninety strategy is scheduled for " + runTime.format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
-        logger.info("Starting in " + timeToStart.toString());
     }
     
     public void Stop() {

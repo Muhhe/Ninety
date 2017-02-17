@@ -34,9 +34,19 @@ public class NinetyRunner implements Runnable {
     @Override
     public void run() {
         logger.info("Starting Ninety strategy");
+
+        int connectTries = 3;
+
+        while (connectTries-- > 0) {
+            if (broker.connect()) {
+                break;
+            } else {
+                logger.warning("Cannot connect to IB. Trying again.");
+            }
+        }
         
-        if (!broker.connect() ) {
-            logger.severe("Cannot connect to IB. Exiting trading!");
+        if (connectTries < 0) {
+            logger.warning("Failed to connect to IB. Exiting trading!");
             return;
         }
 

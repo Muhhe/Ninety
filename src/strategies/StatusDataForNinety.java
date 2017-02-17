@@ -96,7 +96,7 @@ public class StatusDataForNinety {
                     "%, sellPrice: " + TradeFormatter.toString(order.fillPrice) + 
                     ", portions: " + held.GetPortions());
             
-            UpdateTradeLogFile(order, held);
+            UpdateTradeLogs(order, held);
         } else {
             
             int newPortions = Ninety.GetNewPortionsToBuy(held.GetPortions());
@@ -246,7 +246,7 @@ public class StatusDataForNinety {
         }
     }
     
-    static public void UpdateTradeLogFile(OrderStatus order, HeldStock held) {
+    static public void UpdateTradeLogs(OrderStatus order, HeldStock held) {
         if (order.order.orderType != TradeOrder.OrderType.SELL) {
             logger.warning("Trying to add BUY order to trade log.");
             return;
@@ -256,6 +256,12 @@ public class StatusDataForNinety {
             logger.warning("Trying to add empty held stock to trade log.");
             return;
         }
+        
+        UpdateCloseTradeLogFile(order, held);
+        UpdateDetailedTradeLogFile(order, held);
+    }
+    
+    static public void UpdateCloseTradeLogFile(OrderStatus order, HeldStock held) {
         
         Writer writer = null;
         try {
@@ -275,18 +281,66 @@ public class StatusDataForNinety {
             writer.append(held.GetTotalPricePaid() + ",");
             writer.append((held.purchases.size() + 1) + "\r\n");
             
-            logger.finer("Updated trade log file.");
+            logger.finer("Updated close trade log file.");
         } catch (FileNotFoundException ex) {
-            logger.severe("Cannot find equity file: " + ex);
+            logger.severe("Cannot find close trade log file: " + ex);
         } catch (IOException ex) {
-            logger.severe("Error updating equity file: " + ex);
+            logger.severe("Error updating close trade log file: " + ex);
         } finally {
             try {
                 if (writer != null) {
                     writer.close();
                 }
             } catch (IOException ex) {
-                logger.severe("Error updating equity file: " + ex);
+                logger.severe("Error updating close trade log file: " + ex);
+            }
+        }
+    }
+    
+    static public void UpdateDetailedTradeLogFile(OrderStatus order, HeldStock held) {
+                
+        Writer writer = null;
+        try {
+            File equityFile = new File("TradeLogDetailed.txt");
+            equityFile.createNewFile();
+            writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(equityFile, true), "UTF-8"));
+            
+            for (StockPurchase purchase : held.purchases) {
+                writer.append(purchase.date.toString() + ", ");
+                if (purchase.portions == 1) {
+                    writer.append("OPEN, ");
+                } else {
+                    writer.append("SCALE, ");
+                }
+                writer.append("Ticker: " + held.tickerSymbol + ", ");
+                writer.append("Price: " + TradeFormatter.toString(purchase.priceForOne) + ", ");
+                writer.append("Position: " + purchase.position + "\r\n");
+            }
+            
+            double profit = held.CalculateProfitIfSold(order.fillPrice);
+            double profitPercent = held.CalculatePercentProfitIfSold(order.fillPrice);
+            
+            writer.append(LocalDate.now().toString() + ", ");
+            writer.append("CLOSE, ");
+            writer.append("Ticker: " + held.tickerSymbol + ", ");
+            writer.append("Price: " + TradeFormatter.toString(order.fillPrice) + ", ");
+            writer.append("Position: " + held.GetPosition()+ ", ");
+            writer.append("Profit: " + TradeFormatter.toString(profit) + "$, = " + TradeFormatter.toString(profitPercent) + "%, ");
+            writer.append("Portions: " + held.GetPortions() + ",");
+            writer.append("Fees: " + (held.purchases.size() + 1) + "$\r\n\r\n");
+            
+            logger.finer("Updated detailed trade log file.");
+        } catch (FileNotFoundException ex) {
+            logger.severe("Cannot find detailed trade log file: " + ex);
+        } catch (IOException ex) {
+            logger.severe("Error updating detailed trade log file: " + ex);
+        } finally {
+            try {
+                if (writer != null) {
+                    writer.close();
+                }
+            } catch (IOException ex) {
+                logger.severe("Error updating detailed trade log file: " + ex);
             }
         }
     }

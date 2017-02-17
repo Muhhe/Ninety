@@ -7,6 +7,7 @@ package tradingapp;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import strategies.HeldStock;
 import strategies.NinetyChecker;
 import strategies.NinetyScheduler;
 import strategies.StockPurchase;
@@ -167,7 +168,11 @@ public class MainWindow extends javax.swing.JFrame {
     }//GEN-LAST:event_startButtonActionPerformed
 
     private void checkPositionsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkPositionsButtonActionPerformed
-
+        /*HeldStock a = null;
+        if (a == null) {
+            a.purchases.add(new StockPurchase());
+        }*/
+        
         new Thread(() -> {
             boolean connected = ninetyScheduler.broker.connected;
             if (!connected) {
