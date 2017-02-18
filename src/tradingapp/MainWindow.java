@@ -5,6 +5,7 @@
  */
 package tradingapp;
 
+import communication.BrokerIB;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import strategies.HeldStock;
@@ -38,8 +39,10 @@ public class MainWindow extends javax.swing.JFrame {
         });
 
         TradeLogger.getInstance().initializeTextAreas(logArea, fineLogArea, commArea);
+        
+        Settings.getInstance().ReadSettings();
 
-        ninetyScheduler = new NinetyScheduler();
+        ninetyScheduler = new NinetyScheduler( new BrokerIB(Settings.getInstance().port, Settings.getInstance().clientId) );
     }
 
     /**
@@ -64,6 +67,7 @@ public class MainWindow extends javax.swing.JFrame {
         checkPositionsButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Trading app 90");
         setMinimumSize(new java.awt.Dimension(300, 300));
 
         startButton.setText("Start");
@@ -174,7 +178,7 @@ public class MainWindow extends javax.swing.JFrame {
         }*/
         
         new Thread(() -> {
-            boolean connected = ninetyScheduler.broker.connected;
+            boolean connected = ninetyScheduler.broker.isConnected();
             if (!connected) {
                 ninetyScheduler.broker.connect();
             }

@@ -3,13 +3,14 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package strategies;
+package backtesting;
 
 import data.CloseData;
 import data.DataGetterHistQuandl;
 import data.DataGetterHistYahoo;
 import data.IndicatorCalculator;
 import data.StockIndicatorsForNinety;
+import data.TickersToTrade;
 import java.io.BufferedReader;
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -19,7 +20,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
-import static strategies.StockDataForNinety.getSP100;
 import tradingapp.TradeOrder;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -37,6 +37,10 @@ import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
+import strategies.HeldStock;
+import strategies.Ninety;
+import strategies.StatusDataForNinety;
+import strategies.StockPurchase;
 import tradingapp.TradeFormatter;
 
 /**
@@ -151,7 +155,7 @@ public class BackTesterNinety {
 
         Map<String, CloseData> map = new HashMap<>();
         
-        for (String ticker : StockDataForNinety.getSP100()) {
+        for (String ticker : TickersToTrade.GetTickers()) {
             FileReader file = null;
             try {
                 file = new FileReader("backtestCache/" + ticker + ".txt");
@@ -259,7 +263,7 @@ public class BackTesterNinety {
         if (CheckBacktestSettingsInCache(startDate, endDate)) {
             dataMap = LoadBacktestCache(startDate, endDate);
         } else {
-            for (String ticker : StockDataForNinety.getSP100()) {
+            for (String ticker : TickersToTrade.GetTickers()) {
                 CloseData data = LoadTickerDataFromYahoo(ticker, startDate, endDate);
                 if (data == null) {
                     continue;
@@ -323,8 +327,8 @@ public class BackTesterNinety {
             
             equityList.add(eq);
             
-            Map<String, StockIndicatorsForNinety> indicatorsMap = new HashMap<>(getSP100().length);
-            for (String string : StockDataForNinety.getSP100()) {
+            Map<String, StockIndicatorsForNinety> indicatorsMap = new HashMap<>(TickersToTrade.GetTickers().length);
+            for (String string : TickersToTrade.GetTickers()) {
                 CloseData data = dataMap.get(string);
                 if (data == null) {
                     continue;

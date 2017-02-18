@@ -5,7 +5,8 @@
  */
 package strategies;
 
-import communication.IBBroker;
+import communication.BrokerIB;
+import communication.IBroker;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -34,18 +35,16 @@ public class NinetyScheduler {
     public StockDataForNinety stockData = new StockDataForNinety();
     public StatusDataForNinety statusData = new StatusDataForNinety();
 
-    public final IBBroker broker;
+    public final IBroker broker;
     public boolean isStartScheduled = false;
     
     public final Semaphore dataMutex = new Semaphore(1);
 
-    public NinetyScheduler() {
+    public NinetyScheduler(IBroker broker) {
         statusData.ReadHeldPositions();
         statusData.PrintStatus();
         
-        Settings.getInstance().ReadSettings();
-        
-        broker = new IBBroker(Settings.getInstance().port, Settings.getInstance().clientId);
+        this.broker = broker;
     }
 
     public void RunNow() {
@@ -143,7 +142,7 @@ public class NinetyScheduler {
             
             isCheckOk &= NinetyChecker.PerformChecks(statusData, stockData, broker);
             
-            logger.fine(broker.accountSummary.toString());
+            logger.fine(broker.GetAccountSummary().toString());
             broker.disconnect();
 
             if (isCheckOk) {
@@ -216,7 +215,7 @@ public class NinetyScheduler {
                     stockData.SaveIndicatorsToCSVFile();
                     stockData.SaveStockIndicatorsToFiles();
                     
-                    MailSender.AddLineToMail(broker.accountSummary.toString());
+                    MailSender.AddLineToMail(broker.GetAccountSummary().toString());
                     MailSender.AddLineToMail("Saved current cash: " + TradeFormatter.toString(statusData.currentCash));
                     
                     MailSender.getInstance().SendTradingLog();

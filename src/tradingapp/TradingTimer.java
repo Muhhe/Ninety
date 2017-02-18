@@ -165,7 +165,7 @@ public class TradingTimer {
         logger.fine("Loading special days!");
         timer.specialTradingDays.clear();
         try {
-            File inputFile = new File("specialTradingDays.xml");
+            File inputFile = new File(FilePaths.specialTradingDaysPathFile);
             SAXBuilder saxBuilder = new SAXBuilder();
             Document document = saxBuilder.build(inputFile);
 

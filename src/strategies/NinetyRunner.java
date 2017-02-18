@@ -5,7 +5,7 @@
  */
 package strategies;
 
-import communication.IBBroker;
+import communication.IBroker;
 import communication.OrderStatus;
 import java.util.Iterator;
 import java.util.List;
@@ -23,9 +23,9 @@ public class NinetyRunner implements Runnable {
     
     private final StockDataForNinety stockData;
     private final StatusDataForNinety statusData;
-    private final IBBroker broker;
+    private final IBroker broker;
 
-    public NinetyRunner(StockDataForNinety stockData, StatusDataForNinety statusData, IBBroker broker) {
+    public NinetyRunner(StockDataForNinety stockData, StatusDataForNinety statusData, IBroker broker) {
         this.stockData = stockData;
         this.statusData = statusData;
         this.broker = broker;
@@ -56,7 +56,7 @@ public class NinetyRunner implements Runnable {
         } catch (InterruptedException ex) {
         }
         
-        logger.info(broker.accountSummary.toString());
+        logger.info(broker.GetAccountSummary().toString());
 
         stockData.UpdateDataWithActValuesIB(broker);
         stockData.CalculateIndicators();
@@ -109,7 +109,7 @@ public class NinetyRunner implements Runnable {
 
         logger.info("Trading day finished");
         statusData.PrintStatus();
-        logger.fine(broker.accountSummary.toString());
+        logger.fine(broker.GetAccountSummary().toString());
 
         broker.disconnect();
     }
@@ -152,7 +152,7 @@ public class NinetyRunner implements Runnable {
 
     private void ProcessSubmittedOrders() {
         
-        for (Iterator<Map.Entry<Integer, OrderStatus>> it = broker.orderStatusMap.entrySet().iterator(); it.hasNext();) {
+        for (Iterator<Map.Entry<Integer, OrderStatus>> it = broker.GetOrderStatuses().entrySet().iterator(); it.hasNext();) {
             Map.Entry<Integer, OrderStatus> entry = it.next();
             OrderStatus order = entry.getValue();
 

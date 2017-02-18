@@ -3,12 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package tradingapp;
+package test;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import strategies.NinetyChecker;
 import strategies.NinetyScheduler;
+import tradingapp.FilePaths;
+import tradingapp.Settings;
+import tradingapp.TradeLogger;
+import tradingapp.TradeOrder;
 
 /**
  *
@@ -17,7 +21,7 @@ import strategies.NinetyScheduler;
 public class TestPlatform extends javax.swing.JFrame {
     private final static Logger logger = Logger.getLogger( Logger.GLOBAL_LOGGER_NAME );
     
-    NinetyScheduler ninetyScheduler;
+    NinetyScheduler ninetySchedulerNoBroker;
 
     /**
      * Creates new form TestPlatform
@@ -27,7 +31,16 @@ public class TestPlatform extends javax.swing.JFrame {
         
         TradeLogger.getInstance().initializeTextAreas(logArea, fineLogArea, commArea);
         
-        ninetyScheduler = new NinetyScheduler();
+        FilePaths.tradingStatusPathFileInput = "testingData/TradingStatus.xml";
+        FilePaths.tradingStatusPathFileOutput = "testingData/TradingStatus.xml";
+        FilePaths.equityPathFile = "testingData/Equity.csv";
+        FilePaths.tradeLogPathFile = "testingData/TradeLog.csv";
+        FilePaths.tradeLogDetailedPathFile = "testingData/TradeLogDetailed.txt";
+        FilePaths.specialTradingDaysPathFile = "testingData/specialTradingDays.xml";
+        
+        Settings.getInstance().ReadSettings();
+        
+        ninetySchedulerNoBroker = new NinetyScheduler( new BrokerMockup() );
     }
 
     /**
@@ -54,6 +67,7 @@ public class TestPlatform extends javax.swing.JFrame {
         buyButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Trading app 90 - TEST PLATFORM");
 
         logScrollPane.setAutoscrolls(true);
 
@@ -165,15 +179,15 @@ public class TestPlatform extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void startButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startButtonActionPerformed
-        if (!ninetyScheduler.isStartScheduled) {
+        if (!ninetySchedulerNoBroker.isStartScheduled) {
             new Thread(() -> {
-                ninetyScheduler.ScheduleFirstCheck();
+                ninetySchedulerNoBroker.ScheduleFirstCheck();
             }).start();
             isOnCheckbox.setSelected(true);
             startButton.setText("Stop");
             startNowButton.setText("Stop");
         } else {
-            ninetyScheduler.Stop();
+            ninetySchedulerNoBroker.Stop();
             isOnCheckbox.setSelected(false);
             startButton.setText("Start");
             startNowButton.setText("StartNow");
@@ -182,27 +196,27 @@ public class TestPlatform extends javax.swing.JFrame {
 
     private void checkPositionsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkPositionsButtonActionPerformed
         new Thread(() -> {
-            boolean connected = ninetyScheduler.broker.connected;
+            boolean connected = ninetySchedulerNoBroker.broker.isConnected();
             if (!connected) {
-                ninetyScheduler.broker.connect();
+                ninetySchedulerNoBroker.broker.connect();
             }
 
-            NinetyChecker.CheckHeldPositions(ninetyScheduler.statusData, ninetyScheduler.broker);
+            NinetyChecker.CheckHeldPositions(ninetySchedulerNoBroker.statusData, ninetySchedulerNoBroker.broker);
 
             if (!connected) {
-                ninetyScheduler.broker.disconnect();
+                ninetySchedulerNoBroker.broker.disconnect();
             }
         }).start();
     }//GEN-LAST:event_checkPositionsButtonActionPerformed
 
     private void startNowButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startNowButtonActionPerformed
-        if (!ninetyScheduler.isStartScheduled) {
-            ninetyScheduler.RunNow();
+        if (!ninetySchedulerNoBroker.isStartScheduled) {
+            ninetySchedulerNoBroker.RunNow();
             isOnCheckbox.setSelected(true);
             startNowButton.setText("Stop");
             startButton.setText("Stop");
         } else {
-            ninetyScheduler.Stop();
+            ninetySchedulerNoBroker.Stop();
             isOnCheckbox.setSelected(false);
             startNowButton.setText("StartNow");
             startButton.setText("Start");
@@ -211,9 +225,9 @@ public class TestPlatform extends javax.swing.JFrame {
 
     private void buyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buyButtonActionPerformed
         new Thread(() -> {
-            boolean connected = ninetyScheduler.broker.connected;
+            boolean connected = ninetySchedulerNoBroker.broker.isConnected();
             if (!connected) {
-                ninetyScheduler.broker.connect();
+                ninetySchedulerNoBroker.broker.connect();
             }
             
             TradeOrder tradeOrder = new TradeOrder();
@@ -221,7 +235,7 @@ public class TestPlatform extends javax.swing.JFrame {
             tradeOrder.position = 10;
             tradeOrder.orderType = TradeOrder.OrderType.BUY;
             
-            ninetyScheduler.broker.PlaceOrder(tradeOrder);
+            ninetySchedulerNoBroker.broker.PlaceOrder(tradeOrder);
 
             try {
                 Thread.sleep(1000);
@@ -230,7 +244,7 @@ public class TestPlatform extends javax.swing.JFrame {
             }
             
             if (!connected) {
-                ninetyScheduler.broker.disconnect();
+                ninetySchedulerNoBroker.broker.disconnect();
             }
         }).start();
     }//GEN-LAST:event_buyButtonActionPerformed

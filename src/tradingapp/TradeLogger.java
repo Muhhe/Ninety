@@ -69,7 +69,7 @@ public class TradeLogger {
 
     public void initializeFiles(LocalDate date) {
         String todayString = date.toString();
-        String pathDir = "dataLog/" + todayString + "/";
+        String pathDir = FilePaths.dataLogDirectory + todayString + "/";
         File file = new File(pathDir);
                 
         if (!file.exists() && !file.mkdirs()) {

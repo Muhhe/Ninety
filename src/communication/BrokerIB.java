@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,50 +30,37 @@ import static tradingapp.MainWindow.LOGGER_COMM_NAME;
  *
  * @author Muhe
  */
-public class IBBroker extends BaseIBConnectionImpl {
+public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     private final static Logger loggerComm = Logger.getLogger(LOGGER_COMM_NAME );
     
-    public int port;
-    public int clientId;
+    private int port;
+    private int clientId;
     
-    public final Map<Integer, OrderStatus> orderStatusMap = new ConcurrentHashMap<>();
+    private final Map<Integer, OrderStatus> orderStatusMap = new ConcurrentHashMap<>();
     private final Map<Integer, OrderStatus> activeOrdersMap = new HashMap<>();
     
     private final RealtimeDataIB realtimeData = new RealtimeDataIB();
     
     private EClientSocket ibClientSocket = new EClientSocket(this);
-    public boolean connected = false;
-    protected BlockingQueue<Integer> nextIdQueue = new LinkedBlockingQueue<>();
-    protected CountDownLatch getPositionsCountdownLatch = null;
-    protected CountDownLatch ordersClosedWaitCountdownLatch = null;
-    protected CountDownLatch connectionLatch = null;
-    protected List<Position> positionsList = new ArrayList<>();
+    private boolean connected = false;
+    private BlockingQueue<Integer> nextIdQueue = new LinkedBlockingQueue<>();
+    private CountDownLatch getPositionsCountdownLatch = null;
+    private CountDownLatch ordersClosedWaitCountdownLatch = null;
+    private CountDownLatch connectionLatch = null;
+    private List<Position> positionsList = new ArrayList<>();
     private int nextOrderId = -1;
     
-    public AccountSummary accountSummary = new AccountSummary();
+    private AccountSummary accountSummary = new AccountSummary();
     private boolean accountSummarySubscribed = false;
-    
-    public class AccountSummary
-    {
-        public double totalCashValue = 0;
-        public double netLiquidation = 0;
-        public double availableFunds = 0;
-        public double buyingPower = 0;
-        
-        @Override
-        public String toString() {
-            return "IB AccountSummary - totalCashValue: " + totalCashValue + ", netLiquidation: " + netLiquidation + 
-                    ", \r\n availableFunds: " + availableFunds + ", buyingPower: " + buyingPower;
-        }
-    }
 
-    public IBBroker(int port, int clientId) {
+    public BrokerIB(int port, int clientId) {
         this.port = port;
         this.clientId = clientId;
     }
     
-    public boolean connect() {
+    @Override
+    public synchronized boolean connect() {
         if( !connected ) {
             logger.fine("Connecting to IB.");
             loggerComm.fine("Connecting to IB.");
@@ -94,7 +82,13 @@ public class IBBroker extends BaseIBConnectionImpl {
         return true;
     }
     
-    public void disconnect() {
+    @Override
+    public synchronized boolean isConnected() {
+        return connected;
+    }
+    
+    @Override
+    public synchronized void disconnect() {
         if( connected ) {
             loggerComm.info("Disconnecting from IB.");
             ibClientSocket.eDisconnect();
@@ -127,7 +121,7 @@ public class IBBroker extends BaseIBConnectionImpl {
         }
     }
     
-    public synchronized int getNextOrderId() {
+    private synchronized int getNextOrderId() {
         if (nextOrderId == -1) {
             try {
                 ibClientSocket.reqIds(1);
@@ -146,6 +140,7 @@ public class IBBroker extends BaseIBConnectionImpl {
         return ++nextOrderId;
     }
     
+    @Override
     public synchronized boolean PlaceOrder(TradeOrder tradeOrder) {        
         if (!connected) {
             logger.severe("IB not connected. Cannot place order.");
@@ -223,6 +218,7 @@ public class IBBroker extends BaseIBConnectionImpl {
         }
     }
 
+    @Override
     public List<Position> getAllPositions() {
         positionsList.clear();
         if (!connected) {
@@ -254,6 +250,7 @@ public class IBBroker extends BaseIBConnectionImpl {
         loggerComm.fine("Position END()");
     }
 
+    @Override
     public boolean waitUntilOrdersClosed(int maxWaitSeconds) {
         try {
             Thread.sleep(100);  // For safety if orders are not yet issued
@@ -268,7 +265,13 @@ public class IBBroker extends BaseIBConnectionImpl {
         }
         return false;
     }
+    
+    @Override
+    public Map<Integer, OrderStatus> GetOrderStatuses() {
+        return orderStatusMap;
+    }
 
+    @Override
     public void clearOrderMaps() {
         synchronized (activeOrdersMap) {
             activeOrdersMap.clear();
@@ -277,6 +280,7 @@ public class IBBroker extends BaseIBConnectionImpl {
         }
     }
     
+    @Override
     public void RequestRealtimeData(String ticker) {
         if (!connected) {
             logger.severe("IB not connected. Cannot RequestRealtimeData.");
@@ -296,6 +300,7 @@ public class IBBroker extends BaseIBConnectionImpl {
         }
     }
     
+    @Override
     public void CancelAllRealtimeData() {
         for (Integer orderId : realtimeData.GetAllOrderIds()) {
             ibClientSocket.cancelMktData(orderId);
@@ -318,6 +323,7 @@ public class IBBroker extends BaseIBConnectionImpl {
         realtimeData.UpdateValue(orderId, field, price);
     }
     
+    @Override
     public double GetLastPrice(String ticker) {
         return realtimeData.GetLastPrice(ticker);
     }
@@ -348,12 +354,18 @@ public class IBBroker extends BaseIBConnectionImpl {
         return contract;
     }
 
+    @Override
     public void RequestAccountSummary() {
         if (!accountSummarySubscribed) {
             ibClientSocket.reqAccountSummary(getNextOrderId(), "All", "TotalCashValue,NetLiquidation,SettledCash,AccruedCash,BuyingPower,"
                     + "EquityWithLoanValue,RegTEquity,RegTMargin,AvailableFunds,Leverage");
             accountSummarySubscribed = true;
         }
+    }
+
+    @Override
+    public AccountSummary GetAccountSummary() {
+        return accountSummary;
     }
 
     @Override

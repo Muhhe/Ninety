@@ -20,7 +20,7 @@ import static tradingapp.MainWindow.LOGGER_COMM_NAME;
  *
  * @author Muhe
  */
-public class BaseIBConnectionImpl  implements EWrapper {
+public class BaseIBConnectionImpl implements EWrapper {
     private final static Logger logger = Logger.getLogger(LOGGER_COMM_NAME);
 
     @Override

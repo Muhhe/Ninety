@@ -86,7 +86,7 @@ public class MailSender {
         logger.fine("Sending trade log mail!");
         
         if (Send("Trading log 90", Settings.getInstance().mailAddressTradeLog, m_mailBody.toString())) {
-            m_mailBodyError.setLength(0);
+            m_mailBody.setLength(0);
             logger.info("Trade mail sent!");
         } else {
             logger.info("Trade mail NOT sent!");
@@ -97,7 +97,7 @@ public class MailSender {
         logger.fine("Sending check mail!");
         
         if (Send("Check 90", Settings.getInstance().mailAddressCheck, m_mailBody.toString())) {
-            m_mailBodyError.setLength(0);
+            m_mailBody.setLength(0);
             logger.info("Check mail sent!");
         } else {
             logger.info("Check mail NOT sent!");
@@ -142,19 +142,19 @@ public class MailSender {
             multipart.addBodyPart(messageBodyPart);
 
             String todayString = LocalDate.now().toString();
-            String pathDir = "dataLog/" + todayString + "/Log.txt";
+            String pathDir = FilePaths.dataLogDirectory + todayString + FilePaths.logPathFile;
             AddAttachment(pathDir, multipart);
 
-            pathDir = "dataLog/" + todayString + "/LogComm.txt";
+            pathDir = FilePaths.dataLogDirectory + todayString + FilePaths.logCommPathFile;
             AddAttachment(pathDir, multipart);
 
-            pathDir = "dataLog/" + todayString + "/LogDetailed.txt";
+            pathDir = FilePaths.dataLogDirectory + todayString + FilePaths.logDetailedPathFile;
             AddAttachment(pathDir, multipart);
 
-            pathDir = "Equity.csv";
+            pathDir = FilePaths.equityPathFile;
             AddAttachment(pathDir, multipart);
 
-            pathDir = "TradingStatus.xml";
+            pathDir = FilePaths.tradingStatusPathFileInput;
             AddAttachment(pathDir, multipart);
 
             // Send the complete message parts

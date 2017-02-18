@@ -25,7 +25,7 @@ public class TextAreaLogHandler extends Handler {
     private final int m_toLevel;
     private final boolean m_mailErrors;
 
-    TextAreaLogHandler(JTextArea textArea, Level fromLevel, Level toLevel, boolean mailErrors)
+    public TextAreaLogHandler(JTextArea textArea, Level fromLevel, Level toLevel, boolean mailErrors)
     {
         m_textArea = textArea;
         m_fromLevel = fromLevel.intValue();

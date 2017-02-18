@@ -5,13 +5,14 @@
  */
 package strategies;
 
-import communication.IBBroker;
+import communication.IBroker;
 import data.CloseData;
 import data.DataGetterActGoogle;
 import data.DataGetterHistQuandl;
 import data.DataGetterHistYahoo;
 import data.IndicatorCalculator;
 import data.StockIndicatorsForNinety;
+import data.TickersToTrade;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -23,6 +24,7 @@ import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import tradingapp.FilePaths;
 import tradingapp.TradeFormatter;
 import tradingapp.TradingTimer;
 
@@ -34,14 +36,14 @@ public class StockDataForNinety {
 
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
-    public Map<String, CloseData> closeDataMap = new HashMap<>(getSP100().length);
-    public Map<String, StockIndicatorsForNinety> indicatorsMap = new HashMap<>(getSP100().length);
+    public Map<String, CloseData> closeDataMap = new HashMap<>(TickersToTrade.GetTickers().length);
+    public Map<String, StockIndicatorsForNinety> indicatorsMap = new HashMap<>(TickersToTrade.GetTickers().length);
 
     public final Semaphore histDataMutex = new Semaphore(1);
 
     public boolean isRealtimeDataSubscribed = false;
 
-    public static String[] getSP100() {
+    /*public static String[] getSP100() {
         String[] tickers = {
             "AAPL", "ABBV", "ABT", "ACN", "AGN", "AIG", "ALL", "AMGN", "AMZN",
             "AXP", "BA", "BAC", "BIIB", "BK", "BLK", "BMY", "C", "CAT", "CELG", "CL", "CMCSA",
@@ -55,7 +57,7 @@ public class StockDataForNinety {
             "UTX", "V", "VZ", "WBA", "WFC", "WMT", "XOM"}; //"NEE" - blbe se nacita z YAHOO
 
         return tickers;
-    }
+    }*/
     
     private void FillFirstDato(CloseData data) {                
         if ((data != null) && (data.adjCloses.length > 2)) {
@@ -70,7 +72,7 @@ public class StockDataForNinety {
             logger.fine("PrepareHistData: Getting lock on hist data.");
             histDataMutex.acquire();
             logger.info("Starting to load historic data");
-            String[] tickers = getSP100();
+            String[] tickers = TickersToTrade.GetTickers();
             for (String ticker : tickers) {
                 logger.finest("Loading hist data for " + ticker);
                 
@@ -105,9 +107,9 @@ public class StockDataForNinety {
         }
     }
 
-    public void SubscribeRealtimeData(IBBroker broker) {
+    public void SubscribeRealtimeData(IBroker broker) {
         if (!isRealtimeDataSubscribed) {
-            for (String ticker : getSP100()) {
+            for (String ticker : TickersToTrade.GetTickers()) {
                 broker.RequestRealtimeData(ticker);
             }
             isRealtimeDataSubscribed = true;
@@ -115,7 +117,7 @@ public class StockDataForNinety {
         }
     }
 
-    public void UnSubscribeRealtimeData(IBBroker broker) {
+    public void UnSubscribeRealtimeData(IBroker broker) {
         if (isRealtimeDataSubscribed) {
             broker.CancelAllRealtimeData();
             isRealtimeDataSubscribed = false;
@@ -123,7 +125,7 @@ public class StockDataForNinety {
         }
     }
 
-    private boolean CheckRealtimeDataOnIB(IBBroker broker) {
+    private boolean CheckRealtimeDataOnIB(IBroker broker) {
         int tickersFilled = 0;
 
         for (Iterator<Map.Entry<String, CloseData>> it = closeDataMap.entrySet().iterator(); it.hasNext();) {
@@ -140,7 +142,7 @@ public class StockDataForNinety {
         return tickersFilled >= closeDataMap.size()/2;
     }
 
-    public void UpdateDataWithActValuesIB(IBBroker broker) {
+    public void UpdateDataWithActValuesIB(IBroker broker) {
         if (!TradingTimer.IsTradingDay(LocalDate.now())) {
             logger.warning("Today is not a trading day. Cannot update with actual values.");
             return;
@@ -205,7 +207,7 @@ public class StockDataForNinety {
         try {
             logger.fine("Starting to load actual data from Google");
 
-            String[] tickerSymbols = getSP100();
+            String[] tickerSymbols = TickersToTrade.GetTickers();
             Map<String, Double> valuesMap = DataGetterActGoogle.readActualData(tickerSymbols);
 
             if (tickerSymbols.length != valuesMap.size()) {
@@ -276,7 +278,7 @@ public class StockDataForNinety {
         LocalDate today = LocalDate.now();
         String todayString = today.toString();
         for (Map.Entry<String, CloseData> entry : closeDataMap.entrySet()) {
-            File file = new File("dataLog/" + todayString + "/Historic/" + entry.getKey() + ".csv");
+            File file = new File(FilePaths.dataLogDirectory + todayString + "/Historic/" + entry.getKey() + ".csv");
             File directory = new File(file.getParentFile().getAbsolutePath());
             directory.mkdirs();
             BufferedWriter output = null;
@@ -313,7 +315,7 @@ public class StockDataForNinety {
         LocalDate today = LocalDate.now();
         String todayString = today.toString();
         for (Map.Entry<String, StockIndicatorsForNinety> entry : indicatorsMap.entrySet()) {
-            File file = new File("dataLog/" + todayString + "/Indicators/" + entry.getKey() + ".txt");
+            File file = new File(FilePaths.dataLogDirectory + todayString + "/Indicators/" + entry.getKey() + ".txt");
             File directory = new File(file.getParentFile().getAbsolutePath());
             directory.mkdirs();
             BufferedWriter output = null;
@@ -346,7 +348,7 @@ public class StockDataForNinety {
 
     public void SaveIndicatorsToCSVFile() {
         String todayString = LocalDate.now().toString();
-        File file = new File("dataLog/" + todayString + "/indicators.csv");
+        File file = new File(FilePaths.dataLogDirectory + todayString + "/indicators.csv");
         File directory = new File(file.getParentFile().getAbsolutePath());
         directory.mkdirs();
         BufferedWriter output = null;

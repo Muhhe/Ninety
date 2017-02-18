@@ -3,12 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package tradingapp;
+package backtesting;
 
 import java.time.LocalDate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import strategies.BackTesterNinety;
+import tradingapp.TextAreaLogHandler;
 
 /**
  *
@@ -47,6 +47,7 @@ public class Backtester extends javax.swing.JFrame {
         backTestButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Trading app 90 - BACKTESTER");
 
         logArea.setColumns(20);
         logArea.setRows(5);

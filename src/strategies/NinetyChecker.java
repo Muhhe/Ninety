@@ -5,9 +5,11 @@
  */
 package strategies;
 
-import communication.IBBroker;
+import communication.BrokerIB;
+import communication.IBroker;
 import communication.Position;
 import data.CloseData;
+import data.TickersToTrade;
 import static java.lang.Math.abs;
 import java.time.LocalDate;
 import java.util.List;
@@ -25,7 +27,7 @@ public class NinetyChecker {
 
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
-    public static boolean PerformChecks(StatusDataForNinety statusData, StockDataForNinety stockData, IBBroker broker) {
+    public static boolean PerformChecks(StatusDataForNinety statusData, StockDataForNinety stockData, IBroker broker) {
         boolean isOk = true;
         
         isOk &= CheckHeldPositions(statusData, broker);
@@ -35,7 +37,7 @@ public class NinetyChecker {
         return isOk;
     }
 
-    public static boolean CheckHeldPositions(StatusDataForNinety statusData, IBBroker broker) {
+    public static boolean CheckHeldPositions(StatusDataForNinety statusData, IBroker broker) {
         List<Position> allPositions = broker.getAllPositions();
 
         int posSize = 0;
@@ -85,10 +87,10 @@ public class NinetyChecker {
         return isOk;
     }
 
-    public static boolean CheckCash(StatusDataForNinety statusData, IBBroker broker) {
-        logger.info("Saved current cash: " + TradeFormatter.toString(statusData.currentCash) + ", cash on IB: " + TradeFormatter.toString(broker.accountSummary.totalCashValue));
+    public static boolean CheckCash(StatusDataForNinety statusData, IBroker broker) {
+        logger.info("Saved current cash: " + TradeFormatter.toString(statusData.currentCash) + ", cash on IB: " + TradeFormatter.toString(broker.GetAccountSummary().totalCashValue));
 
-        double cashDiff = broker.accountSummary.totalCashValue - statusData.currentCash;
+        double cashDiff = broker.GetAccountSummary().totalCashValue - statusData.currentCash;
         double cashDiffPercent = abs(cashDiff / statusData.currentCash * 100);
 
         if (cashDiffPercent > 5.0) {
@@ -102,9 +104,9 @@ public class NinetyChecker {
         double availableCash = freePortions * statusData.GetOnePortionValue() / Settings.getInstance().leverage;
 
         logger.info("Saved current available cash: " + TradeFormatter.toString(availableCash)
-                + ", available funds on IB: " + TradeFormatter.toString(broker.accountSummary.availableFunds));
+                + ", available funds on IB: " + TradeFormatter.toString(broker.GetAccountSummary().availableFunds));
 
-        double availableCashDiff = broker.accountSummary.availableFunds - availableCash;
+        double availableCashDiff = broker.GetAccountSummary().availableFunds - availableCash;
         double availableCashDiffPercent = abs(availableCashDiff / availableCash * 100);
 
         if (availableCashDiff < 0) {
@@ -116,8 +118,8 @@ public class NinetyChecker {
         
         double buyingPowerLocal = freePortions * statusData.GetOnePortionValue();
         
-        if (buyingPowerLocal > broker.accountSummary.buyingPower) {
-            logger.severe("Not enough buying power on IB. Local buying power: " + buyingPowerLocal + ", on IB: " + broker.accountSummary.buyingPower);
+        if (buyingPowerLocal > broker.GetAccountSummary().buyingPower) {
+            logger.severe("Not enough buying power on IB. Local buying power: " + buyingPowerLocal + ", on IB: " + broker.GetAccountSummary().buyingPower);
             return false;
         }
         
@@ -128,7 +130,7 @@ public class NinetyChecker {
         logger.fine("Starting history data check.");
         boolean isOk = true;
 
-        int tickerCount = StockDataForNinety.getSP100().length;
+        int tickerCount = TickersToTrade.GetTickers().length;
         int histCount = stockData.closeDataMap.size();
         int indicatorCount = stockData.indicatorsMap.size();
 

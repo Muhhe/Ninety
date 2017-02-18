@@ -26,6 +26,7 @@ import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
+import tradingapp.FilePaths;
 import tradingapp.TradeFormatter;
 import tradingapp.MailSender;
 import tradingapp.Settings;
@@ -137,7 +138,7 @@ public class StatusDataForNinety {
 
             XMLOutputter xmlOutput = new XMLOutputter();
 
-            File statusFile = new File("TradingStatus.xml");
+            File statusFile = new File(FilePaths.tradingStatusPathFileOutput);
             statusFile.createNewFile();
             FileOutputStream oFile = new FileOutputStream(statusFile, false);
 
@@ -153,7 +154,7 @@ public class StatusDataForNinety {
 
         heldStocks.clear();
         try {
-            File inputFile = new File("TradingStatus.xml");
+            File inputFile = new File(FilePaths.tradingStatusPathFileInput);
             SAXBuilder saxBuilder = new SAXBuilder();
             Document document = saxBuilder.build(inputFile);
 
@@ -224,7 +225,7 @@ public class StatusDataForNinety {
     void UpdateEquityFile() {
         Writer writer = null;
         try {
-            File equityFile = new File("Equity.csv");
+            File equityFile = new File(FilePaths.equityPathFile);
             equityFile.createNewFile();
             writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(equityFile, true), "UTF-8"));
             String line = LocalDate.now().toString() + "," + currentCash + "\r\n";
@@ -265,7 +266,7 @@ public class StatusDataForNinety {
         
         Writer writer = null;
         try {
-            File equityFile = new File("TradeLog.csv");
+            File equityFile = new File(FilePaths.tradeLogPathFile);
             equityFile.createNewFile();
             writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(equityFile, true), "UTF-8"));
             
@@ -301,7 +302,7 @@ public class StatusDataForNinety {
                 
         Writer writer = null;
         try {
-            File equityFile = new File("TradeLogDetailed.txt");
+            File equityFile = new File(FilePaths.tradeLogDetailedPathFile);
             equityFile.createNewFile();
             writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(equityFile, true), "UTF-8"));
             

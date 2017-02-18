@@ -50,7 +50,7 @@ public class Settings {
     
     public void ReadSettings() {
         try {
-            File inputFile = new File("Settings.xml");
+            File inputFile = new File(FilePaths.settingsPathFile);
             SAXBuilder saxBuilder = new SAXBuilder();
             Document document = saxBuilder.build(inputFile);
 

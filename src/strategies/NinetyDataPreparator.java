@@ -5,8 +5,7 @@
  */
 package strategies;
 
-import communication.IBBroker;
-import java.time.LocalDate;
+import communication.IBroker;
 import java.util.logging.Logger;
 
 /**
@@ -18,9 +17,9 @@ public class NinetyDataPreparator implements Runnable {
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     private final StockDataForNinety stockData;
-    private final IBBroker broker;
+    private final IBroker broker;
 
-    public NinetyDataPreparator(StockDataForNinety stockData, IBBroker broker) {
+    public NinetyDataPreparator(StockDataForNinety stockData, IBroker broker) {
         this.stockData = stockData;
         this.broker = broker;
     }

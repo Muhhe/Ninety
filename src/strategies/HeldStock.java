@@ -21,7 +21,7 @@ public class HeldStock {
     public List<StockPurchase> purchases = new ArrayList<StockPurchase>();
     public String tickerSymbol;
     
-    int GetPosition() {
+    public int GetPosition() {
         int positions = 0;
         for (StockPurchase purchase : purchases) {
             positions += purchase.position;
@@ -29,7 +29,7 @@ public class HeldStock {
         return positions;
     }
     
-    int GetPortions() {
+    public int GetPortions() {
         int portions = 0;
         for (StockPurchase purchase : purchases) {
             portions += purchase.portions;
@@ -37,7 +37,7 @@ public class HeldStock {
         return portions;
     }
     
-    double GetTotalPricePaid() {
+    public double GetTotalPricePaid() {
         double price = 0;
         for (StockPurchase purchase : purchases) {
             price += purchase.priceForOne * purchase.position;
@@ -45,11 +45,11 @@ public class HeldStock {
         return price;
     }
 
-    double GetAvgPricePaid() {
+    public double GetAvgPricePaid() {
         return GetTotalPricePaid() / GetPosition();
     }
 
-    void AddToXml(Element rootElement) {
+    public void AddToXml(Element rootElement) {
         Element heldElement = new Element("heldStock");
         heldElement.setAttribute(new Attribute("ticker", tickerSymbol));
         
@@ -59,7 +59,7 @@ public class HeldStock {
         rootElement.addContent(heldElement);
     }
 
-    void LoadFromXml(Element heldElement) {
+    public void LoadFromXml(Element heldElement) {
         Attribute attribute = heldElement.getAttribute("ticker");
         tickerSymbol = attribute.getValue();
         
