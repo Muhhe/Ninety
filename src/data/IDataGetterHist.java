@@ -12,11 +12,11 @@ import java.time.LocalDate;
  * @author Muhe
  */
 public interface IDataGetterHist {
-    public CloseData readAdjCloseData(LocalDate lastDate, String tickerSymbol, int daysToRead, boolean duplicateFirst);
+    public CloseData readAdjCloseData(LocalDate lastDate, String tickerSymbol, int daysToRead, boolean skipFirstIndex);
     
     public CloseData readAdjCloseData(LocalDate startDate, LocalDate endDate, String tickerSymbol);
     
-    public CloseData readAdjCloseData(LocalDate startDate, LocalDate endDate, String tickerSymbol, int daysToRead, boolean duplicateFirst);
+    public CloseData readAdjCloseData(LocalDate startDate, LocalDate endDate, String tickerSymbol, int daysToRead, boolean skipFirstIndex);
     
     public String getName();
 }

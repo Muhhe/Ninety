@@ -46,21 +46,6 @@ public class StockDataForNinety {
 
     private boolean isRealtimeDataSubscribed = false;
 
-    /*public static String[] getSP100() {
-        String[] tickers = {
-            "AAPL", "ABBV", "ABT", "ACN", "AGN", "AIG", "ALL", "AMGN", "AMZN",
-            "AXP", "BA", "BAC", "BIIB", "BK", "BLK", "BMY", "C", "CAT", "CELG", "CL", "CMCSA",
-            "COF", "COP", "COST", "CSCO", "CVS", "CVX", "DD", "DHR", "DIS", "DOW", "DUK",
-            "EMR", "EXC", "F", "FB", "FDX", "FOX", "GD", "GE",
-            "GILD", "GM", "GOOG", "GS", "HAL", "HD", "HON", "IBM", "INTC",
-            "JNJ", "JPM", "KMI", "KO", "LLY", "LMT", "LOW", "MA", "MCD", "MDLZ", "MDT",
-            "MET", "MMM", "MO", "MON", "MRK", "MS", "MSFT", "NKE", "ORCL", "OXY",
-            "PCLN", "PEP", "PFE", "PG", "PM", "PYPL", "QCOM", "RTN", "SBUX", "SLB",
-            "SO", "SPG", "T", "TGT", "TWX", "TXN", "UNH", "UNP", "UPS", "USB",
-            "UTX", "V", "VZ", "WBA", "WFC", "WMT", "XOM"}; //"NEE" - blbe se nacita z YAHOO
-
-        return tickers;
-    }*/
     public void PrepareData(IBroker broker) {
 
         try {

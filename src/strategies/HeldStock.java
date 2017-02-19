@@ -18,7 +18,7 @@ import tradingapp.TradeFormatter;
  * @author Muhe
  */
 public class HeldStock {
-    public List<StockPurchase> purchases = new ArrayList<StockPurchase>();
+    public List<StockPurchase> purchases = new ArrayList<>();
     public String tickerSymbol;
     
     public int GetPosition() {

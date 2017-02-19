@@ -5,13 +5,12 @@
  */
 package strategies;
 
-import java.time.ZonedDateTime;
+import java.time.LocalDate;
 import java.util.logging.Logger;
 import org.jdom2.Attribute;
 import org.jdom2.DataConversionException;
 import org.jdom2.Element;
 import tradingapp.TradeFormatter;
-import tradingapp.TradingTimer;
 
 /**
  *
@@ -24,7 +23,7 @@ public class StockPurchase {
     public double priceForOne = 0;
     public int position = 0;
     public int portions = 0;
-    public ZonedDateTime date = TradingTimer.GetNYTimeNow();
+    public LocalDate date = LocalDate.MIN;
     
     @Override
     public String toString() {
@@ -58,10 +57,10 @@ public class StockPurchase {
             portions = attribute.getIntValue();
                     
             attribute = purchaseElement.getAttribute("date");
-            date = ZonedDateTime.parse(attribute.getValue());
+            date = LocalDate.parse(attribute.getValue());
             
         } catch (DataConversionException ex) {
-            logger.severe("Error in loading from XML: Failed to convert values in purchases.");
+            logger.severe("Error in loading from XML: Failed to convert values in purchases. " + ex.getMessage());
         }
     }
 }

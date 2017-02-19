@@ -5,9 +5,6 @@
  */
 package tradingapp;
 
-import data.DataGetterActGoogle;
-import data.DataGetterActIB;
-import data.DataGetterHistYahoo;
 import data.IDataGetterAct;
 import data.IDataGetterHist;
 import java.util.ArrayList;
@@ -25,6 +22,11 @@ public class GlobalConfig {
     
     protected GlobalConfig() {
         // Exists only to defeat instantiation.
+    }
+    
+    public static void ClearGetters() {
+        actGetters.clear();
+        histGetters.clear();
     }
     
     public static void AddDataGetterAct(IDataGetterAct getter) {

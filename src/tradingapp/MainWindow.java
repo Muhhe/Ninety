@@ -11,6 +11,8 @@ import data.DataGetterActGoogle;
 import data.DataGetterActIB;
 import data.DataGetterHistQuandl;
 import data.DataGetterHistYahoo;
+import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import strategies.HeldStock;
@@ -56,6 +58,13 @@ public class MainWindow extends javax.swing.JFrame {
         GlobalConfig.AddDataGetterHist(new DataGetterHistQuandl());
 
         ninetyScheduler = new NinetyScheduler( broker );
+        
+        try {
+            ServerSocket s = new ServerSocket(4123);
+            logger.fine("Opened test port on: " + s.getLocalPort());
+        } catch (IOException ex) {
+            logger.warning("Failed to open test port. " + ex.getMessage());
+        }
     }
 
     /**

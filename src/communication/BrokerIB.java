@@ -344,9 +344,9 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
         contract.m_secType = "STK"; //Cannot be CFD for req data
         contract.m_currency = "USD";
 
-        if ((ticker == "MSFT")
-            || (ticker == "CSCO")
-            || (ticker == "INTC")) {
+        if (ticker.equals("MSFT")
+            || ticker.equals("CSCO")
+            || ticker.equals("INTC")) {
             contract.m_exchange = "BATS";
         }
 

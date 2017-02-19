@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 import tradingapp.Settings;
 import tradingapp.TradeFormatter;
-import tradingapp.TradingTimer;
+import tradingapp.TradeTimer;
 
 /**
  *
@@ -172,8 +172,8 @@ public class NinetyChecker {
         }
         
         boolean isOk = true;
-        LocalDate checkDate = LocalDate.now();
-        while (!TradingTimer.IsTradingDay(checkDate)) {
+        LocalDate checkDate = TradeTimer.GetLocalDateNow();
+        while (!TradeTimer.IsTradingDay(checkDate)) {
             checkDate = checkDate.minusDays(1);
         }
         for (LocalDate date : data.dates) {
@@ -184,7 +184,7 @@ public class NinetyChecker {
             }
 
             checkDate = checkDate.minusDays(1);
-            while (!TradingTimer.IsTradingDay(checkDate)) {
+            while (!TradeTimer.IsTradingDay(checkDate)) {
                 checkDate = checkDate.minusDays(1);
             }
         }

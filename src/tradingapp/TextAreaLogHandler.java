@@ -45,7 +45,7 @@ public class TextAreaLogHandler extends Handler {
             }
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
-            ZonedDateTime now = TradingTimer.GetNYTimeNow();
+            ZonedDateTime now = TradeTimer.GetNYTimeNow();
             msg.append(formatter.format(now));
             msg.append(": ");
 

@@ -62,7 +62,7 @@ public class StatusDataForNinety {
             held.tickerSymbol = order.order.tickerSymbol;
 
             StockPurchase purchase = new StockPurchase();
-            purchase.date = order.timestampFilled;
+            purchase.date = LocalDate.now();
             purchase.portions = 1;
             purchase.position = order.filled;
             purchase.priceForOne = order.fillPrice;
@@ -107,7 +107,7 @@ public class StatusDataForNinety {
             }
             
             StockPurchase purchase = new StockPurchase();
-            purchase.date = order.timestampFilled;
+            purchase.date = LocalDate.now();
             purchase.portions = newPortions;
             purchase.position = order.filled;
             purchase.priceForOne = order.fillPrice;

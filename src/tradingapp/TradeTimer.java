@@ -34,7 +34,7 @@ public class TradingTimer {
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     private final static LocalTime DEFAULT_CLOSE_TIME = LocalTime.of(16, 00);
 
-    private static ScheduledExecutorService executorService = Executors.newScheduledThreadPool(5);
+    private static ScheduledExecutorService executorService = Executors.newScheduledThreadPool(10);
 
     private static List<TradingDay> specialTradingDays = new ArrayList<TradingDay>();
 

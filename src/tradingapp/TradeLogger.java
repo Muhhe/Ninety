@@ -12,7 +12,6 @@ import java.util.logging.Formatter;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 import javax.swing.JTextArea;
 import static tradingapp.MainWindow.LOGGER_COMM_NAME;
 
@@ -68,6 +67,11 @@ public class TradeLogger {
     }
 
     public void initializeFiles(LocalDate date) {
+        
+        logger.removeHandler(m_infoLogFile);
+        logger.removeHandler(m_commLogFile);
+        logger.removeHandler(m_detailedLogFile);
+        
         String todayString = date.toString();
         String pathDir = FilePaths.dataLogDirectory + todayString + "/";
         File file = new File(pathDir);

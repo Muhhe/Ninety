@@ -3,7 +3,7 @@
   <money currentCash="20211.65" />
   <heldPositions heldStocks="1">
     <heldStock ticker="KMI">
-      <purchase priceForOne="21.77" position="91" portions="1" date="2017-02-19T09:19:04.636-05:00[America/New_York]" />
+      <purchase priceForOne="21.77" position="91" portions="1" date="2017-02-17" />
     </heldStock>
   </heldPositions>
 </status>

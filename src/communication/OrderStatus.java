@@ -9,7 +9,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import tradingapp.TradeFormatter;
 import tradingapp.TradeOrder;
-import tradingapp.TradingTimer;
+import tradingapp.TradeTimer;
 
 /**
  *
@@ -37,8 +37,8 @@ public class OrderStatus {
         this.remaining = order.position;
         this.fillPrice = 0;
         //this.tickerSymbol = order.tickerSymbol;
-        this.timestampIssued = TradingTimer.GetNYTimeNow();
-        this.timestampFilled = TradingTimer.GetNYTimeNow();
+        this.timestampIssued = TradeTimer.GetNYTimeNow();
+        this.timestampFilled = TradeTimer.GetNYTimeNow();
     }
     
     public static OrderStatus.Status getOrderStatus(String status) {

@@ -44,7 +44,7 @@ public class TestPlatform extends javax.swing.JFrame {
 
         });
 
-        TradeLogger.getInstance().initializeTextAreas(logArea, Level.FINE, fineLogArea, Level.FINEST, commArea, Level.FINEST);
+        TradeLogger.getInstance().initializeTextAreas(logArea, Level.INFO, fineLogArea, Level.FINEST, commArea, Level.FINEST);
         
         FilePaths.tradingStatusPathFileInput = "testingData/TradingStatus.xml";
         FilePaths.tradingStatusPathFileOutput = "testingData/TradingStatusOutput.xml";
@@ -55,7 +55,7 @@ public class TestPlatform extends javax.swing.JFrame {
         
         Settings.ReadSettings();
         
-        IBroker broker = new BrokerNoIB();
+        IBroker broker = new BrokerIBReadOnly(Settings.port, Settings.clientId);
         
         GlobalConfig.sendMails = false;
         GlobalConfig.AddDataGetterAct(new DataGetterActIB(broker));

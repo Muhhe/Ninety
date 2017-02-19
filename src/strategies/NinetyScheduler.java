@@ -15,6 +15,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Logger;
+import tradingapp.CheckingThread;
 import tradingapp.TradeFormatter;
 import tradingapp.MailSender;
 import tradingapp.Settings;
@@ -47,13 +48,22 @@ public class NinetyScheduler {
         
         this.broker = broker;
     }
-
-    public void RunNow() {  // TODO: make init method
-        TradeLogger.getInstance().closeFiles();
+    
+    public void NewDayInit() {
+        TradeLogger.getInstance().clearLogs(); 
         TradeLogger.getInstance().initializeFiles(LocalDate.now());
-        
         TradingTimer.LoadSpecialTradingDays();
         TickersToTrade.LoadTickers();
+
+        Settings.ReadSettings();
+
+        statusData.UpdateCashSettings();
+        statusData.ReadHeldPositions();
+        statusData.PrintStatus();
+    }
+
+    public void RunNow() {
+        NewDayInit();
         
         isStartScheduled = true;
         
@@ -95,16 +105,7 @@ public class NinetyScheduler {
     public void DoInitialization() {
         boolean isCheckOk = true;
         try {
-            TradeLogger.getInstance().clearLogs(); // TODO: move to init method
-            TradeLogger.getInstance().initializeFiles(LocalDate.now());
-            TradingTimer.LoadSpecialTradingDays();
-            TickersToTrade.LoadTickers();
-
-            Settings.ReadSettings();
-            
-            statusData.UpdateCashSettings();
-            statusData.ReadHeldPositions();
-            statusData.PrintStatus();
+            NewDayInit();
 
             ZonedDateTime now = TradingTimer.GetNYTimeNow();
             LocalTime closeTimeLocal = TradingTimer.GetTodayCloseTime();
@@ -131,7 +132,7 @@ public class NinetyScheduler {
 
             ZonedDateTime closeTimeZoned = now.with(closeTimeLocal);
 
-            LoadHistData();
+            PrepareData();
             
             if (!broker.connect() ) {
                 isCheckOk = false;
@@ -168,14 +169,18 @@ public class NinetyScheduler {
         }
     }
 
-    public void LoadHistData() {
+    public void PrepareData() {
         try {
+            CheckingThread checkThread = CheckingThread.StartNewCheckingThread(Duration.ofMinutes(2), "Failed to prepare data");
+        
             logger.finer("Acquiring lock for LoadingHistData run.");
             dataMutex.acquire();
             new NinetyDataPreparator(stockData, broker).run();
             stockData.SaveHistDataToFiles();
             dataMutex.release();
             logger.finer("Released lock for LoadingHistData run.");
+            
+            checkThread.SetChecked();
         } catch (InterruptedException ex) {
             throw new IllegalStateException("InterruptedException");
         }
@@ -185,7 +190,7 @@ public class NinetyScheduler {
         Runnable taskWrapper = new Runnable() {
             @Override
             public void run() {
-                LoadHistData();
+                PrepareData();
             }
         };
         
@@ -207,6 +212,8 @@ public class NinetyScheduler {
             @Override
             public void run() {
                 try {
+                    CheckingThread checkThread = CheckingThread.StartNewCheckingThread(Duration.ofMinutes(2), "Trade run did not end properly.");
+            
                     logger.finer("Acquiring lock for trading run.");
                     dataMutex.acquire();
                     new NinetyRunner(stockData, statusData, broker).run();
@@ -224,6 +231,8 @@ public class NinetyScheduler {
                     
                     MailSender.SendTradingLog();
                     MailSender.SendErrors();
+                    
+                    checkThread.SetChecked();
                 } catch (InterruptedException ex) {
                     throw new IllegalStateException("InterruptedException");
                 }

@@ -137,7 +137,7 @@ public class MailSender {
             // Set text message part
             multipart.addBodyPart(messageBodyPart);
 
-            String todayString = LocalDate.now().toString();
+            String todayString = TradeTimer.GetLocalDateNow().toString();
             String pathDir = FilePaths.dataLogDirectory + todayString + FilePaths.logPathFile;
             AddAttachment(pathDir, multipart);
 

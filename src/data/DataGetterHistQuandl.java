@@ -31,12 +31,12 @@ public class DataGetterHistQuandl implements IDataGetterHist {
     }
     
     @Override
-    public CloseData readAdjCloseData(LocalDate lastDate, String tickerSymbol, int daysToRead, boolean duplicateFirst) {
+    public CloseData readAdjCloseData(LocalDate lastDate, String tickerSymbol, int daysToRead, boolean skipFirstIndex) {
         int daysBackNecessary = (int) ((daysToRead * (7.0/5.0)) + 20);
-        return readAdjCloseData(lastDate.minusDays(daysBackNecessary), lastDate, tickerSymbol, daysToRead, duplicateFirst);
+        return readAdjCloseData(lastDate.minusDays(daysBackNecessary), lastDate, tickerSymbol, daysToRead, skipFirstIndex);
     }
     
-    public CloseData readAdjCloseData(LocalDate startDate, LocalDate endDate, String tickerSymbol, int daysToRead, boolean duplicateFirst) {
+    public CloseData readAdjCloseData(LocalDate startDate, LocalDate endDate, String tickerSymbol, int daysToRead, boolean skipFirstIndex) {
         
         ArrayList<Double> arrCloseVals = new ArrayList<>();
         ArrayList<LocalDate> arrDates = new ArrayList<>();
@@ -79,7 +79,7 @@ public class DataGetterHistQuandl implements IDataGetterHist {
 
             BufferedReader br = new BufferedReader( new InputStreamReader(urlQuandl.openStream()));
 
-            line = br.readLine(); // skip first line
+            br.readLine(); // skip first line
                 
             while ((line = br.readLine()) != null) {
 
@@ -88,9 +88,9 @@ public class DataGetterHistQuandl implements IDataGetterHist {
                 LocalDate parsedDate = LocalDate.parse(dateLine[0], DateTimeFormatter.ofPattern("yyyy-MM-dd"));
                 double adjClose = Double.parseDouble(dateLine[11]);
                 
-                if (totalCount == 0 && duplicateFirst) {
-                    arrDates.add(parsedDate);
-                    arrCloseVals.add(adjClose);
+                if (totalCount == 0 && skipFirstIndex) {
+                    arrDates.add(LocalDate.now());
+                    arrCloseVals.add(0.0);
                     totalCount++;
                 }
                 

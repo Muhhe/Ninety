@@ -53,6 +53,6 @@ public class DataGetterActIB implements IDataGetterAct {
             }
         }
         
-        return null;
+        return map;
     }
 }
