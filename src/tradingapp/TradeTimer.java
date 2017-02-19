@@ -29,7 +29,7 @@ import org.jdom2.input.SAXBuilder;
  *
  * @author Muhe
  */
-public class TradingTimer {
+public class TradeTimer {
 
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     private final static LocalTime DEFAULT_CLOSE_TIME = LocalTime.of(16, 00);
@@ -39,31 +39,49 @@ public class TradingTimer {
     private static List<TradingDay> specialTradingDays = new ArrayList<TradingDay>();
 
     public final static ZoneId ZONE_NY = ZoneId.of("America/New_York");
+    
+    private static LocalDate today = null;
 
     private static class TradingDay {
 
         LocalDate date = null;
         LocalTime closingTime = null;
     }
-    
-    protected TradingTimer() {
+
+    protected TradeTimer() {
         // Exists only to defeat instantiation.
     }
     
-    public static ZonedDateTime GetNYTimeNow() {
-        return ZonedDateTime.now(ZONE_NY);
+    public static void SetToday(LocalDate date) {
+        today = date;
     }
-    
+
+    public static ZonedDateTime GetNYTimeNow() {
+        if (today != null) {
+            return ZonedDateTime.now(ZONE_NY).withYear(today.getYear()).withMonth(today.getMonthValue()).withDayOfMonth(today.getDayOfMonth());
+        } else {
+            return ZonedDateTime.now(ZONE_NY);
+        }
+    }
+
+    public static LocalDate GetLocalDateNow() {
+        if (today != null) {
+            return today;
+        } else {
+            return LocalDate.now(ZONE_NY);
+        }
+    }
+
     public static LocalDate GetLastTradingDay(LocalDate date) {
         LocalDate lastDay = date;
-        while (!TradingTimer.IsTradingDay(lastDay)) {
+        while (!TradeTimer.IsTradingDay(lastDay)) {
             lastDay = lastDay.minusDays(1);
         }
         return lastDay;
     }
     
     public static LocalDate GetLastTradingDay() {
-        return GetLastTradingDay(LocalDate.now());
+        return GetLastTradingDay(TradeTimer.GetLocalDateNow());
     }
     
     public static LocalDate GetLastTradingDayBefore(LocalDate date) {
@@ -130,7 +148,7 @@ public class TradingTimer {
     }
     
     public static LocalTime GetTodayCloseTime() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = TradeTimer.GetLocalDateNow();
         LocalTime closingTime = DEFAULT_CLOSE_TIME;
         
         DayOfWeek dow = today.getDayOfWeek();

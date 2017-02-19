@@ -7,19 +7,24 @@ package test;
 
 import communication.BrokerIB;
 import communication.IBroker;
+import data.DataGetterActFile;
 import data.DataGetterActGoogle;
 import data.DataGetterActIB;
+import data.DataGetterHistFile;
 import data.DataGetterHistQuandl;
 import data.DataGetterHistYahoo;
+import java.time.LocalDate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import strategies.NinetyChecker;
 import strategies.NinetyScheduler;
+import strategies.StockDataForNinety;
 import tradingapp.FilePaths;
 import tradingapp.GlobalConfig;
 import tradingapp.Settings;
 import tradingapp.TradeLogger;
 import tradingapp.TradeOrder;
+import tradingapp.TradeTimer;
 
 /**
  *
@@ -43,28 +48,11 @@ public class TestPlatform extends javax.swing.JFrame {
             }
 
         });
+        
+        TradeTimer.SetToday(LocalDate.of(2017, 2, 17));
 
         TradeLogger.getInstance().initializeTextAreas(logArea, Level.INFO, fineLogArea, Level.FINEST, commArea, Level.FINEST);
         
-        FilePaths.tradingStatusPathFileInput = "testingData/TradingStatus.xml";
-        FilePaths.tradingStatusPathFileOutput = "testingData/TradingStatusOutput.xml";
-        FilePaths.equityPathFile = "testingData/Equity.csv";
-        FilePaths.tradeLogPathFile = "testingData/TradeLog.csv";
-        FilePaths.tradeLogDetailedPathFile = "testingData/TradeLogDetailed.txt";
-        FilePaths.specialTradingDaysPathFile = "testingData/specialTradingDays.xml";
-        
-        Settings.ReadSettings();
-        
-        IBroker broker = new BrokerIBReadOnly(Settings.port, Settings.clientId);
-        
-        GlobalConfig.sendMails = false;
-        GlobalConfig.AddDataGetterAct(new DataGetterActIB(broker));
-        GlobalConfig.AddDataGetterAct(new DataGetterActGoogle());
-        
-        GlobalConfig.AddDataGetterHist(new DataGetterHistYahoo());
-        GlobalConfig.AddDataGetterHist(new DataGetterHistQuandl());
-        
-        ninetySchedulerNoBroker = new NinetyScheduler( broker );
     }
 
     /**
@@ -89,6 +77,7 @@ public class TestPlatform extends javax.swing.JFrame {
         startNowButton = new javax.swing.JButton();
         tickerField = new javax.swing.JTextField();
         buyButton = new javax.swing.JButton();
+        testDataYahooButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Trading app 90 - TEST PLATFORM");
@@ -152,6 +141,13 @@ public class TestPlatform extends javax.swing.JFrame {
             }
         });
 
+        testDataYahooButton.setText("Test Load Data Yahoo");
+        testDataYahooButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                testDataYahooButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -162,16 +158,18 @@ public class TestPlatform extends javax.swing.JFrame {
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(startButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(isOnCheckbox)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 389, Short.MAX_VALUE)
-                        .addComponent(checkPositionsButton)
-                        .addGap(5, 5, 5)
-                        .addComponent(startNowButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(isOnCheckbox))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(tickerField, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(buyButton)
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addComponent(buyButton)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 373, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(checkPositionsButton)
+                        .addGap(5, 5, 5)
+                        .addComponent(startNowButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(testDataYahooButton))
                 .addContainerGap())
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(layout.createSequentialGroup()
@@ -190,7 +188,8 @@ public class TestPlatform extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(tickerField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(buyButton))
+                    .addComponent(buyButton)
+                    .addComponent(testDataYahooButton))
                 .addGap(0, 538, Short.MAX_VALUE))
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
@@ -234,6 +233,29 @@ public class TestPlatform extends javax.swing.JFrame {
     }//GEN-LAST:event_checkPositionsButtonActionPerformed
 
     private void startNowButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startNowButtonActionPerformed
+        FilePaths.tradingStatusPathFileInput = "testData/TradingStatus.xml";
+        FilePaths.tradingStatusPathFileOutput = "testData/TradingStatusOutput.xml";
+        FilePaths.equityPathFile = "testData/Equity.csv";
+        FilePaths.tradeLogPathFile = "testData/TradeLog.csv";
+        FilePaths.tradeLogDetailedPathFile = "testData/TradeLogDetailed.txt";
+        FilePaths.specialTradingDaysPathFile = "testData/specialTradingDays.xml";
+        FilePaths.dataLogDirectory = "testData/dataLog/";
+        
+        Settings.ReadSettings();
+        
+        IBroker broker = new BrokerIBReadOnly(Settings.port, Settings.clientId);
+        
+        GlobalConfig.sendMails = false;
+        GlobalConfig.ClearGetters();
+        
+        GlobalConfig.AddDataGetterAct(new DataGetterActIB(broker));
+        GlobalConfig.AddDataGetterAct(new DataGetterActGoogle());
+        
+        GlobalConfig.AddDataGetterHist(new DataGetterHistYahoo());
+        GlobalConfig.AddDataGetterHist(new DataGetterHistQuandl());
+        
+        ninetySchedulerNoBroker = new NinetyScheduler( broker );
+        
         if (!ninetySchedulerNoBroker.isStartScheduled) {
             ninetySchedulerNoBroker.RunNow();
             isOnCheckbox.setSelected(true);
@@ -272,6 +294,56 @@ public class TestPlatform extends javax.swing.JFrame {
             }
         }).start();
     }//GEN-LAST:event_buyButtonActionPerformed
+
+    private void testDataYahooButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_testDataYahooButtonActionPerformed
+        LocalDate testDay = LocalDate.of(2017, 2, 17);
+        TradeTimer.SetToday(testDay);
+        
+        FilePaths.tradingStatusPathFileInput = "testData/TradingStatus.xml";
+        FilePaths.tradingStatusPathFileOutput = "testData/TradingStatusOutput.xml";
+        FilePaths.equityPathFile = "testData/Equity.csv";
+        FilePaths.tradeLogPathFile = "testData/TradeLog.csv";
+        FilePaths.tradeLogDetailedPathFile = "testData/TradeLogDetailed.txt";
+        FilePaths.specialTradingDaysPathFile = "testData/specialTradingDays.xml";
+        FilePaths.dataLogDirectory = "testData/dataLog/";
+        
+        Settings.ReadSettings();
+        TradeTimer.LoadSpecialTradingDays();
+        
+        GlobalConfig.sendMails = false;
+        GlobalConfig.ClearGetters();
+        
+        String pathToSourceData = "testData/Data 2017-02-17/Historic/";
+        
+        GlobalConfig.AddDataGetterAct(new DataGetterActFile(pathToSourceData));
+        GlobalConfig.AddDataGetterHist(new DataGetterHistFile(pathToSourceData));
+        //GlobalConfig.AddDataGetterHist(new DataGetterHistYahoo());
+        //GlobalConfig.AddDataGetterHist(new DataGetterHistQuandl());
+        
+        StockDataForNinety stockDataForNinety = new StockDataForNinety();
+        
+        new Thread(() -> {
+            stockDataForNinety.PrepareData(new BrokerNoIB());
+            
+            stockDataForNinety.SaveHistDataToFiles();
+            stockDataForNinety.SaveStockIndicatorsToFiles();
+            stockDataForNinety.SaveIndicatorsToCSVFile();
+
+            boolean isOk = true;
+
+            isOk &= TestUtils.CompareDirectories("testData/Data 2017-02-17/Historic/", FilePaths.dataLogDirectory + testDay + "/Historic/", TestUtils.histDataComparator);
+
+            isOk &= TestUtils.CompareDirectories("testData/Data 2017-02-17/Indicators/", FilePaths.dataLogDirectory + testDay + "/Indicators/", TestUtils.indicatorTxtComparator);
+
+            isOk &= TestUtils.CompareFiles("testData/Data 2017-02-17/indicators.csv", FilePaths.dataLogDirectory + testDay + "/indicators.csv", TestUtils.indicatorCsvComparator);
+
+            if (isOk) {
+                logger.info("Test finished successfully.");
+            } else {
+                logger.info("Test FAILED.");
+            }
+        }).start();
+    }//GEN-LAST:event_testDataYahooButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -321,6 +393,7 @@ public class TestPlatform extends javax.swing.JFrame {
     private javax.swing.JTabbedPane logTabbedPane;
     private javax.swing.JButton startButton;
     private javax.swing.JButton startNowButton;
+    private javax.swing.JButton testDataYahooButton;
     private javax.swing.JTextField tickerField;
     // End of variables declaration//GEN-END:variables
 }

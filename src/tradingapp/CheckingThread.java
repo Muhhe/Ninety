@@ -26,7 +26,7 @@ public class CheckingThread {
         logger.finer("Checking thread with message '" + msg + "' and countdown " + countdown.toString() + " started.");
         
         CheckingThread checker = new CheckingThread(msg);
-        TradingTimer.startTaskAt(TradingTimer.GetNYTimeNow().plus(countdown), checker::DoCheckOnCountdown);
+        TradeTimer.startTaskAt(TradeTimer.GetNYTimeNow().plus(countdown), checker::DoCheckOnCountdown);
         
         return checker;
     }

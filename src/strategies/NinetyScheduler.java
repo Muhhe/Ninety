@@ -20,7 +20,7 @@ import tradingapp.TradeFormatter;
 import tradingapp.MailSender;
 import tradingapp.Settings;
 import tradingapp.TradeLogger;
-import tradingapp.TradingTimer;
+import tradingapp.TradeTimer;
 
 /**
  *
@@ -52,7 +52,7 @@ public class NinetyScheduler {
     public void NewDayInit() {
         TradeLogger.getInstance().clearLogs(); 
         TradeLogger.getInstance().initializeFiles(LocalDate.now());
-        TradingTimer.LoadSpecialTradingDays();
+        TradeTimer.LoadSpecialTradingDays();
         TickersToTrade.LoadTickers();
 
         Settings.ReadSettings();
@@ -67,17 +67,17 @@ public class NinetyScheduler {
         
         isStartScheduled = true;
         
-        ScheduleLoadingHistData(ZonedDateTime.now().plusSeconds(3));
-        ScheduleTradingRun(ZonedDateTime.now().plusMinutes(1));
+        ScheduleLoadingHistData(TradeTimer.GetNYTimeNow().plusSeconds(2));
+        ScheduleTradingRun(TradeTimer.GetNYTimeNow().plusSeconds(20));
     }
 
     private void ScheduleForTomorrow() {
         logger.info("Scheduling for tomorrow!");
         isStartScheduled = true;
-        ZonedDateTime tomorrowCheck = TradingTimer.GetNYTimeNow().plusDays(1).with(FIRST_CHECK_TIME);
-        TradingTimer.startTaskAt(tomorrowCheck, this::DoInitialization);
+        ZonedDateTime tomorrowCheck = TradeTimer.GetNYTimeNow().plusDays(1).with(FIRST_CHECK_TIME);
+        TradeTimer.startTaskAt(tomorrowCheck, this::DoInitialization);
 
-        Duration durationToNextRun = Duration.ofSeconds(TradingTimer.computeTimeFromNowTo(tomorrowCheck));
+        Duration durationToNextRun = Duration.ofSeconds(TradeTimer.computeTimeFromNowTo(tomorrowCheck));
         
         logger.info("Next check is scheduled for " + tomorrowCheck.format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
         logger.info("Starting in " + durationToNextRun.toString());
@@ -86,20 +86,20 @@ public class NinetyScheduler {
     }
 
     public void ScheduleFirstCheck() {
-        ZonedDateTime earliestCheckTime = TradingTimer.GetNYTimeNow().with(FIRST_CHECK_TIME);
+        ZonedDateTime earliestCheckTime = TradeTimer.GetNYTimeNow().with(FIRST_CHECK_TIME);
         
-        ZonedDateTime checkTime = TradingTimer.GetNYTimeNow().plusSeconds(1);
+        ZonedDateTime checkTime = TradeTimer.GetNYTimeNow().plusSeconds(1);
 
         if (checkTime.compareTo(earliestCheckTime) <= 0) {
             checkTime = earliestCheckTime;
         
-            Duration durationToNextRun = Duration.ofSeconds(TradingTimer.computeTimeFromNowTo(checkTime));
+            Duration durationToNextRun = Duration.ofSeconds(TradeTimer.computeTimeFromNowTo(checkTime));
 
             logger.info("First check is scheduled for " + checkTime.format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
             logger.info("Starting in " + durationToNextRun.toString());
         }
 
-        TradingTimer.startTaskAt(checkTime, this::DoInitialization);
+        TradeTimer.startTaskAt(checkTime, this::DoInitialization);
     }
 
     public void DoInitialization() {
@@ -107,8 +107,8 @@ public class NinetyScheduler {
         try {
             NewDayInit();
 
-            ZonedDateTime now = TradingTimer.GetNYTimeNow();
-            LocalTime closeTimeLocal = TradingTimer.GetTodayCloseTime();
+            ZonedDateTime now = TradeTimer.GetNYTimeNow();
+            LocalTime closeTimeLocal = TradeTimer.GetTodayCloseTime();
 
             if (closeTimeLocal == null) {
                 logger.info("No trading today.");
@@ -158,7 +158,7 @@ public class NinetyScheduler {
             if (!isCheckOk) {
                 logger.severe("Check failed. Scheduling check for next hour.");
 
-                TradingTimer.startTaskAt(ZonedDateTime.now().plusHours(1), this::DoInitialization);
+                TradeTimer.startTaskAt(TradeTimer.GetNYTimeNow().plusHours(1), this::DoInitialization);
 
             }
             
@@ -194,16 +194,16 @@ public class NinetyScheduler {
             }
         };
         
-        TradingTimer.startTaskAt(runTime, taskWrapper);
+        TradeTimer.startTaskAt(runTime, taskWrapper);
 
-        Duration timeToHist = Duration.ofSeconds(TradingTimer.computeTimeFromNowTo(runTime));
+        Duration timeToHist = Duration.ofSeconds(TradeTimer.computeTimeFromNowTo(runTime));
 
         logger.info("Reading historic data is scheduled for " + runTime.format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
         logger.info("Starting in " + timeToHist.toString());
     }
     
     public void ScheduleTradingRun(ZonedDateTime runTime) {
-        Duration timeToStart = Duration.ofSeconds(TradingTimer.computeTimeFromNowTo(runTime));
+        Duration timeToStart = Duration.ofSeconds(TradeTimer.computeTimeFromNowTo(runTime));
 
         logger.info("Starting Ninety strategy is scheduled for " + runTime.format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
         logger.info("Starting in " + timeToStart.toString());
@@ -239,12 +239,12 @@ public class NinetyScheduler {
             }
         };
 
-        TradingTimer.startTaskAt(runTime, taskWrapper);
+        TradeTimer.startTaskAt(runTime, taskWrapper);
     }
     
     public void Stop() {
         logger.info("Stopping execution of Ninety strategy.");
-        TradingTimer.stop();
+        TradeTimer.stop();
         logger.info("Execution of Ninety strategy is stopped.");
         isStartScheduled = false;
     }

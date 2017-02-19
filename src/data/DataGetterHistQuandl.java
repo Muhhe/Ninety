@@ -89,7 +89,7 @@ public class DataGetterHistQuandl implements IDataGetterHist {
                 double adjClose = Double.parseDouble(dateLine[11]);
                 
                 if (totalCount == 0 && skipFirstIndex) {
-                    arrDates.add(LocalDate.now());
+                    arrDates.add(LocalDate.MIN);
                     arrCloseVals.add(0.0);
                     totalCount++;
                 }

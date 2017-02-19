@@ -29,7 +29,7 @@ import java.util.logging.Logger;
 import tradingapp.FilePaths;
 import tradingapp.GlobalConfig;
 import tradingapp.TradeFormatter;
-import tradingapp.TradingTimer;
+import tradingapp.TradeTimer;
 
 /**
  *
@@ -53,17 +53,13 @@ public class StockDataForNinety {
             dataMutex.acquire();
 
             if (!isRealtimeDataSubscribed) {
-                SubscribeRealtimeData(broker);
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException ex) {
-                }
+                logger.warning("Actual data not subscribed.");
             }
 
             logger.info("Starting to stock data.");
             String[] tickers = TickersToTrade.GetTickers();
 
-            Map<String, Double> actValues = GetActualValues(broker);
+            Map<String, Double> actValues = GetActualValues();
 
             if (actValues == null) {
                 logger.severe("Totally failed to load actual data.");
@@ -71,14 +67,13 @@ public class StockDataForNinety {
                 return;
             }
 
-            LocalDate lastTradingDay = TradingTimer.GetLastTradingDay();
-            if (lastTradingDay.compareTo(LocalDate.now()) != 0) {
-                logger.warning("Preparing data: Today " + LocalDate.now().toString() + " is not the same as last trading day " + lastTradingDay.toString());
+            LocalDate lastTradingDay = TradeTimer.GetLastTradingDay();
+            if (lastTradingDay.compareTo(TradeTimer.GetLocalDateNow()) != 0) {
+                logger.warning("Preparing data: Today " + TradeTimer.GetLocalDateNow().toString() + " is not the same as last trading day " + lastTradingDay.toString());
             }
 
             logger.info("Starting to load historic data.");
             for (String ticker : tickers) {
-                logger.finest("Loading hist data for " + ticker);
 
                 Double actValue = actValues.get(ticker);
                 if (actValue == null || actValue == 0) {
@@ -88,11 +83,12 @@ public class StockDataForNinety {
 
                 boolean failedHist = false;
                 for (IDataGetterHist dataGetter : GlobalConfig.GetDataGettersHist()) {
+                    logger.finest("Loading hist data for " + ticker + " from " + dataGetter.getName());
                     if (failedHist) {
                         logger.warning("Trying to load it from " + dataGetter.getName());
                     }
 
-                    CloseData data = dataGetter.readAdjCloseData(TradingTimer.GetLastTradingDay(lastTradingDay.minusDays(1)), ticker, 200, true);
+                    CloseData data = dataGetter.readAdjCloseData(TradeTimer.GetLastTradingDay(lastTradingDay.minusDays(1)), ticker, 200, true);
                     if (data == null) {
                         logger.warning("Hist data from " + dataGetter.getName() + " for " + ticker + " are null.");
                         failedHist = false;
@@ -152,7 +148,7 @@ public class StockDataForNinety {
         }
     }
 
-    private Map<String, Double> GetActualValues(IBroker broker) {
+    private Map<String, Double> GetActualValues() {
         Map<String, Double> valuesMap = null;
         logger.info("Starting to load actual data");
 
@@ -160,6 +156,8 @@ public class StockDataForNinety {
         boolean failedLvl1 = false;
 
         for (IDataGetterAct firstLvlGetter : GlobalConfig.GetDataGettersAct()) {
+            logger.fine("Starting to load act data from " + firstLvlGetter.getName());
+            
             valuesMap = firstLvlGetter.readActualData(tickers);
 
             if (valuesMap != null && (valuesMap.size() >= tickers.length / 2)) {
@@ -203,14 +201,10 @@ public class StockDataForNinety {
         return valuesMap;
     }
 
-    public void UpdateDataWithActValuesIB(IBroker broker) {
-        
+    public void UpdateDataWithActValues() {
+
         if (!isRealtimeDataSubscribed) {
-            SubscribeRealtimeData(broker);
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException ex) {
-            }
+            logger.warning("Actual data not subscribed.");
         }
 
         try {
@@ -222,7 +216,7 @@ public class StockDataForNinety {
                 return;
             }
 
-            Map<String, Double> actValues = GetActualValues(broker);
+            Map<String, Double> actValues = GetActualValues();
 
             if (actValues == null) {
                 logger.severe("Totally failed to load actual data.");
@@ -230,9 +224,9 @@ public class StockDataForNinety {
                 return;
             }
 
-            LocalDate lastTradingDay = TradingTimer.GetLastTradingDay();
-            if (lastTradingDay.compareTo(LocalDate.now()) != 0) {
-                logger.warning("Updating with actual data: Today " + LocalDate.now().toString() + " is not the same as last trading day " + lastTradingDay.toString());
+            LocalDate lastTradingDay = TradeTimer.GetLastTradingDay();
+            if (lastTradingDay.compareTo(TradeTimer.GetLocalDateNow()) != 0) {
+                logger.warning("Updating with actual data: Today " + TradeTimer.GetLocalDateNow().toString() + " is not the same as last trading day " + lastTradingDay.toString());
             }
 
             for (Iterator<Map.Entry<String, CloseData>> it = closeDataMap.entrySet().iterator(); it.hasNext();) {
@@ -276,7 +270,7 @@ public class StockDataForNinety {
     }
 
     public void SaveHistDataToFiles() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = TradeTimer.GetLocalDateNow();
         String todayString = today.toString();
         for (Map.Entry<String, CloseData> entry : closeDataMap.entrySet()) {
             File file = new File(FilePaths.dataLogDirectory + todayString + "/Historic/" + entry.getKey() + ".csv");
@@ -313,7 +307,7 @@ public class StockDataForNinety {
     }
 
     public void SaveStockIndicatorsToFiles() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = TradeTimer.GetLocalDateNow();
         String todayString = today.toString();
         for (Map.Entry<String, StockIndicatorsForNinety> entry : indicatorsMap.entrySet()) {
             File file = new File(FilePaths.dataLogDirectory + todayString + "/Indicators/" + entry.getKey() + ".txt");
@@ -348,7 +342,7 @@ public class StockDataForNinety {
     }
 
     public void SaveIndicatorsToCSVFile() {
-        String todayString = LocalDate.now().toString();
+        String todayString = TradeTimer.GetLocalDateNow().toString();
         File file = new File(FilePaths.dataLogDirectory + todayString + "/indicators.csv");
         File directory = new File(file.getParentFile().getAbsolutePath());
         directory.mkdirs();

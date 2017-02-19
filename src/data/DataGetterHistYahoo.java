@@ -88,7 +88,7 @@ public class DataGetterHistYahoo implements IDataGetterHist {
                 LocalDate parsedDate = LocalDate.parse(dateLine[0], DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
                 if (totalCount == 0 && skipFirstIndex) {
-                    arrDates.add(LocalDate.now());
+                    arrDates.add(LocalDate.MIN);
                     arrCloseVals.add(0.0);
                     totalCount++;
                 }

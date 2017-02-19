@@ -31,6 +31,7 @@ import tradingapp.TradeFormatter;
 import tradingapp.MailSender;
 import tradingapp.Settings;
 import tradingapp.TradeOrder;
+import tradingapp.TradeTimer;
 
 /**
  *
@@ -62,7 +63,7 @@ public class StatusDataForNinety {
             held.tickerSymbol = order.order.tickerSymbol;
 
             StockPurchase purchase = new StockPurchase();
-            purchase.date = LocalDate.now();
+            purchase.date = TradeTimer.GetLocalDateNow();
             purchase.portions = 1;
             purchase.position = order.filled;
             purchase.priceForOne = order.fillPrice;
@@ -107,7 +108,7 @@ public class StatusDataForNinety {
             }
             
             StockPurchase purchase = new StockPurchase();
-            purchase.date = LocalDate.now();
+            purchase.date = TradeTimer.GetLocalDateNow();
             purchase.portions = newPortions;
             purchase.position = order.filled;
             purchase.priceForOne = order.fillPrice;
@@ -228,7 +229,7 @@ public class StatusDataForNinety {
             File equityFile = new File(FilePaths.equityPathFile);
             equityFile.createNewFile();
             writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(equityFile, true), "UTF-8"));
-            String line = LocalDate.now().toString() + "," + currentCash + "\r\n";
+            String line = TradeTimer.GetLocalDateNow().toString() + "," + currentCash + "\r\n";
             writer.append(line);
             
             logger.fine("Updated equity file with value " + currentCash);
@@ -273,7 +274,7 @@ public class StatusDataForNinety {
             double profit = held.CalculateProfitIfSold(order.fillPrice);
             double profitPercent = held.CalculatePercentProfitIfSold(order.fillPrice);
             
-            writer.append(LocalDate.now().toString() + ",");
+            writer.append(TradeTimer.GetLocalDateNow().toString() + ",");
             writer.append(held.purchases.get(0).date + ",");
             writer.append(held.tickerSymbol + ",");
             writer.append(profit + ",");
@@ -321,7 +322,7 @@ public class StatusDataForNinety {
             double profit = held.CalculateProfitIfSold(order.fillPrice);
             double profitPercent = held.CalculatePercentProfitIfSold(order.fillPrice);
             
-            writer.append(LocalDate.now().toString() + ", ");
+            writer.append(TradeTimer.GetLocalDateNow().toString() + ", ");
             writer.append("CLOSE, ");
             writer.append("Ticker: " + held.tickerSymbol + ", ");
             writer.append("Price: " + TradeFormatter.toString(order.fillPrice) + ", ");

@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import tradingapp.TradeOrder;
-import tradingapp.TradingTimer;
+import tradingapp.TradeTimer;
 import static tradingapp.MainWindow.LOGGER_COMM_NAME;
 
 /**
@@ -204,7 +204,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
         orderStatus.status = OrderStatus.getOrderStatus(status);
 
         if (orderStatus.status == OrderStatus.Status.FILLED) {
-            orderStatus.timestampFilled = TradingTimer.GetNYTimeNow();
+            orderStatus.timestampFilled = TradeTimer.GetNYTimeNow();
             loggerComm.fine("FILLED id:" + orderId + ", " + orderStatus.toString());
 
             synchronized (activeOrdersMap) {
