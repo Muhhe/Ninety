@@ -59,7 +59,6 @@ public class NinetyRunner implements Runnable {
         logger.info(broker.GetAccountSummary().toString());
 
         stockData.UpdateDataWithActValuesIB(broker);
-        stockData.CalculateIndicators();
         
         if (!NinetyChecker.CheckStockData(stockData, statusData)) {
             logger.severe("Currupted stock data. Exiting trading!");
@@ -78,7 +77,6 @@ public class NinetyRunner implements Runnable {
         ProcessSubmittedOrders();
 
         stockData.UpdateDataWithActValuesIB(broker);
-        stockData.CalculateIndicators();
         
         if (!NinetyChecker.CheckHeldPositions(statusData, broker)) {
             logger.severe("Failed check positions after sell.");

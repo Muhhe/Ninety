@@ -13,6 +13,8 @@
 *.lck
 private.xml
 _settings.xml
+!tickerList.txt
+!testData/*
 
 build/
 nbproject/private

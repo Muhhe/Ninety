@@ -5,11 +5,18 @@
  */
 package test;
 
+import communication.BrokerIB;
+import communication.IBroker;
+import data.DataGetterActGoogle;
+import data.DataGetterActIB;
+import data.DataGetterHistQuandl;
+import data.DataGetterHistYahoo;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import strategies.NinetyChecker;
 import strategies.NinetyScheduler;
 import tradingapp.FilePaths;
+import tradingapp.GlobalConfig;
 import tradingapp.Settings;
 import tradingapp.TradeLogger;
 import tradingapp.TradeOrder;
@@ -28,19 +35,36 @@ public class TestPlatform extends javax.swing.JFrame {
      */
     public TestPlatform() {
         initComponents();
-        
-        TradeLogger.getInstance().initializeTextAreas(logArea, fineLogArea, commArea);
+
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                logger.log(Level.SEVERE, "Uncaught Exception!!!", e);
+            }
+
+        });
+
+        TradeLogger.getInstance().initializeTextAreas(logArea, Level.FINE, fineLogArea, Level.FINEST, commArea, Level.FINEST);
         
         FilePaths.tradingStatusPathFileInput = "testingData/TradingStatus.xml";
-        FilePaths.tradingStatusPathFileOutput = "testingData/TradingStatus.xml";
+        FilePaths.tradingStatusPathFileOutput = "testingData/TradingStatusOutput.xml";
         FilePaths.equityPathFile = "testingData/Equity.csv";
         FilePaths.tradeLogPathFile = "testingData/TradeLog.csv";
         FilePaths.tradeLogDetailedPathFile = "testingData/TradeLogDetailed.txt";
         FilePaths.specialTradingDaysPathFile = "testingData/specialTradingDays.xml";
         
-        Settings.getInstance().ReadSettings();
+        Settings.ReadSettings();
         
-        ninetySchedulerNoBroker = new NinetyScheduler( new BrokerMockup() );
+        IBroker broker = new BrokerNoIB();
+        
+        GlobalConfig.sendMails = false;
+        GlobalConfig.AddDataGetterAct(new DataGetterActIB(broker));
+        GlobalConfig.AddDataGetterAct(new DataGetterActGoogle());
+        
+        GlobalConfig.AddDataGetterHist(new DataGetterHistYahoo());
+        GlobalConfig.AddDataGetterHist(new DataGetterHistQuandl());
+        
+        ninetySchedulerNoBroker = new NinetyScheduler( broker );
     }
 
     /**

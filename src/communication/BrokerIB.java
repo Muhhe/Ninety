@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,28 +30,28 @@ import static tradingapp.MainWindow.LOGGER_COMM_NAME;
  * @author Muhe
  */
 public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
-    private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
-    private final static Logger loggerComm = Logger.getLogger(LOGGER_COMM_NAME );
+    protected final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+    protected final static Logger loggerComm = Logger.getLogger(LOGGER_COMM_NAME );
     
-    private int port;
-    private int clientId;
+    protected int port;
+    protected int clientId;
     
-    private final Map<Integer, OrderStatus> orderStatusMap = new ConcurrentHashMap<>();
-    private final Map<Integer, OrderStatus> activeOrdersMap = new HashMap<>();
+    protected final Map<Integer, OrderStatus> orderStatusMap = new ConcurrentHashMap<>();
+    protected final Map<Integer, OrderStatus> activeOrdersMap = new HashMap<>();
     
-    private final RealtimeDataIB realtimeData = new RealtimeDataIB();
+    protected final RealtimeDataIB realtimeData = new RealtimeDataIB();
     
-    private EClientSocket ibClientSocket = new EClientSocket(this);
-    private boolean connected = false;
-    private BlockingQueue<Integer> nextIdQueue = new LinkedBlockingQueue<>();
-    private CountDownLatch getPositionsCountdownLatch = null;
-    private CountDownLatch ordersClosedWaitCountdownLatch = null;
-    private CountDownLatch connectionLatch = null;
-    private List<Position> positionsList = new ArrayList<>();
-    private int nextOrderId = -1;
+    protected EClientSocket ibClientSocket = new EClientSocket(this);
+    protected boolean connected = false;
+    protected BlockingQueue<Integer> nextIdQueue = new LinkedBlockingQueue<>();
+    protected CountDownLatch getPositionsCountdownLatch = null;
+    protected CountDownLatch ordersClosedWaitCountdownLatch = null;
+    protected CountDownLatch connectionLatch = null;
+    protected List<Position> positionsList = new ArrayList<>();
+    protected int nextOrderId = -1;
     
-    private AccountSummary accountSummary = new AccountSummary();
-    private boolean accountSummarySubscribed = false;
+    protected AccountSummary accountSummary = new AccountSummary();
+    protected boolean accountSummarySubscribed = false;
 
     public BrokerIB(int port, int clientId) {
         this.port = port;
@@ -121,7 +120,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
         }
     }
     
-    private synchronized int getNextOrderId() {
+    protected synchronized int getNextOrderId() {
         if (nextOrderId == -1) {
             try {
                 ibClientSocket.reqIds(1);
@@ -328,7 +327,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
         return realtimeData.GetLastPrice(ticker);
     }
 
-    private Contract CreateOrderContract(String ticker) {
+    protected Contract CreateOrderContract(String ticker) {
         Contract contract = new Contract();
         contract.m_symbol = ticker;
         contract.m_exchange = "SMART";
@@ -338,7 +337,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
         return contract;
     }
     
-    private Contract CreateDataContract(String ticker) {
+    protected Contract CreateDataContract(String ticker) {
         Contract contract = new Contract();
         contract.m_symbol = ticker;
         contract.m_exchange = "SMART";

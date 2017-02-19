@@ -20,7 +20,7 @@ import tradingapp.TradingTimer;
  *
  * @author Muhe
  */
-public class BrokerMockup implements IBroker {
+public class BrokerNoIB implements IBroker {
     
     private boolean connected = false;
     private final Map<Integer, OrderStatus> orderStatusMap = new HashMap<>();

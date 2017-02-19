@@ -16,8 +16,6 @@ public interface IDataGetterAct {
     
     public String getName();
     
-    public void setBroker(IBroker broker);
-    
     public double readActualData(String tickerSymbol);
     
     public  Map<String, Double> readActualData(String[] tickerSymbols);

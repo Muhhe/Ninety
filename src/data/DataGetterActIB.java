@@ -6,6 +6,7 @@
 package data;
 
 import communication.IBroker;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -28,18 +29,13 @@ public class DataGetterActIB implements IDataGetterAct {
     }
     
     @Override
-    public void setBroker(IBroker broker) {
-        this.broker = broker;
-    }
-    
-    @Override
     public double readActualData(String tickerSymbol) {
         if (broker == null) {
             logger.warning("Broker not set for act data getter.");
             return 0;
         }
         
-        return 0;
+        return broker.GetLastPrice(tickerSymbol);
     }
     
     @Override
@@ -48,6 +44,15 @@ public class DataGetterActIB implements IDataGetterAct {
             logger.warning("Broker not set for act data getter.");
             return null;
         }
+        
+        Map<String, Double> map = new HashMap<>(tickerSymbols.length);
+        for (String tickerSymbol : tickerSymbols) {
+            double actData = broker.GetLastPrice(tickerSymbol);
+            if (actData != 0) {
+                map.put(tickerSymbol, actData);
+            }
+        }
+        
         return null;
     }
 }

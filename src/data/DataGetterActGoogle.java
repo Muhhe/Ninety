@@ -39,10 +39,6 @@ public class DataGetterActGoogle implements IDataGetterAct {
         return "Google";
     }
 
-    @Override
-    public void setBroker(IBroker broker) {
-    }
-
     public double readActualData(String tickerSymbol) {
         try {
             StringBuilder urlBuilder = new StringBuilder();
