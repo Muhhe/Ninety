@@ -6,7 +6,6 @@
 package data;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.time.LocalDate;
@@ -19,14 +18,25 @@ import java.util.logging.Logger;
  *
  * @author Muhe
  */
-public class DataGetterHistQuandl {
+public class DataGetterHistQuandl implements IDataGetterHist {
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     
-    public static CloseData readRawAdjCloseData(LocalDate startDate, LocalDate endDate, String tickerSymbol) {
-        return readRawAdjCloseData(startDate, endDate, tickerSymbol, -1);
+    @Override
+    public String getName() {
+        return "Quandl";
     }
     
-    public static CloseData readRawAdjCloseData(LocalDate startDate, LocalDate endDate, String tickerSymbol, int maxCount) {
+    public CloseData readAdjCloseData(LocalDate startDate, LocalDate endDate, String tickerSymbol) {
+        return readAdjCloseData(startDate, endDate, tickerSymbol, -1, false);
+    }
+    
+    @Override
+    public CloseData readAdjCloseData(LocalDate lastDate, String tickerSymbol, int daysToRead, boolean duplicateFirst) {
+        int daysBackNecessary = (int) ((daysToRead * (7.0/5.0)) + 20);
+        return readAdjCloseData(lastDate.minusDays(daysBackNecessary), lastDate, tickerSymbol, daysToRead, duplicateFirst);
+    }
+    
+    public CloseData readAdjCloseData(LocalDate startDate, LocalDate endDate, String tickerSymbol, int daysToRead, boolean duplicateFirst) {
         
         ArrayList<Double> arrCloseVals = new ArrayList<>();
         ArrayList<LocalDate> arrDates = new ArrayList<>();
@@ -76,13 +86,19 @@ public class DataGetterHistQuandl {
                 String[] dateLine = line.split(cvsSplitBy);
 
                 LocalDate parsedDate = LocalDate.parse(dateLine[0], DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                arrDates.add(parsedDate);
-                
                 double adjClose = Double.parseDouble(dateLine[11]);
+                
+                if (totalCount == 0 && duplicateFirst) {
+                    arrDates.add(parsedDate);
+                    arrCloseVals.add(adjClose);
+                    totalCount++;
+                }
+                
+                arrDates.add(parsedDate);
                 arrCloseVals.add(adjClose);
                 
                 totalCount++;
-                if (totalCount == maxCount) {
+                if (totalCount == daysToRead) {
                     break;
                 }
             }
@@ -101,7 +117,7 @@ public class DataGetterHistQuandl {
         return retData;
     }
 
-    public static CloseData readData(LocalDate lastDate, int daysToRead, String tickerSymbol) {
+    /*public static CloseData readData(LocalDate lastDate, int daysToRead, String tickerSymbol) {
         
         CloseData data = new CloseData(daysToRead);
         
@@ -167,5 +183,5 @@ public class DataGetterHistQuandl {
         }
         
         return data;
-    }
+    }*/
 }

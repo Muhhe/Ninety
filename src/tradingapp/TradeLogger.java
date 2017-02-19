@@ -48,20 +48,20 @@ public class TradeLogger {
         return instance;
     }
 
-    public void initializeTextAreas(JTextArea info, JTextArea fine, JTextArea comm) {
+    public void initializeTextAreas(JTextArea info, Level infoLvl, JTextArea fine, Level fineLvl, JTextArea comm, Level comLvl) {
         m_infoArea = info;
         m_fineArea = fine;
         m_commArea = comm;
         
         logger.setLevel(Level.ALL);
 
-        TextAreaLogHandler textHandlerInfo = new TextAreaLogHandler(info, Level.INFO, Level.SEVERE, true);
+        TextAreaLogHandler textHandlerInfo = new TextAreaLogHandler(info, infoLvl, Level.SEVERE, true);
         logger.addHandler(textHandlerInfo);
-        TextAreaLogHandler textHandlerFine = new TextAreaLogHandler(fine, Level.FINE, Level.SEVERE, false);
+        TextAreaLogHandler textHandlerFine = new TextAreaLogHandler(fine, fineLvl, Level.SEVERE, false);
         logger.addHandler(textHandlerFine);
 
         loggerComm.setLevel(Level.FINE);
-        TextAreaLogHandler textHandlerComm = new TextAreaLogHandler(comm, Level.FINEST, Level.SEVERE,false);
+        TextAreaLogHandler textHandlerComm = new TextAreaLogHandler(comm, comLvl, Level.SEVERE,false);
         loggerComm.addHandler(textHandlerComm);
         
         logger.fine("Logger areas initialized");

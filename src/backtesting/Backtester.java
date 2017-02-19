@@ -23,6 +23,14 @@ public class Backtester extends javax.swing.JFrame {
      */
     public Backtester() {
         initComponents();
+
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                logger.log(Level.SEVERE, "Uncaught Exception!!!", e);
+            }
+
+        });
         
         logger.setLevel(Level.INFO);
         TextAreaLogHandler textHandlerInfo = new TextAreaLogHandler(logArea, Level.INFO, Level.SEVERE, false);

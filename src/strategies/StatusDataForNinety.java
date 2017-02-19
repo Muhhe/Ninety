@@ -183,7 +183,7 @@ public class StatusDataForNinety {
     public void UpdateCashSettings() {
 
         heldStocks.clear();
-        moneyToInvest = Settings.getInstance().investCash * Settings.getInstance().leverage;
+        moneyToInvest = Settings.investCash * Settings.leverage;
         
         logger.fine("Updated cash settings - moneyToInvest: " + moneyToInvest);
     }

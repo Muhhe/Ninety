@@ -101,7 +101,7 @@ public class NinetyChecker {
         }
 
         int freePortions = 20 - statusData.GetBoughtPortions();
-        double availableCash = freePortions * statusData.GetOnePortionValue() / Settings.getInstance().leverage;
+        double availableCash = freePortions * statusData.GetOnePortionValue() / Settings.leverage;
 
         logger.info("Saved current available cash: " + TradeFormatter.toString(availableCash)
                 + ", available funds on IB: " + TradeFormatter.toString(broker.GetAccountSummary().availableFunds));
@@ -167,7 +167,7 @@ public class NinetyChecker {
 
     public static boolean CheckTickerData(CloseData data, String ticker) {
         if ((data.adjCloses.length != 200) || (data.dates.length != 200)) {
-            logger.severe("Failed check hist data for: " + ticker + ". Length is not 200 but " + data.adjCloses.length);
+            logger.warning("Failed check hist data for: " + ticker + ". Length is not 200 but " + data.adjCloses.length);
             return false;
         }
         
@@ -178,7 +178,7 @@ public class NinetyChecker {
         }
         for (LocalDate date : data.dates) {
             if (date.compareTo(checkDate) != 0) {
-                logger.severe("Failed check hist data for: " + ticker + ". Date should be " + checkDate + " but is " + date);
+                logger.warning("Failed check hist data for: " + ticker + ". Date should be " + checkDate + " but is " + date);
                 isOk = false;
                 break;
             }
@@ -198,7 +198,7 @@ public class NinetyChecker {
         double lastAdjClose = 0;
         for (int i = 0; i < data.adjCloses.length; i++) {
             if (data.adjCloses[i] == 0) {
-                logger.severe("Failed check hist data for: " + ticker + ". AdjClose value is 0. Date " + data.dates[i]);
+                logger.warning("Failed check hist data for: " + ticker + ". AdjClose value is 0. Date " + data.dates[i]);
                 return false;
             }
 

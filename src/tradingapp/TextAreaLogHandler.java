@@ -76,7 +76,7 @@ public class TextAreaLogHandler extends Handler {
             }
 
             if (record.getThrown() != null) {
-                MailSender.getInstance().SendErrors();
+                MailSender.SendErrors();
             }
 
         } catch (Exception e) { // Exception thrown out of here could cause an infinite loop

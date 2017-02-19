@@ -61,6 +61,22 @@ public class TradingTimer {
     public static ZonedDateTime GetNYTimeNow() {
         return ZonedDateTime.now(ZONE_NY);
     }
+    
+    public static LocalDate GetLastTradingDay(LocalDate date) {
+        LocalDate lastDay = date;
+        while (!TradingTimer.IsTradingDay(lastDay)) {
+            lastDay = lastDay.minusDays(1);
+        }
+        return lastDay;
+    }
+    
+    public static LocalDate GetLastTradingDay() {
+        return GetLastTradingDay(LocalDate.now());
+    }
+    
+    public static LocalDate GetLastTradingDayBefore(LocalDate date) {
+        return GetLastTradingDay(date.minusDays(1));
+    }
 
     public static void startTaskAt(final ZonedDateTime time, Runnable runnableTask) {
         TradingTimer timer = getInstance();

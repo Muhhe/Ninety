@@ -1,7 +1,5 @@
 package tradingapp;
 
-import java.io.File;
-import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -19,39 +17,26 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
-import org.jdom2.Document;
-import org.jdom2.Element;
-import org.jdom2.JDOMException;
-import org.jdom2.input.SAXBuilder;
 
 public class MailSender {
-
-    private static MailSender instance = null;
-
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
-    private StringBuilder m_mailBody = new StringBuilder();
-    private StringBuilder m_mailBodyError = new StringBuilder();
+    
+    private static StringBuilder m_mailBody = new StringBuilder();
+    private static StringBuilder m_mailBodyError = new StringBuilder();
 
     protected MailSender() {
         // Exists only to defeat instantiation.
     }
 
-    public static MailSender getInstance() {
-        if (instance == null) {
-            instance = new MailSender();
-        }
-        return instance;
-    }
-
     static public void AddLineToMail(String str) {
-        getInstance().m_mailBody.append(str + "\r\n");
+        m_mailBody.append(str + "\r\n");
     }
 
     static public void AddErrorLineToMail(String str) {
-        getInstance().m_mailBodyError.append(str + "\r\n");
+        m_mailBodyError.append(str + "\r\n");
     }
 
-    private Properties SetupProperties() {
+    private static Properties SetupProperties() {
         Properties props = new Properties();
         props.put("mail.smtp.host", "smtp.gmail.com");
         props.put("mail.smtp.socketFactory.port", "465");
@@ -63,29 +48,32 @@ public class MailSender {
         return props;
     }
 
-    private Session SetupSession() {
+    private static Session SetupSession() {
         Properties props = SetupProperties();
 
         Session session = Session.getDefaultInstance(props,
                 new javax.mail.Authenticator() {
             @Override
             protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(Settings.getInstance().mailFrom, Settings.getInstance().mailPassword);
+                return new PasswordAuthentication(Settings.mailFrom, Settings.mailPassword);
             }
         });
 
         return session;
     }
 
-    public void SendTradingLog() {
-
+    public static void SendTradingLog() {
+        if (!GlobalConfig.sendMails) {
+            return;
+        }
+            
         if (m_mailBody.length() == 0) {
             m_mailBody.append("No trades today!");
         }
 
         logger.fine("Sending trade log mail!");
         
-        if (Send("Trading log 90", Settings.getInstance().mailAddressTradeLog, m_mailBody.toString())) {
+        if (Send("Trading log 90", Settings.mailAddressTradeLog, m_mailBody.toString())) {
             m_mailBody.setLength(0);
             logger.info("Trade mail sent!");
         } else {
@@ -93,10 +81,14 @@ public class MailSender {
         }
     }
 
-    public void SendCheckResult() {
+    public static void SendCheckResult() {
+        if (!GlobalConfig.sendMails) {
+            return;
+        }
+        
         logger.fine("Sending check mail!");
         
-        if (Send("Check 90", Settings.getInstance().mailAddressCheck, m_mailBody.toString())) {
+        if (Send("Check 90", Settings.mailAddressCheck, m_mailBody.toString())) {
             m_mailBody.setLength(0);
             logger.info("Check mail sent!");
         } else {
@@ -104,11 +96,15 @@ public class MailSender {
         }
     }
 
-    public boolean SendErrors() {
+    public static boolean SendErrors() {
+        if (!GlobalConfig.sendMails) {
+            return true;
+        }
+        
         if (m_mailBodyError.length() > 0) {
             logger.fine("Sending error mail!");
 
-            if (Send("Errors!!!", Settings.getInstance().mailAddressError, m_mailBodyError.toString())) {
+            if (Send("Errors!!!", Settings.mailAddressError, m_mailBodyError.toString())) {
                 m_mailBodyError.setLength(0);
                 logger.info("Error mail sent!");
             } else {
@@ -120,12 +116,12 @@ public class MailSender {
         return false;
     }
 
-    private boolean Send(String subject, String address, String mailBody) {
+    private static boolean Send(String subject, String address, String mailBody) {
         Session session = SetupSession();
 
         try {
             Message message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(Settings.getInstance().mailFrom));
+            message.setFrom(new InternetAddress(Settings.mailFrom));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(address));
             message.setSubject(subject);
 
@@ -170,7 +166,7 @@ public class MailSender {
         return true;
     }
 
-    public void AddAttachment(String filename, Multipart multipart) {
+    public static void AddAttachment(String filename, Multipart multipart) {
         try {
             MimeBodyPart messageBodyPart = new MimeBodyPart();
 

@@ -30,6 +30,8 @@ public class TickersToTrade {
         } catch (IOException ex) {
             logger.severe("Cannot load tickers to trade: error reading file - " + ex.getMessage());
         }
+        
+        logger.fine("Loaded " + tickers.length + " ticker symbols.");
     }
     
     public static final String[] GetTickers() {

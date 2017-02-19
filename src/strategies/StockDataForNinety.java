@@ -10,6 +10,8 @@ import data.CloseData;
 import data.DataGetterActGoogle;
 import data.DataGetterHistQuandl;
 import data.DataGetterHistYahoo;
+import data.IDataGetterAct;
+import data.IDataGetterHist;
 import data.IndicatorCalculator;
 import data.StockIndicatorsForNinety;
 import data.TickersToTrade;
@@ -25,6 +27,7 @@ import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import tradingapp.FilePaths;
+import tradingapp.GlobalConfig;
 import tradingapp.TradeFormatter;
 import tradingapp.TradingTimer;
 
@@ -39,9 +42,9 @@ public class StockDataForNinety {
     public Map<String, CloseData> closeDataMap = new HashMap<>(TickersToTrade.GetTickers().length);
     public Map<String, StockIndicatorsForNinety> indicatorsMap = new HashMap<>(TickersToTrade.GetTickers().length);
 
-    public final Semaphore histDataMutex = new Semaphore(1);
+    public final Semaphore dataMutex = new Semaphore(1);
 
-    public boolean isRealtimeDataSubscribed = false;
+    private boolean isRealtimeDataSubscribed = false;
 
     /*public static String[] getSP100() {
         String[] tickers = {
@@ -58,41 +61,79 @@ public class StockDataForNinety {
 
         return tickers;
     }*/
-    
-    private void FillFirstDato(CloseData data) {                
-        if ((data != null) && (data.adjCloses.length > 2)) {
-            data.adjCloses[0] = data.adjCloses[1];
-            data.dates[0] = LocalDate.now();
-        }
-    }
 
-    public void PrepareHistData() {
+    public void PrepareData(IBroker broker) {
 
         try {
             logger.fine("PrepareHistData: Getting lock on hist data.");
-            histDataMutex.acquire();
-            logger.info("Starting to load historic data");
+            dataMutex.acquire();
+
+            if (!isRealtimeDataSubscribed) {
+                SubscribeRealtimeData(broker);
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException ex) {
+                }
+            }
+
+            logger.info("Starting to stock data.");
             String[] tickers = TickersToTrade.GetTickers();
+
+            Map<String, Double> actValues = GetActualValues(broker);
+
+            if (actValues == null) {
+                logger.severe("Totally failed to load actual data.");
+                closeDataMap.clear();
+                return;
+            }
+
+            LocalDate lastTradingDay = TradingTimer.GetLastTradingDay();
+            if (lastTradingDay.compareTo(LocalDate.now()) != 0) {
+                logger.warning("Preparing data: Today " + LocalDate.now().toString() + " is not the same as last trading day " + lastTradingDay.toString());
+            }
+
+            logger.info("Starting to load historic data.");
             for (String ticker : tickers) {
                 logger.finest("Loading hist data for " + ticker);
-                
-                CloseData data = DataGetterHistYahoo.readData(LocalDate.now(), 200, ticker);
-                
-                FillFirstDato(data);
 
-                if ((data == null) || !NinetyChecker.CheckTickerData(data, ticker)) {
-                    logger.warning("Failed to load Yahoo hist data for " + ticker + ". Trying to load it from Quandl.");
-                    data = DataGetterHistQuandl.readData(LocalDate.now(), 200, ticker);
-                    FillFirstDato(data);
-                    
-                    if ((data != null) && NinetyChecker.CheckTickerData(data, ticker)) {
-                        logger.warning("Hist data from Quandl for " + ticker + " loaded successfuly.");
-                        closeDataMap.put(ticker, data);
-                    } else {
-                        logger.severe("Failed to load hist data for " + ticker);
+                Double actValue = actValues.get(ticker);
+                if (actValue == null || actValue == 0) {
+                    logger.warning("Cannot load actual data for: " + ticker + "! This stock will not be used.");
+                    continue;
+                }
+
+                boolean failedHist = false;
+                for (IDataGetterHist dataGetter : GlobalConfig.GetDataGettersHist()) {
+                    if (failedHist) {
+                        logger.warning("Trying to load it from " + dataGetter.getName());
                     }
-                } else {
-                    closeDataMap.put(ticker, data);
+
+                    CloseData data = dataGetter.readAdjCloseData(TradingTimer.GetLastTradingDay(lastTradingDay.minusDays(1)), ticker, 200, true);
+                    if (data == null) {
+                        logger.warning("Hist data from " + dataGetter.getName() + " for " + ticker + " are null.");
+                        failedHist = false;
+                        continue;
+                    }
+
+                    data.adjCloses[0] = actValue;
+                    data.dates[0] = lastTradingDay;
+
+                    if (NinetyChecker.CheckTickerData(data, ticker)) {
+                        if (failedHist) {
+                            logger.warning("Hist data from " + dataGetter.getName() + " for " + ticker + " loaded successfuly.");
+                            failedHist = false;
+                        }
+                        closeDataMap.put(ticker, data);
+                        break;
+                    } else {
+                        logger.warning("Failed to load " + dataGetter.getName() + " hist data for " + ticker + ".");
+                        failedHist = true;
+                        continue;
+                    }
+                }
+                
+                if (!failedHist) {
+                    logger.warning("Hist data for " + ticker + " failed to load. Skipping this ticker.");
                 }
             }
 
@@ -102,7 +143,7 @@ public class StockDataForNinety {
             logger.log(Level.SEVERE, null, ex);
             logger.info("Thread interuppted: " + ex);
         } finally {
-            histDataMutex.release();
+            dataMutex.release();
             logger.fine("PrepareHistData: Released lock on hist data.");
         }
     }
@@ -125,28 +166,64 @@ public class StockDataForNinety {
         }
     }
 
-    private boolean CheckRealtimeDataOnIB(IBroker broker) {
-        int tickersFilled = 0;
+    private Map<String, Double> GetActualValues(IBroker broker) {
+        Map<String, Double> valuesMap = null;
+        logger.info("Starting to load actual data");
 
-        for (Iterator<Map.Entry<String, CloseData>> it = closeDataMap.entrySet().iterator(); it.hasNext();) {
-            Map.Entry<String, CloseData> entry = it.next();
+        String[] tickers = TickersToTrade.GetTickers();
+        boolean failedLvl1 = false;
 
-            double actValue = broker.GetLastPrice(entry.getKey());
-            if (actValue != 0) {
-                tickersFilled++;
+        for (IDataGetterAct firstLvlGetter : GlobalConfig.GetDataGettersAct()) {
+            firstLvlGetter.setBroker(broker);
+            valuesMap = firstLvlGetter.readActualData(tickers);
+
+            if (valuesMap != null && (valuesMap.size() >= tickers.length / 2)) {
+
+                if (failedLvl1) {
+                    logger.warning("Actual data from " + firstLvlGetter.getName() + " loaded " + valuesMap.size() + " out of " + tickers.length + " tickers.");
+                }
+
+                for (String ticker : tickers) {
+
+                    Double actValue = valuesMap.get(ticker);
+                    if (actValue == null || actValue == 0) {
+                        logger.warning("Actual data for: " + ticker + " were not loaded from " + firstLvlGetter.getName());
+
+                        for (IDataGetterAct secondLvlGetter : GlobalConfig.GetDataGettersAct()) {
+                            firstLvlGetter.setBroker(broker);
+                            actValue = secondLvlGetter.readActualData(ticker);
+                            if (actValue != 0) {
+                                logger.warning("Actual data for: " + ticker + " loaded successfuly from " + secondLvlGetter.getName());
+                                break;
+                            } else {
+                                logger.warning("Cannot load actual data for: " + ticker + " from " + secondLvlGetter.getName());
+                            }
+                        }
+
+                        if (actValue == null || actValue == 0) {
+                            logger.warning("Cannot load actual data for: " + ticker + "! This stock will not be used.");
+                            continue;
+                        }
+
+                        valuesMap.put(ticker, actValue);
+                    }
+                }
+
+                break;
+            } else {
+                failedLvl1 = true;
+                logger.warning("Failed to load actual data from " + firstLvlGetter.getName() + ".");
             }
         }
         
-        logger.fine("Actual IB data - loaded " + tickersFilled + " out of " + closeDataMap.size());
-            
-        return tickersFilled >= closeDataMap.size()/2;
+        return valuesMap;
     }
 
     public void UpdateDataWithActValuesIB(IBroker broker) {
-        if (!TradingTimer.IsTradingDay(LocalDate.now())) {
+        /*if (!TradingTimer.IsTradingDay(LocalDate.now())) {
             logger.warning("Today is not a trading day. Cannot update with actual values.");
             return;
-        }
+        }*/
 
         if (!isRealtimeDataSubscribed) {
             SubscribeRealtimeData(broker);
@@ -158,58 +235,58 @@ public class StockDataForNinety {
 
         try {
             logger.fine("UpdateDataWithActValues: Getting lock on hist data.");
-            histDataMutex.acquire();
+            dataMutex.acquire();
 
             if (closeDataMap.isEmpty()) {
                 logger.severe("updateDataWithActualValues - stockMap.isEmpty");
                 return;
             }
 
-            logger.info("Starting to load actual data");
+            Map<String, Double> actValues = GetActualValues(broker);
 
-            if (CheckRealtimeDataOnIB(broker)) {
+            if (actValues == null) {
+                logger.severe("Totally failed to load actual data.");
+                closeDataMap.clear();
+                return;
+            }
 
-                for (Iterator<Map.Entry<String, CloseData>> it = closeDataMap.entrySet().iterator(); it.hasNext();) {
-                    Map.Entry<String, CloseData> entry = it.next();
+            LocalDate lastTradingDay = TradingTimer.GetLastTradingDay();
+            if (lastTradingDay.compareTo(LocalDate.now()) != 0) {
+                logger.warning("Updating with actual data: Today " + LocalDate.now().toString() + " is not the same as last trading day " + lastTradingDay.toString());
+            }
 
-                    double actValue = broker.GetLastPrice(entry.getKey());
-                    if (actValue == 0) {
+            for (Iterator<Map.Entry<String, CloseData>> it = closeDataMap.entrySet().iterator(); it.hasNext();) {
+                Map.Entry<String, CloseData> entry = it.next();
 
-                        try {
-                            actValue = DataGetterActGoogle.readActualData(entry.getKey());
-                        } catch (IOException | NumberFormatException ex) {
-                            logger.warning("Cannot load actual data for: " + entry.getKey() + ", exception: " + ex.getMessage() + "! This stock will not be used.");
-                            it.remove();
-                            continue;
-                        }
-
-                        logger.info("Failed to load actual data from IB for: " + entry.getKey() + "! Load from Google succeded.");
-                    }
-
-                    entry.getValue().adjCloses[0] = actValue;
-                    entry.getValue().dates[0] = LocalDate.now();
+                Double actValue = actValues.get(entry.getKey());
+                if (actValue == null || actValue == 0) {
+                    logger.warning("Cannot load actual data for: " + entry.getKey() + "! This stock will not be used.");
+                    it.remove();
+                    continue;
                 }
 
-            } else {
-                logger.warning("Failed to load real-time data from IB. Trying to load it from Google.");
-                UpdateDataWithActValuesGoogle();
+                entry.getValue().adjCloses[0] = actValue;
+                entry.getValue().dates[0] = lastTradingDay;
+
             }
 
         } catch (InterruptedException ex) {
         } finally {
-            histDataMutex.release();
+            dataMutex.release();
             logger.fine("UpdateDataWithActValues: Released lock on hist data.");
             logger.info("Finished to load actual data");
         }
     }
 
-    private void UpdateDataWithActValuesGoogle() {
-        try {
-            logger.fine("Starting to load actual data from Google");
+    /*private void UpdateDataWithActValuesGoogle() {  //TODO: obsolete
+        logger.fine("Starting to load actual data from Google");
 
-            String[] tickerSymbols = TickersToTrade.GetTickers();
-            Map<String, Double> valuesMap = DataGetterActGoogle.readActualData(tickerSymbols);
+        IDataGetterAct getter = GlobalConfig.GetDataGettersAct()[0];
 
+        String[] tickerSymbols = TickersToTrade.GetTickers();
+        Map<String, Double> valuesMap = getter.readActualData(tickerSymbols);
+
+        if (valuesMap != null) {
             if (tickerSymbols.length != valuesMap.size()) {
                 logger.warning("Not all actual data has been loaded! Missing " + (tickerSymbols.length - valuesMap.size()) + " stock(s).");
             }
@@ -227,30 +304,30 @@ public class StockDataForNinety {
                 entry.getValue().adjCloses[0] = valueRef;
                 entry.getValue().dates[0] = LocalDate.now();
             }
-
-        } catch (IOException | NumberFormatException ex) {
-            logger.warning("Failed to load actual data from google at once. Exception: " + ex.getMessage());
+        } else {
+            logger.warning("Failed to load actual data from google at once.");
             logger.info("Loading one at a time...");
             for (Iterator<Map.Entry<String, CloseData>> it = closeDataMap.entrySet().iterator(); it.hasNext();) {
                 CloseData closeData = it.next().getValue();
                 String ticker = it.next().getKey();
-                try {
-                    closeData.adjCloses[0] = DataGetterActGoogle.readActualData(ticker);
-                    closeData.dates[0] = LocalDate.now();
-                } catch (IOException | NumberFormatException ex2) {
-                    logger.warning("Cannot load actual data for: " + ticker + ", exception: " + ex2.getMessage());
+
+                closeData.adjCloses[0] = getter.readActualData(ticker);
+                closeData.dates[0] = LocalDate.now();
+                if (closeData.adjCloses[0] == 0) {
+                    logger.warning("Cannot load actual data for: " + ticker + ", ticker will not be used!");
                     it.remove();
                 }
             }
-        } finally {
-            logger.fine("Finished to load actual data from Google");
         }
-    }
+
+        logger.fine("Finished to load actual data from Google");
+
+    }*/
 
     public void CalculateIndicators() {
         try {
             logger.finer("CalculateIndicators: Getting lock on hist data.");
-            histDataMutex.acquire();
+            dataMutex.acquire();
 
             logger.fine("Starting to compute indicators");
             for (Map.Entry<String, CloseData> entry : closeDataMap.entrySet()) {
@@ -268,7 +345,7 @@ public class StockDataForNinety {
             logger.log(Level.SEVERE, null, ex);
             logger.info("Thread interuppted: " + ex);
         } finally {
-            histDataMutex.release();
+            dataMutex.release();
             logger.finer("CalculateIndicators: Released lock on hist data.");
             logger.fine("Finished to compute indicators");
         }

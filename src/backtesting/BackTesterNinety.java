@@ -8,6 +8,7 @@ package backtesting;
 import data.CloseData;
 import data.DataGetterHistQuandl;
 import data.DataGetterHistYahoo;
+import data.IDataGetterHist;
 import data.IndicatorCalculator;
 import data.StockIndicatorsForNinety;
 import data.TickersToTrade;
@@ -205,9 +206,11 @@ public class BackTesterNinety {
     
     public static CloseData LoadTickerDataFromYahoo(String ticker, LocalDate startDate, LocalDate endDate) {
         logger.info("Loading Yahoo data for: " + ticker);
-            
-        CloseData closeData = DataGetterHistYahoo.readRawAdjCloseData(startDate, endDate, ticker);
-        CloseData first199 = DataGetterHistYahoo.readRawAdjCloseData(startDate.minusDays(300), startDate.minusDays(1), ticker, 199);
+        
+        IDataGetterHist getter = new DataGetterHistYahoo();
+        
+        CloseData closeData = getter.readAdjCloseData(startDate, endDate, ticker);
+        CloseData first199 = getter.readAdjCloseData(startDate.minusDays(300), startDate.minusDays(1), ticker, 199, false);
         
         if ((closeData == null) || (first199 == null)) {
             return null;
@@ -228,12 +231,13 @@ public class BackTesterNinety {
         return data;
     }
     
-    
     public static CloseData LoadTickerDataFromQuandl(String ticker, LocalDate startDate, LocalDate endDate) {
         logger.info("Loading Quandl data for: " + ticker);
+        
+        IDataGetterHist getter = new DataGetterHistYahoo();
             
-        CloseData closeData = DataGetterHistQuandl.readRawAdjCloseData(startDate, endDate, ticker);
-        CloseData first199 = DataGetterHistQuandl.readRawAdjCloseData(startDate.minusDays(300), startDate.minusDays(1), ticker, 199);
+        CloseData closeData = getter.readAdjCloseData(startDate, endDate, ticker);
+        CloseData first199 = getter.readAdjCloseData(startDate.minusDays(300), startDate.minusDays(1), ticker, 199, false);
         
         if ((closeData == null) || (first199 == null)) {
             return null;

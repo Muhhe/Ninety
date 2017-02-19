@@ -7,6 +7,7 @@ package strategies;
 
 import communication.BrokerIB;
 import communication.IBroker;
+import data.TickersToTrade;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -47,12 +48,14 @@ public class NinetyScheduler {
         this.broker = broker;
     }
 
-    public void RunNow() {
+    public void RunNow() {  // TODO: make init method
         TradeLogger.getInstance().closeFiles();
         TradeLogger.getInstance().initializeFiles(LocalDate.now());
         
-        isStartScheduled = true;
         TradingTimer.LoadSpecialTradingDays();
+        TickersToTrade.LoadTickers();
+        
+        isStartScheduled = true;
         
         ScheduleLoadingHistData(ZonedDateTime.now().plusSeconds(3));
         ScheduleTradingRun(ZonedDateTime.now().plusMinutes(1));
@@ -69,7 +72,7 @@ public class NinetyScheduler {
         logger.info("Next check is scheduled for " + tomorrowCheck.format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
         logger.info("Starting in " + durationToNextRun.toString());
 
-        MailSender.getInstance().SendErrors();
+        MailSender.SendErrors();
     }
 
     public void ScheduleFirstCheck() {
@@ -92,11 +95,12 @@ public class NinetyScheduler {
     public void DoInitialization() {
         boolean isCheckOk = true;
         try {
-            TradeLogger.getInstance().clearLogs();
+            TradeLogger.getInstance().clearLogs(); // TODO: move to init method
             TradeLogger.getInstance().initializeFiles(LocalDate.now());
             TradingTimer.LoadSpecialTradingDays();
+            TickersToTrade.LoadTickers();
 
-            Settings.getInstance().ReadSettings();
+            Settings.ReadSettings();
             
             statusData.UpdateCashSettings();
             statusData.ReadHeldPositions();
@@ -157,9 +161,9 @@ public class NinetyScheduler {
 
             }
             
-            if (!MailSender.getInstance().SendErrors()) {
+            if (!MailSender.SendErrors()) {
                 MailSender.AddLineToMail("Check complete");
-                MailSender.getInstance().SendCheckResult();
+                MailSender.SendCheckResult();
             }
         }
     }
@@ -218,8 +222,8 @@ public class NinetyScheduler {
                     MailSender.AddLineToMail(broker.GetAccountSummary().toString());
                     MailSender.AddLineToMail("Saved current cash: " + TradeFormatter.toString(statusData.currentCash));
                     
-                    MailSender.getInstance().SendTradingLog();
-                    MailSender.getInstance().SendErrors();
+                    MailSender.SendTradingLog();
+                    MailSender.SendErrors();
                 } catch (InterruptedException ex) {
                     throw new IllegalStateException("InterruptedException");
                 }

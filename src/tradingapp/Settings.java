@@ -19,36 +19,26 @@ import org.jdom2.input.SAXBuilder;
  * @author Muhe
  */
 
-// TODO: udelat gettery/settery static
-public class Settings {
-    private static Settings instance = null;
-    
+public class Settings {    
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     
-    public int port = 0;
-    public int clientId = 0;
+    public static int port = 0;
+    public static int clientId = 0;
     
-    public double investCash = 0;
-    public double leverage = 0;
+    public static double investCash = 0;
+    public static double leverage = 0;
     
-    public String mailAddressTradeLog = null;
-    public String mailAddressCheck = null;
-    public String mailAddressError = null;
-    public String mailFrom = null;
-    public String mailPassword = null;
+    public static String mailAddressTradeLog = null;
+    public static String mailAddressCheck = null;
+    public static String mailAddressError = null;
+    public static String mailFrom = null;
+    public static String mailPassword = null;
     
     protected Settings() {
         // Exists only to defeat instantiation.
     }
-
-    public static Settings getInstance() {
-        if (instance == null) {
-            instance = new Settings();
-        }
-        return instance;
-    }
     
-    public void ReadSettings() {
+    public static void ReadSettings() {
         try {
             File inputFile = new File(FilePaths.settingsPathFile);
             SAXBuilder saxBuilder = new SAXBuilder();

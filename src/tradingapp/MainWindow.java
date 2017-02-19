@@ -6,6 +6,11 @@
 package tradingapp;
 
 import communication.BrokerIB;
+import communication.IBroker;
+import data.DataGetterActGoogle;
+import data.DataGetterActIB;
+import data.DataGetterHistQuandl;
+import data.DataGetterHistYahoo;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import strategies.HeldStock;
@@ -38,11 +43,19 @@ public class MainWindow extends javax.swing.JFrame {
 
         });
 
-        TradeLogger.getInstance().initializeTextAreas(logArea, fineLogArea, commArea);
+        TradeLogger.getInstance().initializeTextAreas(logArea, Level.INFO, fineLogArea, Level.FINE, commArea, Level.FINEST);
         
-        Settings.getInstance().ReadSettings();
+        Settings.ReadSettings();
+        
+        IBroker broker = new BrokerIB(Settings.port, Settings.clientId);
+        
+        GlobalConfig.AddDataGetterAct(new DataGetterActIB(broker));
+        GlobalConfig.AddDataGetterAct(new DataGetterActGoogle());
+        
+        GlobalConfig.AddDataGetterHist(new DataGetterHistYahoo());
+        GlobalConfig.AddDataGetterHist(new DataGetterHistQuandl());
 
-        ninetyScheduler = new NinetyScheduler( new BrokerIB(Settings.getInstance().port, Settings.getInstance().clientId) );
+        ninetyScheduler = new NinetyScheduler( broker );
     }
 
     /**

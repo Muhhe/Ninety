@@ -7,6 +7,7 @@ package strategies;
 
 import communication.IBroker;
 import java.util.logging.Logger;
+import tradingapp.GlobalConfig;
 
 /**
  *
@@ -37,8 +38,9 @@ public class NinetyDataPreparator implements Runnable {
         } catch (InterruptedException ex) {
         }
 
-        stockData.PrepareHistData();
-        stockData.UpdateDataWithActValuesIB(broker);
+        stockData.PrepareData(broker);
+        
+        //stockData.UpdateDataWithActValuesIB(broker);
 
         stockData.UnSubscribeRealtimeData(broker);
 
