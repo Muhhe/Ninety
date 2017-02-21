@@ -49,7 +49,7 @@ public class TextAreaLogHandler extends Handler {
             msg.append(formatter.format(now));
             msg.append(": ");
 
-            if (level > Level.INFO.intValue()) {
+            if (level >= Level.WARNING.intValue()) {
                 msg.append("[" + record.getLevel().getName() + "] ");
             }
 

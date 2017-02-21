@@ -5,6 +5,9 @@
  */
 package backtesting;
 
+import backtesting.BTStatistics.EquityInTime;
+import communication.IBroker;
+import communication.OrderStatus;
 import data.CloseData;
 import data.DataGetterHistQuandl;
 import data.DataGetterHistYahoo;
@@ -42,6 +45,8 @@ import strategies.HeldStock;
 import strategies.Ninety;
 import strategies.StatusDataForNinety;
 import strategies.StockPurchase;
+import test.BrokerNoIB;
+import tradingapp.GlobalConfig;
 import tradingapp.TradeFormatter;
 
 /**
@@ -156,6 +161,7 @@ public class BackTesterNinety {
 
         Map<String, CloseData> map = new HashMap<>();
         
+        int dataSize = 0;
         for (String ticker : TickersToTrade.GetTickers()) {
             FileReader file = null;
             try {
@@ -180,14 +186,27 @@ public class BackTesterNinety {
                 retData.dates = new LocalDate[dates.size()];
                 retData.dates = dates.toArray(retData.dates);
                 
+
+                if (retData.dates.length > dataSize) {
+                    if (dataSize != 0) {
+                        logger.warning("Data size increased for " + ticker);
+                    }
+                    dataSize = retData.dates.length;
+                }
+
                 map.put(ticker, retData);
-                
+
             } catch (FileNotFoundException ex) {
-                CloseData data = LoadTickerDataFromQuandl(ticker, startDate, endDate);
+                CloseData data = LoadTickerData(ticker, startDate, endDate);
                 if (data == null) {
                     continue;
                 }
-                map.put(ticker, data);
+                
+                if (data.dates.length < dataSize) {
+                    logger.warning("Data for " + ticker + " are not complete. Only " + data.dates.length + " out of " + dataSize + " loaded.");
+                } else {
+                    map.put(ticker, data);
+                }
             } catch (IOException ex) {
                 logger.severe("Error while reading " + ticker);
             } finally {
@@ -204,56 +223,33 @@ public class BackTesterNinety {
         return map;
     }
     
-    public static CloseData LoadTickerDataFromYahoo(String ticker, LocalDate startDate, LocalDate endDate) {
-        logger.info("Loading Yahoo data for: " + ticker);
-        
-        IDataGetterHist getter = new DataGetterHistYahoo();
-        
-        CloseData closeData = getter.readAdjCloseData(startDate, endDate, ticker);
-        CloseData first199 = getter.readAdjCloseData(startDate.minusDays(300), startDate.minusDays(1), ticker, 199, false);
-        
-        if ((closeData == null) || (first199 == null)) {
-            return null;
-        }
+    public static CloseData LoadTickerData(String ticker, LocalDate startDate, LocalDate endDate) {
+        CloseData data = null;
+        for (IDataGetterHist getter : GlobalConfig.GetDataGettersHist()) {
+            logger.info("Loading " + getter.getName() + " data for: " + ticker);
 
-        Stream<LocalDate> stream1 = Arrays.stream(closeData.dates);
-        Stream<LocalDate> stream2 = Arrays.stream(first199.dates);
-        LocalDate[] dates = Stream.concat(stream1, stream2).toArray(LocalDate[]::new);
+            CloseData closeData = getter.readAdjCloseData(startDate, endDate, ticker);
+            CloseData first199 = getter.readAdjCloseData(startDate.minusDays(300), startDate.minusDays(1), ticker, 199, false);
 
-        double[] closeValues = concat(closeData.adjCloses, first199.adjCloses);
+            if ((closeData == null) || (first199 == null) || (first199.adjCloses.length != 199)) {
+                logger.info("Failed: Loading " + getter.getName() + " data for: " + ticker);
+                continue;
+            }
 
-        assert(dates.length == closeValues.length);
+            Stream<LocalDate> stream1 = Arrays.stream(closeData.dates);
+            Stream<LocalDate> stream2 = Arrays.stream(first199.dates);
+            LocalDate[] dates = Stream.concat(stream1, stream2).toArray(LocalDate[]::new);
 
-        CloseData data = new CloseData(dates.length);
-        data.adjCloses = closeValues;
-        data.dates = dates;
-        
-        return data;
-    }
-    
-    public static CloseData LoadTickerDataFromQuandl(String ticker, LocalDate startDate, LocalDate endDate) {
-        logger.info("Loading Quandl data for: " + ticker);
-        
-        IDataGetterHist getter = new DataGetterHistYahoo();
+            double[] closeValues = concat(closeData.adjCloses, first199.adjCloses);
+
+            assert(dates.length == closeValues.length);
+
+            data = new CloseData(dates.length);
+            data.adjCloses = closeValues;
+            data.dates = dates;
             
-        CloseData closeData = getter.readAdjCloseData(startDate, endDate, ticker);
-        CloseData first199 = getter.readAdjCloseData(startDate.minusDays(300), startDate.minusDays(1), ticker, 199, false);
-        
-        if ((closeData == null) || (first199 == null)) {
-            return null;
+            break;
         }
-
-        Stream<LocalDate> stream1 = Arrays.stream(closeData.dates);
-        Stream<LocalDate> stream2 = Arrays.stream(first199.dates);
-        LocalDate[] dates = Stream.concat(stream1, stream2).toArray(LocalDate[]::new);
-
-        double[] closeValues = concat(closeData.adjCloses, first199.adjCloses);
-
-        assert(dates.length == closeValues.length);
-
-        CloseData data = new CloseData(dates.length);
-        data.adjCloses = closeValues;
-        data.dates = dates;
         
         return data;
     }
@@ -266,9 +262,10 @@ public class BackTesterNinety {
 
         if (CheckBacktestSettingsInCache(startDate, endDate)) {
             dataMap = LoadBacktestCache(startDate, endDate);
+            logger.log(BTLogLvl.BACKTEST, "Data loaded from cache.");
         } else {
             for (String ticker : TickersToTrade.GetTickers()) {
-                CloseData data = LoadTickerDataFromYahoo(ticker, startDate, endDate);
+                CloseData data = LoadTickerData(ticker, startDate, endDate);
                 if (data == null) {
                     continue;
                 }
@@ -282,40 +279,47 @@ public class BackTesterNinety {
 
                 if (data.dates.length < dataSize) {
                     logger.warning("Data for " + ticker + " are not complete. Only " + data.dates.length + " out of " + dataSize + " loaded.");
-                    //continue;
+                    continue;
                 }
 
                 dataMap.put(ticker, data);
+                logger.log(BTLogLvl.BACKTEST, "Loaded " + ticker);
             }
         }
         SaveLoadedData(dataMap, startDate, endDate);
         return dataMap;
     }
 
-    private static class EquityInTime {
-        LocalDate date;
-        double profit;
+    public static Map<String, StockIndicatorsForNinety> CalulateIndicators(Map<String, CloseData> dataMap, int testingDayInx) {
+        Map<String, StockIndicatorsForNinety> indicatorsMap = new HashMap<>(TickersToTrade.GetTickers().length);
+        for (String ticker : dataMap.keySet()) {
+            CloseData data = dataMap.get(ticker);
+
+            double[] values200 = Arrays.copyOfRange(data.adjCloses, testingDayInx, testingDayInx + 200);
+
+            StockIndicatorsForNinety data90 = new StockIndicatorsForNinety();
+            data90.sma200 = IndicatorCalculator.SMA(200, values200);
+            data90.sma5 = IndicatorCalculator.SMA(5, values200);
+            data90.rsi2 = IndicatorCalculator.RSI(values200);
+            data90.actValue = values200[0];
+
+            indicatorsMap.put(ticker, data90);
+        }
+        
+        return indicatorsMap;
     }
-    
-    public static double RunTest(LocalDate startDate, LocalDate endDate) {
+
+    public static double RunTest(LocalDate startDate, LocalDate endDate, double capital, double leverage, boolean reinvest) {
         Map<String, CloseData> dataMap = LoadData(startDate, endDate);
         StatusDataForNinety statusData = new StatusDataForNinety();
-        double totalProfit = 0;
         
-        int totalSells = 0;
-        int profitSells = 0;
+        statusData.moneyToInvest = capital * leverage;
         
-        double highestProfit = 0;
-        double highestDDproc = 0;
-        double highestDD = 0;
-        LocalDate dateOfHighestDD = LocalDate.MIN;
-        int fees = 0;
+        BTStatistics stats = new BTStatistics(capital);
+        IBroker broker = new BrokerNoIB();
         
-        List<EquityInTime> equityList = new ArrayList<>();
-        
-        logger.info("Starting test from " + startDate.toString() + " to " + endDate.toString());
-        
-        logger.setLevel(Level.INFO);
+        logger.log(BTLogLvl.BACKTEST, "Starting test from " + startDate.toString() + " to " + endDate.toString());
+        logger.log(BTLogLvl.BACKTEST, "Number of used ticker - " + dataMap.size() + " out of " + TickersToTrade.GetTickers().length);
         
         int size = dataMap.entrySet().iterator().next().getValue().adjCloses.length - 199;
         
@@ -323,129 +327,84 @@ public class BackTesterNinety {
             int testingDayInx = size - 1 - dayInx;
             
             LocalDate date = dataMap.entrySet().iterator().next().getValue().dates[testingDayInx];
-            logger.info("Starting to compute day " + date.toString() + ", index: " + dayInx + "/" + (size-1) + ". Profit so far = " + totalProfit);
+            logger.log(BTLogLvl.BACKTEST, "Starting to compute day " + date.toString() + ", day: " + dayInx + "/" + (size-1) + ". Equity so far = " + TradeFormatter.toString(stats.equity));
             
-            EquityInTime eq = new EquityInTime();
-            eq.date = date;
-            eq.profit = totalProfit;
-            
-            equityList.add(eq);
-            
-            Map<String, StockIndicatorsForNinety> indicatorsMap = new HashMap<>(TickersToTrade.GetTickers().length);
-            for (String string : TickersToTrade.GetTickers()) {
-                CloseData data = dataMap.get(string);
+            for (String ticker : dataMap.keySet()) {
+                CloseData data = dataMap.get(ticker);
                 if (data == null) {
+                    logger.warning("Data for " + ticker + " are null.");
+                    dataMap.remove(ticker);
                     continue;
                 }
                 
-                double[] values = data.adjCloses;
+                if (data.dates.length != (size + 199)) {
+                    logger.warning("Data for ticker " + ticker + " have only " + data.dates.length + " entries out of " + (size + 199));
+                    dataMap.remove(ticker);
+                    continue;
+                }
                 
                 if (!data.dates[testingDayInx].equals(date)) {
-                    logger.severe("Dates does not equal for " + string + " date " + data.dates[testingDayInx].toString() + " vs expected " + date.toString());
+                    logger.warning("Dates does not equal for " + ticker + " date " + data.dates[testingDayInx].toString() + " vs expected " + date.toString());
                 }
-                
-                double[] values200 = Arrays.copyOfRange(values, testingDayInx, testingDayInx + 200);
-                
-                StockIndicatorsForNinety data90 = new StockIndicatorsForNinety();
-                data90.sma200 = IndicatorCalculator.SMA(200, values200);
-                data90.sma5 = IndicatorCalculator.SMA(5, values200);
-                data90.rsi2 = IndicatorCalculator.RSI(values200);
-                data90.actValue = values200[0];
-
-                indicatorsMap.put(string, data90);
             }
             
+            stats.StartDay(date, reinvest);
+            
+            Map<String, StockIndicatorsForNinety> indicatorsMap = CalulateIndicators(dataMap, testingDayInx);
+                        
             List<TradeOrder> toSell = Ninety.ComputeStocksToSell(indicatorsMap, statusData);
-            
-            for (TradeOrder tradeOrder : toSell) {
-                HeldStock held = statusData.heldStocks.get(tradeOrder.tickerSymbol);
-                double profit = (tradeOrder.expectedPrice - held.GetAvgPricePaid()) * held.GetPosition();
-                logger.info("Stock sold - profit: " + profit + ", " + tradeOrder.toString());
+ 
+            toSell.forEach((tradeOrder) -> {
+                broker.PlaceOrder(tradeOrder);
+            });
 
-                profit -= 1;
-                fees++;
-                statusData.heldStocks.remove(held.tickerSymbol);
-                totalProfit += profit;
-
-                totalSells++;
-                if (profit > 0) {
-                    profitSells++;
-
-                    if (highestProfit < totalProfit) {
-                        highestProfit = totalProfit;
-                    }
-                } else {
-                    double dd = ((highestProfit - totalProfit) / (40000 + highestProfit)) * 100;
-                    
-                    if (highestDDproc < dd) {
-                        highestDD = highestProfit - totalProfit;
-                        highestDDproc = dd;
-                        dateOfHighestDD = date;
-                    }
-                }
+            for (OrderStatus orderStatus : broker.GetOrderStatuses().values()) {
+                double profit = statusData.heldStocks.get(orderStatus.order.tickerSymbol).CalculateProfitIfSold(orderStatus.fillPrice);
+                
+                stats.AddSell(profit, date);
+                
+                statusData.UpdateHeldByOrderStatus(orderStatus);
             }
+
+            broker.clearOrderMaps();
 
             int remainingPortions = 20 - statusData.GetBoughtPortions();
             TradeOrder toBuy = Ninety.ComputeStocksToBuy(indicatorsMap, statusData, toSell);
-
             if (toBuy != null) {
-                HeldStock held = new HeldStock();
-                held.tickerSymbol = toBuy.tickerSymbol;
-
-                StockPurchase purchase = new StockPurchase();
-                //purchase.date = order.timestampFilled;
-                purchase.portions = 1;
-                purchase.position = toBuy.position;
-                purchase.priceForOne = toBuy.expectedPrice;
-
-                held.purchases.add(purchase);
-
-                statusData.heldStocks.put(held.tickerSymbol, held);
-                logger.info("New stock added: " + held.toString());
+                broker.PlaceOrder(toBuy);
                 remainingPortions--;
                 
-                totalProfit -= 1;
-                fees++;
+                stats.addBuy();
             }
-
-            List<TradeOrder> toBuyMore = Ninety.computeStocksToBuyMore(indicatorsMap, statusData, remainingPortions);
             
+            List<TradeOrder> toBuyMore = Ninety.computeStocksToBuyMore(indicatorsMap, statusData, remainingPortions);
             for (TradeOrder tradeOrder : toBuyMore) {
-                HeldStock held = statusData.heldStocks.get(tradeOrder.tickerSymbol);
+                broker.PlaceOrder(tradeOrder);
                 
-                int newPortions = Ninety.GetNewPortionsToBuy(held.GetPortions());
-                if (newPortions == 0) {
-                    logger.severe("Bought stock '" + held.tickerSymbol + "' has somehow " + held.GetPortions() + " bought portions!!!");
-                    //TODO: dafuq?
-                }
-
-                StockPurchase purchase = new StockPurchase();
-                purchase.portions = newPortions;
-                purchase.position = tradeOrder.position;
-                purchase.priceForOne = tradeOrder.expectedPrice;
-
-                held.purchases.add(purchase);
-                
-                logger.info("More stock bought - " + held.toString());
-                totalProfit -= 1;
-                fees++;
+                stats.addBuy();
+            }
+            
+            for (OrderStatus orderStatus : broker.GetOrderStatuses().values()) {
+                statusData.UpdateHeldByOrderStatus(orderStatus);
+            }
+            broker.clearOrderMaps();
+            
+            if (reinvest) {
+                statusData.moneyToInvest = statusData.currentCash * leverage;
             }
         }
-        logger.setLevel(Level.INFO);
-        logger.info("TestCompleted. Profit = " + totalProfit + ", succesful = " + (double)profitSells/(double)totalSells*100 + "%");
-        logger.info("Highest DD = " + highestDD + "$, " + highestDDproc + "%, date = " + dateOfHighestDD.toString());
-        logger.info("Paid on fees = " + fees + "$");
         
-        double years = (size-1.0)/365.0;
+        stats.LogStats();
+        logger.log(BTLogLvl.BACKTEST, "Current cash = " + statusData.currentCash + "$");
         
-        SaveEquityToCsv(equityList);
+        SaveEquityToCsv(stats.equityList);
 
-        return totalProfit;
+        return stats.equity;
     }
   
     private static void SaveEquityToCsv(List<EquityInTime> equityList) {
         
-        logger.info("Saving equity to CSV");
+        logger.log(BTLogLvl.BACKTEST, "Saving equity to CSV");
         
         File file = new File("backtestCache/_equity.csv");
         File directory = new File(file.getParentFile().getAbsolutePath());
@@ -457,7 +416,7 @@ public class BackTesterNinety {
             output = new BufferedWriter(new FileWriter(file));
 
             for (EquityInTime equityInTime : equityList) {
-                double profit = equityInTime.profit;
+                double profit = equityInTime.equity;
                 LocalDate date = equityInTime.date;
 
                 output.write(date.toString());

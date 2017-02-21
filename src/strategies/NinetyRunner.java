@@ -148,6 +148,7 @@ public class NinetyRunner implements Runnable {
         logger.info("Finished computing stocks to buy.");
     }
 
+    // TODO: zlepsit design
     private void ProcessSubmittedOrders() {
         
         for (Iterator<Map.Entry<Integer, OrderStatus>> it = broker.GetOrderStatuses().entrySet().iterator(); it.hasNext();) {

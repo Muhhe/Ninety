@@ -38,7 +38,7 @@ public class NinetyDataPreparator implements Runnable {
         } catch (InterruptedException ex) {
         }
 
-        stockData.PrepareData(broker);
+        stockData.PrepareData();
         
         //stockData.UpdateDataWithActValuesIB(broker);
 

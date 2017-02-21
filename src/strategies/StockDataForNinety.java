@@ -46,7 +46,7 @@ public class StockDataForNinety {
 
     private boolean isRealtimeDataSubscribed = false;
 
-    public void PrepareData(IBroker broker) {
+    public void PrepareData() {
 
         try {
             logger.fine("PrepareHistData: Getting lock on hist data.");
@@ -56,7 +56,7 @@ public class StockDataForNinety {
                 logger.warning("Actual data not subscribed.");
             }
 
-            logger.info("Starting to stock data.");
+            logger.info("Starting to load stock data.");
             String[] tickers = TickersToTrade.GetTickers();
 
             Map<String, Double> actValues = GetActualValues();
@@ -117,7 +117,7 @@ public class StockDataForNinety {
                 }
             }
 
-            logger.info("Finished to load historic data");
+            logger.info("Finished loading data");
 
             CalculateIndicators();
 
@@ -195,6 +195,9 @@ public class StockDataForNinety {
             } else {
                 failedLvl1 = true;
                 logger.warning("Failed to load actual data from " + firstLvlGetter.getName() + ".");
+                if (valuesMap != null) {
+                    logger.warning("Loaded only " + valuesMap.size() + " tickers.");
+                }
             }
         }
 

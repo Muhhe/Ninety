@@ -101,6 +101,10 @@ public class DataGetterHistYahoo implements IDataGetterHist {
                     break;
                 }
             }
+            
+            if (daysToRead != -1 && daysToRead != totalCount) {
+                logger.warning("Loading " + tickerSymbol + " from " + getName() + " failed. Read only " + totalCount + " out of " + daysToRead);
+            }
 
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "Failed to read data from Yahoo - '" + tickerSymbol + "'", ex);

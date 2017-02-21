@@ -12,7 +12,9 @@ import data.DataGetterActIB;
 import data.DataGetterHistQuandl;
 import data.DataGetterHistYahoo;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import strategies.HeldStock;
@@ -59,11 +61,22 @@ public class MainWindow extends javax.swing.JFrame {
 
         ninetyScheduler = new NinetyScheduler( broker );
         
+        new Thread(MainWindow::StartSocketServer).start();
+    }
+
+    public static void StartSocketServer() {
         try {
-            ServerSocket s = new ServerSocket(4123);
-            logger.fine("Opened test port on: " + s.getLocalPort());
-        } catch (IOException ex) {
-            logger.warning("Failed to open test port. " + ex.getMessage());
+            ServerSocket server = new ServerSocket(4123);
+            logger.fine("Opened test port on: " + server.getLocalPort());
+            while (true) {
+                try (Socket sock = server.accept()) {
+                    //InetAddress addr = sock.getInetAddress();
+                    //logger.fine("Connection made to " + addr.getHostName() + " (" + addr.getHostAddress() + ")");
+                }
+                Thread.sleep(5000);
+            }
+        } catch (IOException | InterruptedException e) {
+            logger.warning("Exception in socket server detected: " + e);
         }
     }
 

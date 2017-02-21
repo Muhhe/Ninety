@@ -13,6 +13,7 @@ import data.DataGetterActIB;
 import data.DataGetterHistFile;
 import data.DataGetterHistQuandl;
 import data.DataGetterHistYahoo;
+import data.TickersToTrade;
 import java.time.LocalDate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -315,15 +316,33 @@ public class TestPlatform extends javax.swing.JFrame {
         
         String pathToSourceData = "testData/Data 2017-02-17/Historic/";
         
-        GlobalConfig.AddDataGetterAct(new DataGetterActFile(pathToSourceData));
-        GlobalConfig.AddDataGetterHist(new DataGetterHistFile(pathToSourceData));
+        //GlobalConfig.AddDataGetterAct(new DataGetterActFile(pathToSourceData));
+        //GlobalConfig.AddDataGetterHist(new DataGetterHistFile(pathToSourceData));
+        
         //GlobalConfig.AddDataGetterHist(new DataGetterHistYahoo());
         //GlobalConfig.AddDataGetterHist(new DataGetterHistQuandl());
         
+        IBroker broker = new BrokerIBReadOnly(4001, 1);
+        broker.connect();
+        /*for (String ticker : TickersToTrade.GetTickers()) {
+            broker.RequestRealtimeData(ticker);
+        }*/
+        
+        GlobalConfig.AddDataGetterAct(new DataGetterActIB(broker));
+        GlobalConfig.AddDataGetterHist(new DataGetterHistYahoo());
+        
         StockDataForNinety stockDataForNinety = new StockDataForNinety();
+        stockDataForNinety.SubscribeRealtimeData(broker);
+        
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(TestPlatform.class.getName()).log(Level.SEVERE, null, ex);
+        }
         
         new Thread(() -> {
-            stockDataForNinety.PrepareData(new BrokerNoIB());
+            stockDataForNinety.PrepareData();
+            broker.disconnect();
             
             stockDataForNinety.SaveHistDataToFiles();
             stockDataForNinety.SaveStockIndicatorsToFiles();
