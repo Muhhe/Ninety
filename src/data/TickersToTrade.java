@@ -32,6 +32,9 @@ public class TickersToTrade {
         }
         
         logger.fine("Loaded " + tickers.length + " ticker symbols.");
+        if (tickers.length < 80) {
+            logger.warning("Only " + tickers.length + " tickers loaded.");
+        }
     }
     
     public static final String[] GetTickers() {

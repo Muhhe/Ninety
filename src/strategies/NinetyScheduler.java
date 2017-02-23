@@ -7,6 +7,7 @@ package strategies;
 
 import communication.BrokerIB;
 import communication.IBroker;
+import data.StockIndicatorsForNinety;
 import data.TickersToTrade;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -164,6 +165,7 @@ public class NinetyScheduler {
             
             if (!MailSender.SendErrors()) {
                 MailSender.AddLineToMail("Check complete");
+                AddProfitLossToMail();
                 MailSender.SendCheckResult();
             }
         }
@@ -226,6 +228,8 @@ public class NinetyScheduler {
                     stockData.SaveIndicatorsToCSVFile();
                     stockData.SaveStockIndicatorsToFiles();
                     
+                    AddProfitLossToMail();
+                    
                     MailSender.AddLineToMail(broker.GetAccountSummary().toString());
                     MailSender.AddLineToMail("Saved current cash: " + TradeFormatter.toString(statusData.currentCash));
                     
@@ -247,5 +251,20 @@ public class NinetyScheduler {
         TradeTimer.stop();
         logger.info("Execution of Ninety strategy is stopped.");
         isStartScheduled = false;
+    }
+    
+    public void AddProfitLossToMail() {
+        for (HeldStock held : statusData.heldStocks.values()) {
+            StockIndicatorsForNinety indicators = stockData.indicatorsMap.get(held.tickerSymbol);
+            if (indicators == null) {
+                continue;
+            }
+            double actValue = stockData.indicatorsMap.get(held.tickerSymbol).actValue;
+            double profit = held.CalculateProfitIfSold(actValue);
+            double profitPercent = held.CalculatePercentProfitIfSold(actValue);
+            
+            MailSender.AddLineToMail("Current profit loss on stock " + held.tickerSymbol.toString() + " is " + 
+                    TradeFormatter.toString(profit) + "$ = " + TradeFormatter.toString(profitPercent) + "%.");
+        }
     }
 }

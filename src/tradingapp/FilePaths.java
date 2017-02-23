@@ -29,4 +29,6 @@ public class FilePaths {
     public static String logPathFile = "/Log.txt";
     public static String logCommPathFile = "/LogComm.txt";
     public static String logDetailedPathFile = "/LogDetailed.txt";
+    
+    public static String indicatorsPathFile = "/indicators.csv";
 }

@@ -30,7 +30,10 @@ public class IndicatorCalculator {
     }
     
     public static double RSI(double[] values) {
-
+        if (values == null) {
+            logger.severe("RSI - null values");
+            return 0;
+        }
         if (values.length < 14) {
             logger.log(Level.SEVERE, "RSI - not enough data: " + values.length + "/14");
         }

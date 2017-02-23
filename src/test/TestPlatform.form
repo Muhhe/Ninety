@@ -36,9 +36,13 @@
                       <Component id="tickerField" min="-2" pref="55" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="buyButton" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace min="-2" pref="29" max="-2" attributes="0"/>
+                      <Component id="testRSIButton" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="compareButton" min="-2" max="-2" attributes="0"/>
                   </Group>
               </Group>
-              <EmptySpace pref="373" max="32767" attributes="0"/>
+              <EmptySpace pref="106" max="32767" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" attributes="0">
                       <Component id="checkPositionsButton" min="-2" max="-2" attributes="0"/>
@@ -72,6 +76,8 @@
                   <Component id="tickerField" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="buyButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="testDataYahooButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="testRSIButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="compareButton" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace min="0" pref="538" max="32767" attributes="0"/>
           </Group>
@@ -219,6 +225,22 @@
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="testDataYahooButtonActionPerformed"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JButton" name="testRSIButton">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Test RSI"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="testRSIButtonActionPerformed"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JButton" name="compareButton">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Compare Yahoo vs Quandl"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="compareButtonActionPerformed"/>
       </Events>
     </Component>
   </SubComponents>

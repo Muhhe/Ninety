@@ -19,8 +19,9 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 public class MailSender {
+
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
-    
+
     private static StringBuilder m_mailBody = new StringBuilder();
     private static StringBuilder m_mailBodyError = new StringBuilder();
 
@@ -66,14 +67,25 @@ public class MailSender {
         if (!GlobalConfig.sendMails) {
             return;
         }
-            
+
         if (m_mailBody.length() == 0) {
             m_mailBody.append("No trades today!");
         }
 
         logger.fine("Sending trade log mail!");
-        
-        if (Send("Trading log 90", Settings.mailAddressTradeLog, m_mailBody.toString())) {
+
+        String todayString = TradeTimer.GetLocalDateNow().toString();
+        String[] attachments = {FilePaths.dataLogDirectory + todayString + FilePaths.logPathFile,
+            FilePaths.dataLogDirectory + todayString + FilePaths.logCommPathFile,
+            FilePaths.dataLogDirectory + todayString + FilePaths.logDetailedPathFile,
+            FilePaths.equityPathFile,
+            FilePaths.tradingStatusPathFileInput,
+            FilePaths.tradeLogPathFile,
+            FilePaths.tradeLogDetailedPathFile,
+            FilePaths.dataLogDirectory + todayString + FilePaths.indicatorsPathFile
+        };
+
+        if (Send("Trading log 90", Settings.mailAddressTradeLog, m_mailBody.toString(), attachments)) {
             m_mailBody.setLength(0);
             logger.info("Trade mail sent!");
         } else {
@@ -85,10 +97,17 @@ public class MailSender {
         if (!GlobalConfig.sendMails) {
             return;
         }
-        
+
         logger.fine("Sending check mail!");
-        
-        if (Send("Check 90", Settings.mailAddressCheck, m_mailBody.toString())) {
+
+        String todayString = TradeTimer.GetLocalDateNow().toString();
+        String[] attachments = {FilePaths.dataLogDirectory + todayString + FilePaths.logPathFile,
+            FilePaths.dataLogDirectory + todayString + FilePaths.logCommPathFile,
+            FilePaths.dataLogDirectory + todayString + FilePaths.logDetailedPathFile,
+            FilePaths.equityPathFile,
+            FilePaths.tradingStatusPathFileInput,};
+
+        if (Send("Check 90", Settings.mailAddressCheck, m_mailBody.toString(), attachments)) {
             m_mailBody.setLength(0);
             logger.info("Check mail sent!");
         } else {
@@ -100,11 +119,18 @@ public class MailSender {
         if (!GlobalConfig.sendMails) {
             return true;
         }
-        
+
         if (m_mailBodyError.length() > 0) {
             logger.fine("Sending error mail!");
 
-            if (Send("Errors!!!", Settings.mailAddressError, m_mailBodyError.toString())) {
+            String todayString = TradeTimer.GetLocalDateNow().toString();
+            String[] attachments = {FilePaths.dataLogDirectory + todayString + FilePaths.logPathFile,
+                FilePaths.dataLogDirectory + todayString + FilePaths.logCommPathFile,
+                FilePaths.dataLogDirectory + todayString + FilePaths.logDetailedPathFile,
+                FilePaths.equityPathFile,
+                FilePaths.tradingStatusPathFileInput,};
+
+            if (Send("Errors!!!", Settings.mailAddressError, m_mailBodyError.toString(), attachments)) {
                 m_mailBodyError.setLength(0);
                 logger.info("Error mail sent!");
             } else {
@@ -116,7 +142,7 @@ public class MailSender {
         return false;
     }
 
-    private static boolean Send(String subject, String address, String mailBody) {
+    private static boolean Send(String subject, String address, String mailBody, String[] attachments) {
         Session session = SetupSession();
 
         try {
@@ -136,22 +162,10 @@ public class MailSender {
 
             // Set text message part
             multipart.addBodyPart(messageBodyPart);
-
-            String todayString = TradeTimer.GetLocalDateNow().toString();
-            String pathDir = FilePaths.dataLogDirectory + todayString + FilePaths.logPathFile;
-            AddAttachment(pathDir, multipart);
-
-            pathDir = FilePaths.dataLogDirectory + todayString + FilePaths.logCommPathFile;
-            AddAttachment(pathDir, multipart);
-
-            pathDir = FilePaths.dataLogDirectory + todayString + FilePaths.logDetailedPathFile;
-            AddAttachment(pathDir, multipart);
-
-            pathDir = FilePaths.equityPathFile;
-            AddAttachment(pathDir, multipart);
-
-            pathDir = FilePaths.tradingStatusPathFileInput;
-            AddAttachment(pathDir, multipart);
+            
+            for (String attachment : attachments) {
+                AddAttachment(attachment, multipart);
+            }
 
             // Send the complete message parts
             message.setContent(multipart);
@@ -162,7 +176,7 @@ public class MailSender {
             logger.severe("Failed to send mail: " + e);
             return false;
         }
-        
+
         return true;
     }
 

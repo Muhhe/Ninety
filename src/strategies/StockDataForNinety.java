@@ -346,7 +346,7 @@ public class StockDataForNinety {
 
     public void SaveIndicatorsToCSVFile() {
         String todayString = TradeTimer.GetLocalDateNow().toString();
-        File file = new File(FilePaths.dataLogDirectory + todayString + "/indicators.csv");
+        File file = new File(FilePaths.dataLogDirectory + todayString + FilePaths.indicatorsPathFile);
         File directory = new File(file.getParentFile().getAbsolutePath());
         directory.mkdirs();
         BufferedWriter output = null;

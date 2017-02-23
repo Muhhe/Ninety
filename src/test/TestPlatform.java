@@ -7,14 +7,19 @@ package test;
 
 import communication.BrokerIB;
 import communication.IBroker;
+import data.CloseData;
 import data.DataGetterActFile;
 import data.DataGetterActGoogle;
 import data.DataGetterActIB;
 import data.DataGetterHistFile;
 import data.DataGetterHistQuandl;
 import data.DataGetterHistYahoo;
+import data.IDataGetterHist;
+import data.IndicatorCalculator;
 import data.TickersToTrade;
+import static java.lang.Math.abs;
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import strategies.NinetyChecker;
@@ -23,6 +28,7 @@ import strategies.StockDataForNinety;
 import tradingapp.FilePaths;
 import tradingapp.GlobalConfig;
 import tradingapp.Settings;
+import tradingapp.TradeFormatter;
 import tradingapp.TradeLogger;
 import tradingapp.TradeOrder;
 import tradingapp.TradeTimer;
@@ -79,6 +85,8 @@ public class TestPlatform extends javax.swing.JFrame {
         tickerField = new javax.swing.JTextField();
         buyButton = new javax.swing.JButton();
         testDataYahooButton = new javax.swing.JButton();
+        testRSIButton = new javax.swing.JButton();
+        compareButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Trading app 90 - TEST PLATFORM");
@@ -149,6 +157,20 @@ public class TestPlatform extends javax.swing.JFrame {
             }
         });
 
+        testRSIButton.setText("Test RSI");
+        testRSIButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                testRSIButtonActionPerformed(evt);
+            }
+        });
+
+        compareButton.setText("Compare Yahoo vs Quandl");
+        compareButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                compareButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -163,8 +185,12 @@ public class TestPlatform extends javax.swing.JFrame {
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(tickerField, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(buyButton)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 373, Short.MAX_VALUE)
+                        .addComponent(buyButton)
+                        .addGap(29, 29, 29)
+                        .addComponent(testRSIButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(compareButton)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 106, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(checkPositionsButton)
@@ -190,7 +216,9 @@ public class TestPlatform extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(tickerField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(buyButton)
-                    .addComponent(testDataYahooButton))
+                    .addComponent(testDataYahooButton)
+                    .addComponent(testRSIButton)
+                    .addComponent(compareButton))
                 .addGap(0, 538, Short.MAX_VALUE))
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
@@ -364,6 +392,89 @@ public class TestPlatform extends javax.swing.JFrame {
         }).start();
     }//GEN-LAST:event_testDataYahooButtonActionPerformed
 
+    private void testRSIButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_testRSIButtonActionPerformed
+        String ticker = "SPY";
+        DataGetterHistYahoo getter = new DataGetterHistYahoo();
+        
+        TradeTimer.SetToday(LocalDate.of(2014, 8, 1));
+        
+        CloseData data = getter.readAdjCloseData(TradeTimer.GetLocalDateNow(), ticker, 200, false);
+        
+        NinetyChecker.CheckTickerData(data, ticker);
+        
+        double rsi2 = IndicatorCalculator.RSI(data.adjCloses);
+        
+        logger.info("RSI2 for " + ticker + " on " + TradeTimer.GetLocalDateNow() + " is " + rsi2);
+        
+        double diff = rsi2 - 0.807851951;
+        if (Math.abs(diff) > 0.001) {
+            logger.severe("Test failed. Difference is " + diff + " = " + diff/rsi2*100 + "%!" );
+        } else {
+            logger.info("Test passed successfully");
+        }
+             
+    }//GEN-LAST:event_testRSIButtonActionPerformed
+
+    private void compareButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_compareButtonActionPerformed
+        String ticker = tickerField.getText();
+        IDataGetterHist getterY = new DataGetterHistYahoo();
+        IDataGetterHist getterQ = new DataGetterHistQuandl();
+        
+        int count = 200;
+        CloseData dataY = getterY.readAdjCloseData(TradeTimer.GetLocalDateNow(), ticker, count, false);
+        CloseData dataQ = getterQ.readAdjCloseData(TradeTimer.GetLocalDateNow(), ticker, count, false);
+        
+        TradeTimer.LoadSpecialTradingDays();
+        
+        if (!NinetyChecker.CheckTickerData(dataQ, ticker)) {
+            logger.warning("Check on Yahoo data failed.");
+        }
+        if (!NinetyChecker.CheckTickerData(dataY, ticker)) {
+            logger.warning("Check on Quandl data failed.");
+        }
+        
+        double highestDiff = 0;
+        double avgDiff = 0;
+        for (int i = 0; i < count; i++) {
+            double closeY = dataY.adjCloses[i];
+            double closeQ = dataQ.adjCloses[i];
+            
+            double diff = closeY - closeQ;
+            double diffPercent = abs(diff / closeY * 100);
+            
+            if (diffPercent > highestDiff) {
+                highestDiff = diffPercent;
+            }
+            avgDiff += diffPercent;
+        }
+        
+        avgDiff /= count;
+        
+        logger.info("Compared hist getters " + getterY.getName() + " and " + getterQ.getName() + 
+                ". Max diff is " + TradeFormatter.toString(highestDiff) + "%, avg diff is " + TradeFormatter.toString(avgDiff) + "%.");
+        
+        double rsiY = IndicatorCalculator.RSI(dataY.adjCloses);
+        double rsiQ = IndicatorCalculator.RSI(dataQ.adjCloses);
+        double diffRSI = (rsiY - rsiQ)/rsiY * 100;
+        
+        double sma5Y = IndicatorCalculator.SMA(5, dataY.adjCloses);
+        double sma5Q = IndicatorCalculator.SMA(5, dataQ.adjCloses);
+        double diffSMA5 = (sma5Y - sma5Q)/sma5Y * 100;
+        
+        double sma200Y = IndicatorCalculator.SMA(200, dataY.adjCloses);
+        double sma200Q = IndicatorCalculator.SMA(200, dataQ.adjCloses);
+        double diffSMA200 = (sma200Y - sma200Q)/sma200Y * 100;
+        
+        logger.info("Indicators - RSI2: " + TradeFormatter.toString(rsiY) + " vs " + TradeFormatter.toString(rsiQ) +
+                ", SMA5: " + TradeFormatter.toString(sma5Y) + " vs " + TradeFormatter.toString(sma5Q) +
+                ", SMA200: " + TradeFormatter.toString(sma200Y) + " vs " + TradeFormatter.toString(sma200Q) + ".");
+                
+        logger.info("Difference in RSI2: " + TradeFormatter.toString(diffRSI) + 
+                "%, SMA5 " + TradeFormatter.toString(diffSMA5) + 
+                "%, SMA200 " + TradeFormatter.toString(diffSMA200) + "%");
+        
+    }//GEN-LAST:event_compareButtonActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -404,6 +515,7 @@ public class TestPlatform extends javax.swing.JFrame {
     private javax.swing.JButton checkPositionsButton;
     private javax.swing.JTextArea commArea;
     private javax.swing.JScrollPane commScrollPane;
+    private javax.swing.JButton compareButton;
     private javax.swing.JTextArea fineLogArea;
     private javax.swing.JScrollPane fineLogScrollPane;
     private javax.swing.JCheckBox isOnCheckbox;
@@ -413,6 +525,7 @@ public class TestPlatform extends javax.swing.JFrame {
     private javax.swing.JButton startButton;
     private javax.swing.JButton startNowButton;
     private javax.swing.JButton testDataYahooButton;
+    private javax.swing.JButton testRSIButton;
     private javax.swing.JTextField tickerField;
     // End of variables declaration//GEN-END:variables
 }

@@ -39,6 +39,7 @@ public class DataGetterActGoogle implements IDataGetterAct {
         return "Google";
     }
 
+    @Override
     public double readActualData(String tickerSymbol) {
         try {
             StringBuilder urlBuilder = new StringBuilder();
@@ -66,6 +67,7 @@ public class DataGetterActGoogle implements IDataGetterAct {
         }
     }
 
+    @Override
     public Map<String, Double> readActualData(String[] tickerSymbols) {
         try {
             StringBuilder urlBuilder = new StringBuilder();
@@ -88,8 +90,7 @@ public class DataGetterActGoogle implements IDataGetterAct {
                 dataFromGSON = gson.fromJson(reader, DataGSON[].class);
             }
 
-            Map<String, Double> valuesMap;
-            valuesMap = new HashMap(dataFromGSON.length);
+            Map<String, Double> valuesMap = new HashMap<>(dataFromGSON.length);
 
             for (DataGSON entryGSON : dataFromGSON) {
                 String tickerSymbol = entryGSON.t;
