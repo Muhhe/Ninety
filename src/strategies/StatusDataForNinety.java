@@ -73,7 +73,10 @@ public class StatusDataForNinety {
             heldStocks.put(held.tickerSymbol, held);
             CountInOrderFee();
             logger.finer("New stock added: " + held.toString());
-            MailSender.AddLineToMail("OPEN new - " + held.toString());
+            
+            MailSender.AddLineToMail("OPEN new - " + held.tickerSymbol +
+                    ", price: " + TradeFormatter.toString(order.fillPrice) + 
+                    "$, position: " + order.filled);
             return;
         }
 
@@ -116,7 +119,11 @@ public class StatusDataForNinety {
             held.purchases.add(purchase);
             CountInOrderFee();
             logger.fine("More stock bought - " + held.toString());
-            MailSender.AddLineToMail("SCALE up - " + held.toString());
+            
+            MailSender.AddLineToMail("SCALE up - " + held.tickerSymbol +
+                    ", price: " + TradeFormatter.toString(order.fillPrice) + 
+                    "$, position: " + order.filled +
+                    ", portion: " + newPortions);
         }
     }
 

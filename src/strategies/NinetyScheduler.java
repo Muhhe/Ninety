@@ -254,17 +254,28 @@ public class NinetyScheduler {
     }
     
     public void AddProfitLossToMail() {
+        MailSender.AddLineToMail("Unrealized profit/loss:");
+        
+        double totalPL = 0;
         for (HeldStock held : statusData.heldStocks.values()) {
             StockIndicatorsForNinety indicators = stockData.indicatorsMap.get(held.tickerSymbol);
             if (indicators == null) {
                 continue;
             }
-            double actValue = stockData.indicatorsMap.get(held.tickerSymbol).actValue;
+            double actValue = indicators.actValue;
             double profit = held.CalculateProfitIfSold(actValue);
             double profitPercent = held.CalculatePercentProfitIfSold(actValue);
             
-            MailSender.AddLineToMail("Current profit loss on stock " + held.tickerSymbol.toString() + " is " + 
-                    TradeFormatter.toString(profit) + "$ = " + TradeFormatter.toString(profitPercent) + "%.");
+            totalPL += profit;
+            
+            MailSender.AddLineToMail(held.tickerSymbol + 
+                    ": " + TradeFormatter.toString(profit) + "$ = " + TradeFormatter.toString(profitPercent) + 
+                    "%. Last buy value: " + TradeFormatter.toString(held.GetLastBuyValue()) + 
+                    ", actual value: " + TradeFormatter.toString(actValue) + 
+                    ", SMA5: " + TradeFormatter.toString(indicators.sma5) +
+                    ", portions: " + held.GetPortions());
         }
+        
+        MailSender.AddLineToMail("Total unrealized profit/loss: " + TradeFormatter.toString(totalPL) + "$ = " + TradeFormatter.toString(totalPL / Settings.investCash * 100) + "%");
     }
 }

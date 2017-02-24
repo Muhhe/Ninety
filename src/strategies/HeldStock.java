@@ -5,10 +5,9 @@
  */
 package strategies;
 
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 import org.jdom2.Attribute;
 import org.jdom2.Element;
 import tradingapp.TradeFormatter;
@@ -18,6 +17,8 @@ import tradingapp.TradeFormatter;
  * @author Muhe
  */
 public class HeldStock {
+    private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+    
     public List<StockPurchase> purchases = new ArrayList<>();
     public String tickerSymbol;
     
@@ -46,7 +47,12 @@ public class HeldStock {
     }
 
     public double GetAvgPricePaid() {
-        return GetTotalPricePaid() / GetPosition();
+        int pos = GetPosition();
+        if (pos == 0) {
+            logger.severe("Empty held stock " + tickerSymbol);
+            return 0;
+        }
+        return GetTotalPricePaid() / pos;
     }
 
     public void AddToXml(Element rootElement) {
@@ -104,5 +110,13 @@ public class HeldStock {
         sb.append(", avgPrice: ").append(TradeFormatter.toString(GetAvgPricePaid())).append("$");
 
         return sb.toString();
+    }
+
+    double GetLastBuyValue() {
+        if (purchases.isEmpty()) {
+            logger.severe("Empty held stock " + tickerSymbol);
+            return 0;
+        }
+        return purchases.get(purchases.size() - 1).priceForOne;
     }
 }
