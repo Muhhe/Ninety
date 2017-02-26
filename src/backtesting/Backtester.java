@@ -7,9 +7,20 @@ package backtesting;
 
 import data.DataGetterHistQuandl;
 import data.DataGetterHistYahoo;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jdom2.Attribute;
+import org.jdom2.Document;
+import org.jdom2.Element;
+import org.jdom2.JDOMException;
+import org.jdom2.input.SAXBuilder;
+import org.jdom2.output.Format;
+import org.jdom2.output.XMLOutputter;
 import tradingapp.FilePaths;
 import tradingapp.GlobalConfig;
 import tradingapp.TextAreaLogHandler;
@@ -18,7 +29,7 @@ import tradingapp.TextAreaLogHandler;
  *
  * @author Muhe
  */
-public class Backtester extends javax.swing.JFrame {
+public final class Backtester extends javax.swing.JFrame {
 
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
@@ -40,6 +51,8 @@ public class Backtester extends javax.swing.JFrame {
         
         GlobalConfig.AddDataGetterHist(new DataGetterHistYahoo());
         GlobalConfig.AddDataGetterHist(new DataGetterHistQuandl());
+        
+        LoadBTSettings();
     }
 
     /**
@@ -69,6 +82,7 @@ public class Backtester extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Trading app 90 - BACKTESTER");
 
+        logArea.setEditable(false);
         logArea.setColumns(20);
         logArea.setRows(5);
         jScrollPane1.setViewportView(logArea);
@@ -88,7 +102,7 @@ public class Backtester extends javax.swing.JFrame {
             }
         });
 
-        logLvlComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Short", "Info" }));
+        logLvlComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Short", "Stats only", "Info" }));
         logLvlComboBox.setToolTipText("");
 
         jLabel3.setText("Log level");
@@ -128,9 +142,9 @@ public class Backtester extends javax.swing.JFrame {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jLabel5)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(leverageField, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addComponent(leverageField, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addComponent(reinvestCheckBox))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 344, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 309, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(backTestButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
@@ -177,6 +191,9 @@ public class Backtester extends javax.swing.JFrame {
                 logLvl = BTLogLvl.BACKTEST;
                 break;
             case 1:
+                logLvl = BTLogLvl.BT_STATS;
+                break;
+            case 2:
                 logLvl = Level.INFO;
                 break;
             default:
@@ -201,10 +218,51 @@ public class Backtester extends javax.swing.JFrame {
         FilePaths.tickerListPathFile = "backtest/tickerList.txt";
 
         new Thread(() -> {
-            BackTesterNinety.RunTest(start, end, capital, leverage, reinvestCheckBox.isSelected());
+            BackTesterNinety.RunTest(new BTSettings(start, end, capital, leverage, reinvestCheckBox.isSelected()));
         }).start();
     }//GEN-LAST:event_backTestButtonActionPerformed
 
+    public void LoadBTSettings() {
+        try {
+            File inputFile = new File(FilePaths.backtestSettings);
+            
+            if (!inputFile.exists()) {
+                return;
+            }
+            
+            SAXBuilder saxBuilder = new SAXBuilder();
+            Document document = saxBuilder.build(inputFile);
+
+            Element rootElement = document.getRootElement();
+            Attribute attStart = rootElement.getAttribute("start");
+            String start = attStart.getValue();
+            fromBTField.setText(start);
+            
+            Attribute attEnd = rootElement.getAttribute("end");
+            String end = attEnd.getValue();
+            toBTField.setText(end);
+            
+            Attribute attCapital = rootElement.getAttribute("capital");
+            String capital = attCapital.getValue();
+            capitalField.setText(capital);
+            
+            Attribute attLeverage = rootElement.getAttribute("leverage");
+            String leverage = attLeverage.getValue();
+            leverageField.setText(leverage);
+
+            Attribute attReinvest = rootElement.getAttribute("reinvest");
+            boolean reinvest = Boolean.parseBoolean(attReinvest.getValue());
+            reinvestCheckBox.setSelected(reinvest);
+
+        } catch (JDOMException e) {
+            e.printStackTrace();
+            logger.severe("Error in loading from XML: JDOMException.\r\n" + e);
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+            logger.severe("Error in loading from XML: IOException.\r\n" + ioe);
+        }
+    }
+    
     /**
      * @param args the command line arguments
      */

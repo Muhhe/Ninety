@@ -45,11 +45,11 @@
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="jLabel5" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
-                              <Component id="leverageField" min="-2" pref="20" max="-2" attributes="0"/>
+                              <Component id="leverageField" min="-2" pref="33" max="-2" attributes="0"/>
                           </Group>
                           <Component id="reinvestCheckBox" alignment="0" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace pref="344" max="32767" attributes="0"/>
+                      <EmptySpace pref="309" max="32767" attributes="0"/>
                       <Group type="103" groupAlignment="0" max="-2" attributes="0">
                           <Component id="backTestButton" max="32767" attributes="0"/>
                           <Group type="102" alignment="1" attributes="0">
@@ -101,6 +101,7 @@
       <SubComponents>
         <Component class="javax.swing.JTextArea" name="logArea">
           <Properties>
+            <Property name="editable" type="boolean" value="false"/>
             <Property name="columns" type="int" value="20"/>
             <Property name="rows" type="int" value="5"/>
           </Properties>
@@ -138,9 +139,10 @@
     <Component class="javax.swing.JComboBox" name="logLvlComboBox">
       <Properties>
         <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-          <StringArray count="2">
+          <StringArray count="3">
             <StringItem index="0" value="Short"/>
-            <StringItem index="1" value="Info"/>
+            <StringItem index="1" value="Stats only"/>
+            <StringItem index="2" value="Info"/>
           </StringArray>
         </Property>
         <Property name="toolTipText" type="java.lang.String" value=""/>

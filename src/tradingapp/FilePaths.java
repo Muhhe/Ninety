@@ -31,4 +31,6 @@ public class FilePaths {
     public static String logDetailedPathFile = "/LogDetailed.txt";
     
     public static String indicatorsPathFile = "/indicators.csv";
+    
+    public static String backtestSettings = "backtest/cache/_settings.xml";
 }

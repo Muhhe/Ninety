@@ -52,6 +52,7 @@ public class BTStatistics {
     
     public boolean reinvest;
 
+    public double startCapital = 0;
     public double capital = 0;
     public double equity = 0;
 
@@ -64,6 +65,7 @@ public class BTStatistics {
     public List<TradeYearlyStats> yearlyStats = new ArrayList<>();
 
     public BTStatistics(double capital, boolean reinvest) {
+        this.startCapital = capital;
         this.capital = capital;
         this.equity = capital;
         this.reinvest = reinvest;
@@ -125,8 +127,8 @@ public class BTStatistics {
                 GetThisYearStats().highestequity = equity;
             }
         } else {
-            //double dd = ((highestProfit - totalProfit) / (capital + highestProfit)) * 100;
-            double dd = ((GetThisYearStats().highestequity - equity) / (capital)) * 100;
+            //double dd = ((GetThisYearStats().highestequity - equity) / (GetThisYearStats().startCapital)) * 100;
+            double dd = ((GetThisYearStats().highestequity - equity) / (GetThisYearStats().highestequity)) * 100;
 
             if (GetThisYearStats().highestDDproc < dd) {
                 GetThisYearStats().highestDD = GetThisYearStats().highestequity - equity;
@@ -143,9 +145,9 @@ public class BTStatistics {
         GetThisYearStats().fees += fee;
     }
 
-    public void LogStats() {
+    public void LogStats(BTSettings settings) {
         
-        logger.log(BTLogLvl.BACKTEST, "TestCompleted.");
+        logger.log(BTLogLvl.BT_STATS, "Backtest completed with settings | " + settings.toString());
 
         double totalProfit = 0;
         long totalDays = 0;
@@ -158,9 +160,9 @@ public class BTStatistics {
         for (TradeYearlyStats thisYearStat : yearlyStats) {
             
             double profit = thisYearStat.profit;
-            double profitPercent = thisYearStat.profit / capital * 100;
+            double profitPercent = thisYearStat.profit / thisYearStat.startCapital * 100;
             
-            logger.log(BTLogLvl.BACKTEST, thisYearStat.year + " days: " + thisYearStat.days + 
+            logger.log(BTLogLvl.BT_STATS, thisYearStat.year + " days: " + thisYearStat.days + 
                     " | profit = " + TradeFormatter.toString(profit) + "$ = " + TradeFormatter.toString(profitPercent) + 
                     "% | max DD = " + TradeFormatter.toString(thisYearStat.highestDDproc) + "% (" + thisYearStat.dateOfHighestDD +
                     ") | fees = " + TradeFormatter.toString(thisYearStat.fees) + 
@@ -181,9 +183,9 @@ public class BTStatistics {
             profitSells += thisYearStat.profitSells;
         }
         
-        double profitPercent = totalProfit / capital * 100;
+        double profitPercent = totalProfit / startCapital * 100;
         
-        logger.log(BTLogLvl.BACKTEST, "Total stats" + 
+        logger.log(BTLogLvl.BT_STATS, "Total stats" + 
                     " | profit = " + TradeFormatter.toString(totalProfit) + "$ = " + TradeFormatter.toString(profitPercent) + 
                     "% | max DD = " + TradeFormatter.toString(highestDDproc) + "% (" + dateOfHighestDD +
                     ") | fees = " + TradeFormatter.toString(fees) + 
@@ -192,7 +194,7 @@ public class BTStatistics {
                     "%");
         
         double avgProfitPercent = profitPercent / ((double)totalDays / 252.0);
-        logger.log(BTLogLvl.BACKTEST, "Average yearly profit: " + TradeFormatter.toString(avgProfitPercent) + "%");
+        logger.log(BTLogLvl.BT_STATS, "Average yearly profit: " + TradeFormatter.toString(avgProfitPercent) + "%");
 
         /*logger.log(BTLogLvl.BACKTEST, "TestCompleted. Profit = " + TradeFormatter.toString(equity - capital)
                 + ", succesful = " + TradeFormatter.toString((double) GetThisYearStats().profitSells / (double) GetThisYearStats().totalSells * 100) + "%");

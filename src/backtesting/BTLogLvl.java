@@ -14,6 +14,7 @@ import java.util.logging.Level;
 public class BTLogLvl extends Level {
 
     public static final Level BACKTEST = new BTLogLvl("BACKTEST", 850);
+    public static final Level BT_STATS = new BTLogLvl("BT_STATS", 860);
 
     protected BTLogLvl(String name, int value) {
         super(name, value, null);

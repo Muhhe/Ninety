@@ -125,13 +125,20 @@ public class BackTesterNinety {
                 }
             }
         }
-
+    }
+    
+    private static void SaveSettings(BTSettings settings) {
         BufferedWriter output = null;
         try {            
             Element rootElement = new Element("Settings");
             Document doc = new Document(rootElement);
-            rootElement.setAttribute("start", startDate.toString());
-            rootElement.setAttribute("end", endDate.toString());
+            rootElement.setAttribute("start", settings.startDate.toString());
+            rootElement.setAttribute("end", settings.endDate.toString());
+            
+            rootElement.setAttribute("capital", Double.toString(settings.capital));
+            rootElement.setAttribute("leverage", Double.toString(settings.leverage));
+            
+            rootElement.setAttribute("reinvest", Boolean.toString(settings.reinvest));
 
             XMLOutputter xmlOutput = new XMLOutputter();
 
@@ -262,6 +269,13 @@ public class BackTesterNinety {
             dataMap = LoadBacktestCache(startDate, endDate);
             logger.log(BTLogLvl.BACKTEST, "Data loaded from cache.");
         } else {
+            File dir = new File("backtest/cache/");
+            for(File file: dir.listFiles()) {
+                if (!file.isDirectory()) {
+                    file.delete();
+                }
+            }
+            
             for (String ticker : TickersToTrade.GetTickers()) {
                 CloseData data = LoadTickerData(ticker, startDate, endDate);
                 if (data == null) {
@@ -284,7 +298,6 @@ public class BackTesterNinety {
                 logger.log(BTLogLvl.BACKTEST, "Loaded " + ticker);
             }
         }
-        SaveLoadedData(dataMap, startDate, endDate);
         return dataMap;
     }
 
@@ -307,7 +320,7 @@ public class BackTesterNinety {
         return indicatorsMap;
     }
 
-    public static double RunTest(LocalDate startDate, LocalDate endDate, double capital, double leverage, boolean reinvest) {
+    public static double RunTest(BTSettings settings) {
 
         FilePaths.tradingStatusPathFileInput = "backtest/TradingStatus.xml";
         FilePaths.tradingStatusPathFileInput = "backtest/TradingStatus.xml";
@@ -328,16 +341,18 @@ public class BackTesterNinety {
             logger.warning("Exception: " + e);
         }
 
-        Map<String, CloseData> dataMap = LoadData(startDate, endDate);
+        Map<String, CloseData> dataMap = LoadData(settings.startDate, settings.endDate);
+        SaveLoadedData(dataMap, settings.startDate, settings.endDate);
+        SaveSettings(settings);
         StatusDataForNinety statusData = new StatusDataForNinety();
 
-        statusData.moneyToInvest = capital * leverage;
-        statusData.currentCash = capital;
+        statusData.moneyToInvest = settings.capital * settings.leverage;
+        statusData.currentCash = settings.capital;
         
-        BTStatistics stats = new BTStatistics(capital, reinvest);
+        BTStatistics stats = new BTStatistics(settings.capital, settings.reinvest);
         IBroker broker = new BrokerNoIB();
         
-        logger.log(BTLogLvl.BACKTEST, "Starting test from " + startDate.toString() + " to " + endDate.toString());
+        logger.log(BTLogLvl.BACKTEST, "Starting test from " + settings.startDate.toString() + " to " + settings.endDate.toString());
         logger.log(BTLogLvl.BACKTEST, "Number of used ticker - " + dataMap.size() + " out of " + TickersToTrade.GetTickers().length);
         
         int size = dataMap.entrySet().iterator().next().getValue().adjCloses.length - 199;
@@ -412,13 +427,13 @@ public class BackTesterNinety {
             
             stats.EndDay();
             
-            if (reinvest) {
-                statusData.moneyToInvest = statusData.currentCash * leverage;
+            if (settings.reinvest) {
+                statusData.moneyToInvest = statusData.currentCash * settings.leverage;
             }
         }
         
-        stats.LogStats();
-        logger.log(BTLogLvl.BACKTEST, "Current cash = " + statusData.currentCash + "$");
+        stats.LogStats(settings);
+        logger.log(BTLogLvl.BT_STATS, "Current cash = " + TradeFormatter.toString(statusData.currentCash) + "$");
         
         SaveEquityToCsv(stats.equityList);
 
