@@ -84,7 +84,7 @@ public class NinetyRunner implements Runnable {
         
         if (!NinetyChecker.CheckStockData(stockData, statusData)) {
             logger.severe("Currupted stock data after sell. Exiting trading!");
-            statusData.SaveHeldPositionsToXML();
+            statusData.SaveTradingStatus();
             broker.disconnect();
             return;
         }
@@ -103,7 +103,7 @@ public class NinetyRunner implements Runnable {
         NinetyChecker.CheckHeldPositions(statusData, broker);
         NinetyChecker.CheckCash(statusData, broker);
 
-        statusData.SaveHeldPositionsToXML();
+        statusData.SaveTradingStatus();
 
         logger.info("Trading day finished");
         statusData.PrintStatus();

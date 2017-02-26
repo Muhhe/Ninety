@@ -44,7 +44,7 @@ public class NinetyScheduler {
     public final Semaphore dataMutex = new Semaphore(1);
 
     public NinetyScheduler(IBroker broker) {
-        statusData.ReadHeldPositions();
+        statusData.LoadTradingStatus();
         statusData.PrintStatus();
         
         this.broker = broker;
@@ -59,8 +59,10 @@ public class NinetyScheduler {
         Settings.ReadSettings();
 
         statusData.UpdateCashSettings();
-        statusData.ReadHeldPositions();
+        statusData.LoadTradingStatus();
         statusData.PrintStatus();
+        
+        stockData.ClearData();
     }
 
     public void RunNow() {
@@ -76,7 +78,7 @@ public class NinetyScheduler {
         logger.info("Scheduling for tomorrow!");
         isStartScheduled = true;
         ZonedDateTime tomorrowCheck = TradeTimer.GetNYTimeNow().plusDays(1).with(FIRST_CHECK_TIME);
-        TradeTimer.startTaskAt(tomorrowCheck, this::DoInitialization);
+        TradeTimer.startTaskAt(tomorrowCheck, this::PrepareForTrading);
 
         Duration durationToNextRun = Duration.ofSeconds(TradeTimer.computeTimeFromNowTo(tomorrowCheck));
         
@@ -100,10 +102,10 @@ public class NinetyScheduler {
             logger.info("Starting in " + durationToNextRun.toString());
         }
 
-        TradeTimer.startTaskAt(checkTime, this::DoInitialization);
+        TradeTimer.startTaskAt(checkTime, this::PrepareForTrading);
     }
 
-    public void DoInitialization() {
+    public void PrepareForTrading() {
         boolean isCheckOk = true;
         try {
             NewDayInit();
@@ -159,7 +161,7 @@ public class NinetyScheduler {
             if (!isCheckOk) {
                 logger.severe("Check failed. Scheduling check for next hour.");
 
-                TradeTimer.startTaskAt(TradeTimer.GetNYTimeNow().plusHours(1), this::DoInitialization);
+                TradeTimer.startTaskAt(TradeTimer.GetNYTimeNow().plusHours(1), this::PrepareForTrading);
 
             }
             
@@ -254,6 +256,10 @@ public class NinetyScheduler {
     }
     
     public void AddProfitLossToMail() {
+        if (stockData.indicatorsMap.isEmpty()) { // This happens during no trade days
+            return;
+        }
+        
         MailSender.AddLineToMail("Unrealized profit/loss:");
         
         double totalPL = 0;

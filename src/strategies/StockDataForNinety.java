@@ -271,6 +271,11 @@ public class StockDataForNinety {
         }
         logger.fine("Finished to compute indicators");
     }
+    
+    public void ClearData() {
+        closeDataMap.clear();
+        indicatorsMap.clear();
+    }
 
     public void SaveHistDataToFiles() {
         LocalDate today = TradeTimer.GetLocalDateNow();

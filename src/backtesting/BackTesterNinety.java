@@ -42,8 +42,10 @@ import org.jdom2.output.XMLOutputter;
 import strategies.Ninety;
 import strategies.StatusDataForNinety;
 import test.BrokerNoIB;
+import tradingapp.FilePaths;
 import tradingapp.GlobalConfig;
 import tradingapp.TradeFormatter;
+import tradingapp.TradeTimer;
 
 /**
  *
@@ -62,7 +64,7 @@ public class BackTesterNinety {
     
     public static boolean CheckBacktestSettingsInCache(LocalDate startDate, LocalDate endDate) {
         try {
-            File inputFile = new File("backtestCache/_settings.xml");
+            File inputFile = new File("backtest/cache/_settings.xml");
             
             if (!inputFile.exists()) {
                 return false;
@@ -92,7 +94,7 @@ public class BackTesterNinety {
 
     public static void SaveLoadedData(Map<String, CloseData> dataMap, LocalDate startDate, LocalDate endDate) {
         for (Map.Entry<String, CloseData> entry : dataMap.entrySet()) {
-            File file = new File("backtestCache/" + entry.getKey() + ".txt");
+            File file = new File("backtest/cache/" + entry.getKey() + ".txt");
             File directory = new File(file.getParentFile().getAbsolutePath());
             directory.mkdirs();
             BufferedWriter output = null;
@@ -133,7 +135,7 @@ public class BackTesterNinety {
 
             XMLOutputter xmlOutput = new XMLOutputter();
 
-            File fileSettings = new File("backtestCache/_settings.xml");
+            File fileSettings = new File("backtest/cache/_settings.xml");
             fileSettings.createNewFile();
             FileOutputStream oFile = new FileOutputStream(fileSettings, false);
 
@@ -161,7 +163,7 @@ public class BackTesterNinety {
         for (String ticker : TickersToTrade.GetTickers()) {
             FileReader file = null;
             try {
-                file = new FileReader("backtestCache/" + ticker + ".txt");
+                file = new FileReader("backtest/cache/" + ticker + ".txt");
                 BufferedReader br = new BufferedReader(file);
                 
                 List<LocalDate> dates = new ArrayList<>();
@@ -306,12 +308,33 @@ public class BackTesterNinety {
     }
 
     public static double RunTest(LocalDate startDate, LocalDate endDate, double capital, double leverage, boolean reinvest) {
+
+        FilePaths.tradingStatusPathFileInput = "backtest/TradingStatus.xml";
+        FilePaths.tradingStatusPathFileInput = "backtest/TradingStatus.xml";
+        
+        FilePaths.tradeLogDetailedPathFile = "backtest/TradeLogDetailed.txt";
+        FilePaths.tradeLogPathFile = "backtest/TradeLog.csv";
+        
+        FilePaths.equityPathFile = "backtest/Equity.csv";
+        
+        try {
+            File file = new File(FilePaths.tradeLogDetailedPathFile);
+            file.delete();
+            file = new File(FilePaths.tradeLogPathFile);
+            file.delete();
+            file = new File(FilePaths.equityPathFile);
+            file.delete();
+        } catch (Exception e) {
+            logger.warning("Exception: " + e);
+        }
+
         Map<String, CloseData> dataMap = LoadData(startDate, endDate);
         StatusDataForNinety statusData = new StatusDataForNinety();
-        
+
         statusData.moneyToInvest = capital * leverage;
+        statusData.currentCash = capital;
         
-        BTStatistics stats = new BTStatistics(capital);
+        BTStatistics stats = new BTStatistics(capital, reinvest);
         IBroker broker = new BrokerNoIB();
         
         logger.log(BTLogLvl.BACKTEST, "Starting test from " + startDate.toString() + " to " + endDate.toString());
@@ -323,19 +346,21 @@ public class BackTesterNinety {
             int testingDayInx = size - 1 - dayInx;
             
             LocalDate date = dataMap.entrySet().iterator().next().getValue().dates[testingDayInx];
+            TradeTimer.SetToday(date);
+            
             logger.log(BTLogLvl.BACKTEST, "Starting to compute day " + date.toString() + ", day: " + dayInx + "/" + (size-1) + ". Equity so far = " + TradeFormatter.toString(stats.equity));
             
             for (String ticker : dataMap.keySet()) {
                 CloseData data = dataMap.get(ticker);
                 if (data == null) {
                     logger.warning("Data for " + ticker + " are null.");
-                    dataMap.remove(ticker);
+                    //dataMap.remove(ticker);
                     continue;
                 }
                 
                 if (data.dates.length != (size + 199)) {
                     logger.warning("Data for ticker " + ticker + " have only " + data.dates.length + " entries out of " + (size + 199));
-                    dataMap.remove(ticker);
+                    //dataMap.remove(ticker);
                     continue;
                 }
                 
@@ -344,7 +369,7 @@ public class BackTesterNinety {
                 }
             }
             
-            stats.StartDay(date, reinvest);
+            stats.StartDay(date);
             
             Map<String, StockIndicatorsForNinety> indicatorsMap = CalulateIndicators(dataMap, testingDayInx);
                         
@@ -357,7 +382,7 @@ public class BackTesterNinety {
             for (OrderStatus orderStatus : broker.GetOrderStatuses().values()) {
                 double profit = statusData.heldStocks.get(orderStatus.order.tickerSymbol).CalculateProfitIfSold(orderStatus.fillPrice);
                 
-                stats.AddSell(profit, date);
+                stats.AddSell(profit, orderStatus.filled, date);
                 
                 statusData.UpdateHeldByOrderStatus(orderStatus);
             }
@@ -369,21 +394,23 @@ public class BackTesterNinety {
             if (toBuy != null) {
                 broker.PlaceOrder(toBuy);
                 remainingPortions--;
-                
-                stats.addBuy();
             }
             
             List<TradeOrder> toBuyMore = Ninety.computeStocksToBuyMore(indicatorsMap, statusData, remainingPortions);
             for (TradeOrder tradeOrder : toBuyMore) {
                 broker.PlaceOrder(tradeOrder);
-                
-                stats.addBuy();
             }
             
             for (OrderStatus orderStatus : broker.GetOrderStatuses().values()) {
                 statusData.UpdateHeldByOrderStatus(orderStatus);
+                
+                stats.addBuy(orderStatus.filled);
             }
             broker.clearOrderMaps();
+            
+            statusData.UpdateEquityFile();
+            
+            stats.EndDay();
             
             if (reinvest) {
                 statusData.moneyToInvest = statusData.currentCash * leverage;
@@ -402,7 +429,7 @@ public class BackTesterNinety {
         
         logger.log(BTLogLvl.BACKTEST, "Saving equity to CSV");
         
-        File file = new File("backtestCache/_equity.csv");
+        File file = new File("backtest/cache/_equity.csv");
         File directory = new File(file.getParentFile().getAbsolutePath());
         directory.mkdirs();
         BufferedWriter output = null;

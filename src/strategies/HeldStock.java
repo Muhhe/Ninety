@@ -5,6 +5,7 @@
  */
 package strategies;
 
+import static java.lang.Double.max;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -118,5 +119,14 @@ public class HeldStock {
             return 0;
         }
         return purchases.get(purchases.size() - 1).priceForOne;
+    }
+
+    double GetTotalFeesPaid() {
+        double fees = 0;
+        for (StockPurchase purchase : purchases) {
+            fees += StatusDataForNinety.GetOrderFee(purchase.position);
+        }
+        fees += StatusDataForNinety.GetOrderFee(GetPosition());
+        return fees;
     }
 }

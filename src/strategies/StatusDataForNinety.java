@@ -13,7 +13,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.time.LocalDate;
+import static java.lang.Double.max;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +44,11 @@ public class StatusDataForNinety {
     public Map<String, HeldStock> heldStocks = new HashMap<>();
     public double moneyToInvest = 40000.0;
     public double currentCash = 20000.0;
+    public double currentFees = 0;
+    
+    public static double GetOrderFee(int position) {
+        return max(1.0, position * 0.005);
+    }
     
     public void UpdateHeldByOrderStatus(OrderStatus order) {
         HeldStock held = heldStocks.get(order.order.tickerSymbol);
@@ -71,7 +76,7 @@ public class StatusDataForNinety {
             held.purchases.add(purchase);
 
             heldStocks.put(held.tickerSymbol, held);
-            CountInOrderFee();
+            CountInOrderFee(order.filled);
             logger.finer("New stock added: " + held.toString());
             
             MailSender.AddLineToMail("OPEN new - " + held.tickerSymbol +
@@ -92,7 +97,7 @@ public class StatusDataForNinety {
 
             heldStocks.remove(held.tickerSymbol);
             CountInProfit(profit);
-            CountInOrderFee();
+            CountInOrderFee(order.filled);
             
             logger.info("Stock removed - profit: " + TradeFormatter.toString(profit) + " = " + TradeFormatter.toString(profitPercent) + "%, " + order.toString());
             
@@ -117,7 +122,7 @@ public class StatusDataForNinety {
             purchase.priceForOne = order.fillPrice;
 
             held.purchases.add(purchase);
-            CountInOrderFee();
+            CountInOrderFee(order.filled);
             logger.fine("More stock bought - " + held.toString());
             
             MailSender.AddLineToMail("SCALE up - " + held.tickerSymbol +
@@ -127,13 +132,14 @@ public class StatusDataForNinety {
         }
     }
 
-    public void SaveHeldPositionsToXML() {
+    public void SaveTradingStatus() {
         try {
             Element rootElement = new Element("status");
             Document doc = new Document(rootElement);
             
             Element moneyElement = new Element("money");
             moneyElement.setAttribute("currentCash", TradeFormatter.toString(currentCash));
+            moneyElement.setAttribute("currentFees", TradeFormatter.toString(currentFees));
             rootElement.addContent(moneyElement);
             
             Element heldPosElement = new Element("heldPositions");
@@ -158,7 +164,7 @@ public class StatusDataForNinety {
         }
     }
 
-    public void ReadHeldPositions() {
+    public void LoadTradingStatus() {
 
         heldStocks.clear();
         try {
@@ -172,6 +178,9 @@ public class StatusDataForNinety {
             
             Attribute attribute = moneyElement.getAttribute("currentCash");
             currentCash = attribute.getDoubleValue();
+            
+            attribute = moneyElement.getAttribute("currentFees");
+            currentFees = attribute.getDoubleValue();
             
             List<Element> heldStocksElements = rootElement.getChild("heldPositions").getChildren();
 
@@ -222,15 +231,17 @@ public class StatusDataForNinety {
         }
     }
 
-    void CountInProfit(double profit) {
+    private void CountInProfit(double profit) {
         currentCash += profit;
     }
 
-    void CountInOrderFee() {
-        currentCash -= 1.0;
+    private void CountInOrderFee(int position) {
+        double fee = GetOrderFee(position);
+        currentCash -= fee;
+        currentFees += fee;
     }
     
-    void UpdateEquityFile() {
+    public void UpdateEquityFile() {
         Writer writer = null;
         try {
             File equityFile = new File(FilePaths.equityPathFile);
@@ -284,11 +295,12 @@ public class StatusDataForNinety {
             writer.append(TradeTimer.GetLocalDateNow().toString() + ",");
             writer.append(held.purchases.get(0).date + ",");
             writer.append(held.tickerSymbol + ",");
-            writer.append(profit + ",");
-            writer.append(profitPercent + ",");
+            writer.append(TradeFormatter.toString(profit) + ",");
+            writer.append(TradeFormatter.toString(profitPercent) + ",");
             writer.append(held.GetPortions() + ",");
-            writer.append(held.GetTotalPricePaid() + ",");
-            writer.append((held.purchases.size() + 1) + "\r\n");
+            writer.append(TradeFormatter.toString(held.GetTotalPricePaid()) + ",");
+            double fees = held.GetTotalFeesPaid();
+            writer.append(TradeFormatter.toString(fees) + "\r\n");
             
             logger.finer("Updated close trade log file.");
         } catch (FileNotFoundException ex) {
@@ -336,7 +348,7 @@ public class StatusDataForNinety {
             writer.append("Position: " + held.GetPosition()+ ", ");
             writer.append("Profit: " + TradeFormatter.toString(profit) + "$, = " + TradeFormatter.toString(profitPercent) + "%, ");
             writer.append("Portions: " + held.GetPortions() + ",");
-            writer.append("Fees: " + (held.purchases.size() + 1) + "$\r\n\r\n");
+            writer.append("Fees: " + held.GetTotalFeesPaid() + "$\r\n\r\n");
             
             logger.finer("Updated detailed trade log file.");
         } catch (FileNotFoundException ex) {

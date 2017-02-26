@@ -10,6 +10,7 @@ import data.DataGetterHistYahoo;
 import java.time.LocalDate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import tradingapp.FilePaths;
 import tradingapp.GlobalConfig;
 import tradingapp.TextAreaLogHandler;
 
@@ -74,11 +75,11 @@ public class Backtester extends javax.swing.JFrame {
 
         jLabel1.setText("From");
 
-        fromBTField.setText("2013-09-01");
+        fromBTField.setText("2013-01-01");
 
         jLabel2.setText("To");
 
-        toBTField.setText("2016-08-01");
+        toBTField.setText("2017-02-25");
 
         backTestButton.setText("RunBacktest");
         backTestButton.addActionListener(new java.awt.event.ActionListener() {
@@ -189,6 +190,15 @@ public class Backtester extends javax.swing.JFrame {
         
         double capital = Double.parseDouble(capitalField.getText());
         double leverage = Double.parseDouble(leverageField.getText());
+        
+        FilePaths.tradingStatusPathFileInput = "backtest/TradingStatus.xml";
+        FilePaths.tradingStatusPathFileInput = "backtest/TradingStatus.xml";
+        
+        FilePaths.tradeLogDetailedPathFile = "backtest/TradeLogDetailed.txt";
+        FilePaths.tradeLogPathFile = "backtest/TradeLog.csv";
+        
+        FilePaths.equityPathFile = "backtest/Equity.csv";
+        FilePaths.tickerListPathFile = "backtest/tickerList.txt";
 
         new Thread(() -> {
             BackTesterNinety.RunTest(start, end, capital, leverage, reinvestCheckBox.isSelected());
