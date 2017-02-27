@@ -56,7 +56,7 @@ public class TestPlatform extends javax.swing.JFrame {
 
         });
         
-        TradeTimer.SetToday(LocalDate.of(2017, 2, 17));
+        //TradeTimer.SetToday(LocalDate.of(2017, 2, 17));
 
         TradeLogger.getInstance().initializeTextAreas(logArea, Level.INFO, fineLogArea, Level.FINEST, commArea, Level.FINEST);
         
@@ -420,6 +420,8 @@ public class TestPlatform extends javax.swing.JFrame {
         IDataGetterHist getterY = new DataGetterHistYahoo();
         IDataGetterHist getterQ = new DataGetterHistQuandl();
         
+        TradeTimer.SetToday(LocalDate.now());
+        
         int count = 200;
         CloseData dataY = getterY.readAdjCloseData(TradeTimer.GetLocalDateNow(), ticker, count, false);
         CloseData dataQ = getterQ.readAdjCloseData(TradeTimer.GetLocalDateNow(), ticker, count, false);
@@ -450,8 +452,8 @@ public class TestPlatform extends javax.swing.JFrame {
         
         avgDiff /= count;
         
-        logger.info("Compared hist getters " + getterY.getName() + " and " + getterQ.getName() + 
-                ". Max diff is " + TradeFormatter.toString(highestDiff) + "%, avg diff is " + TradeFormatter.toString(avgDiff) + "%.");
+        logger.info("Compared hist getters " + getterY.getName() + " and " + getterQ.getName() + " for ticket '" + ticker +
+                "'. Max diff is " + TradeFormatter.toString(highestDiff) + "%, avg diff is " + TradeFormatter.toString(avgDiff) + "%.");
         
         double rsiY = IndicatorCalculator.RSI(dataY.adjCloses);
         double rsiQ = IndicatorCalculator.RSI(dataQ.adjCloses);

@@ -162,10 +162,9 @@ public class NinetyScheduler {
                 logger.severe("Check failed. Scheduling check for next hour.");
 
                 TradeTimer.startTaskAt(TradeTimer.GetNYTimeNow().plusHours(1), this::PrepareForTrading);
-
-            }
-            
-            if (!MailSender.SendErrors()) {
+                MailSender.SendErrors();
+            } else {
+                MailSender.SendErrors();
                 MailSender.AddLineToMail("Check complete");
                 AddProfitLossToMail();
                 MailSender.SendCheckResult();
@@ -260,7 +259,23 @@ public class NinetyScheduler {
             return;
         }
         
+        int heldAboveSMA200 = 0;
+        for (StockIndicatorsForNinety inds : stockData.indicatorsMap.values()) {
+            if (inds.actValue > inds.sma200) {
+                heldAboveSMA200++;
+            }
+        }
+        
+        double heldAboveSMA200Percent = (double) heldAboveSMA200 / stockData.indicatorsMap.size() * 100.0;
+        
+        String strTickersAboveSMA200 = "Tickers with actual value above SMA200: " + heldAboveSMA200 + "/" + stockData.indicatorsMap.size() 
+                + " = " + TradeFormatter.toString(heldAboveSMA200Percent) + "%";
+        
+        MailSender.AddLineToMail(strTickersAboveSMA200);
+        logger.info(strTickersAboveSMA200);
+        
         MailSender.AddLineToMail("Unrealized profit/loss:");
+        logger.info("Unrealized profit/loss:");
         
         double totalPL = 0;
         for (HeldStock held : statusData.heldStocks.values()) {
@@ -274,14 +289,21 @@ public class NinetyScheduler {
             
             totalPL += profit;
             
-            MailSender.AddLineToMail(held.tickerSymbol + 
+            String strHeldStats = held.tickerSymbol + 
                     ": " + TradeFormatter.toString(profit) + "$ = " + TradeFormatter.toString(profitPercent) + 
                     "%. Last buy value: " + TradeFormatter.toString(held.GetLastBuyValue()) + 
                     ", actual value: " + TradeFormatter.toString(actValue) + 
                     ", SMA5: " + TradeFormatter.toString(indicators.sma5) +
-                    ", portions: " + held.GetPortions());
+                    ", portions: " + held.GetPortions();
+            
+            MailSender.AddLineToMail(strHeldStats);
+            logger.info(strHeldStats);
         }
         
-        MailSender.AddLineToMail("Total unrealized profit/loss: " + TradeFormatter.toString(totalPL) + "$ = " + TradeFormatter.toString(totalPL / Settings.investCash * 100) + "%");
+        String strTotalPL = "Total unrealized profit/loss: " + TradeFormatter.toString(totalPL) 
+                + "$ = " + TradeFormatter.toString(totalPL / Settings.investCash * 100) + "%";
+        
+        MailSender.AddLineToMail(strTotalPL);
+        logger.info(strTotalPL);
     }
 }

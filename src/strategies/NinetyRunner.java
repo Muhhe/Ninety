@@ -52,7 +52,7 @@ public class NinetyRunner implements Runnable {
 
         stockData.SubscribeRealtimeData(broker);
         try {
-            Thread.sleep(1000);
+            Thread.sleep(5000);
         } catch (InterruptedException ex) {
         }
         

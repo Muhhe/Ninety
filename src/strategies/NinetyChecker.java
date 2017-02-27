@@ -109,7 +109,7 @@ public class NinetyChecker {
         double availableCashDiff = broker.GetAccountSummary().availableFunds - availableCash;
         double availableCashDiffPercent = abs(availableCashDiff / availableCash * 100);
 
-        if (availableCashDiff < 0) {
+        if ((availableCashDiffPercent > 5.0) && (availableCashDiff < 0)) {
             logger.warning("Difference between saved available cash and available funds on IB is " + TradeFormatter.toString(availableCashDiff)
                     + "$ = " + TradeFormatter.toString(availableCashDiffPercent) + "%");
         } else {

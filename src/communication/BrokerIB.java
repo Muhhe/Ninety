@@ -62,13 +62,11 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
     public synchronized boolean connect() {
         if( !connected ) {
             logger.fine("Connecting to IB.");
-            loggerComm.fine("Connecting to IB.");
             ibClientSocket.eConnect(null, port, clientId );
             connectionLatch = new CountDownLatch(1);
             try {
                 if (!connectionLatch.await(5, TimeUnit.SECONDS) || !connected) {
                     logger.severe("Cannot connect to IB");
-                    loggerComm.severe("Cannot connect to IB");
                     return false;
                 }
             } catch (InterruptedException ex) {
@@ -102,6 +100,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
         connected = false;
         accountSummarySubscribed = false;
         clearOrderMaps();
+        realtimeData.ClearMaps();
         connectionLatch.countDown();    // if connection fails
     }
     
@@ -191,17 +190,21 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
         loggerComm.finer("OrderStatus(): orderId: " + orderId + " Status: " + status + " filled: " + filled + " remaining: " + remaining + " avgFillPrice: " + avgFillPrice + " permId: " + permId + " parentId: " + parentId + " lastFillePrice: " + lastFillPrice + " clientId: " + clientId + " whyHeld: " + whyHeld);
         
         OrderStatus orderStatus = orderStatusMap.get(orderId);
-
+        
         if (orderStatus == null) {
-            loggerComm.severe("Open Order with ID: " + orderId + " not found");
+            if (OrderStatus.getOrderStatus(status)  == OrderStatus.Status.FILLED) {
+                loggerComm.info("Open Order with ID: " + orderId + " not found");
+            } else {
+                loggerComm.severe("Open Order with ID: " + orderId + " not found");
+            }
             return;
         }
+        
+        orderStatus.status = OrderStatus.getOrderStatus(status);
 
         orderStatus.filled = filled;
         orderStatus.remaining = remaining;
         orderStatus.fillPrice = avgFillPrice;
-        
-        orderStatus.status = OrderStatus.getOrderStatus(status);
 
         if (orderStatus.status == OrderStatus.Status.FILLED) {
             orderStatus.timestampFilled = TradeTimer.GetNYTimeNow();
