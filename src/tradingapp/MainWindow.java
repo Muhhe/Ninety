@@ -28,7 +28,7 @@ import strategies.StockPurchase;
  */
 public class MainWindow extends javax.swing.JFrame {
 
-    public final static String LOGGER_COMM_NAME = "CommLogger";
+    public final static String LOGGER_COMM_NAME = "COMM";
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     NinetyScheduler ninetyScheduler;

@@ -162,10 +162,9 @@ public class NinetyScheduler {
                 logger.severe("Check failed. Scheduling check for next hour.");
 
                 TradeTimer.startTaskAt(TradeTimer.GetNYTimeNow().plusHours(1), this::PrepareForTrading);
-
-            }
-            
-            if (!MailSender.SendErrors()) {
+                MailSender.SendErrors();
+            } else {
+                MailSender.SendErrors();
                 MailSender.AddLineToMail("Check complete");
                 AddProfitLossToMail();
                 MailSender.SendCheckResult();

@@ -60,7 +60,7 @@ public class TradeLogger {
         logger.addHandler(textHandlerFine);
 
         loggerComm.setLevel(Level.ALL);
-        TextAreaLogHandler textHandlerComm = new TextAreaLogHandler(comm, comLvl, Level.SEVERE,false);
+        TextAreaLogHandler textHandlerComm = new TextAreaLogHandler(comm, comLvl, Level.SEVERE, true);
         loggerComm.addHandler(textHandlerComm);
         
         logger.fine("Logger areas initialized");

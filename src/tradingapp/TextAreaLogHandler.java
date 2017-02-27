@@ -52,6 +52,11 @@ public class TextAreaLogHandler extends Handler {
             if (level >= Level.WARNING.intValue()) {
                 msg.append("[" + record.getLevel().getName() + "] ");
             }
+            
+            String loggerName = record.getLoggerName();
+            if (loggerName != null && loggerName.equals(MainWindow.LOGGER_COMM_NAME)) {
+                msg.append("(" + loggerName + ") - ");
+            }
 
             msg.append(record.getMessage());
 

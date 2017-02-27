@@ -346,9 +346,9 @@ public class StatusDataForNinety {
             writer.append("Ticker: " + held.tickerSymbol + ", ");
             writer.append("Price: " + TradeFormatter.toString(order.fillPrice) + ", ");
             writer.append("Position: " + held.GetPosition()+ ", ");
-            writer.append("Profit: " + TradeFormatter.toString(profit) + "$, = " + TradeFormatter.toString(profitPercent) + "%, ");
-            writer.append("Portions: " + held.GetPortions() + ",");
-            writer.append("Fees: " + held.GetTotalFeesPaid() + "$\r\n\r\n");
+            writer.append("Profit: " + TradeFormatter.toString(profit) + "$ = " + TradeFormatter.toString(profitPercent) + "%, ");
+            writer.append("Portions: " + held.GetPortions() + ", ");
+            writer.append("Fees: " + TradeFormatter.toString(held.GetTotalFeesPaid()) + "$\r\n\r\n");
             
             logger.finer("Updated detailed trade log file.");
         } catch (FileNotFoundException ex) {
