@@ -59,7 +59,7 @@ public class TradeLogger {
         TextAreaLogHandler textHandlerFine = new TextAreaLogHandler(fine, fineLvl, Level.SEVERE, false);
         logger.addHandler(textHandlerFine);
 
-        loggerComm.setLevel(Level.FINE);
+        loggerComm.setLevel(Level.ALL);
         TextAreaLogHandler textHandlerComm = new TextAreaLogHandler(comm, comLvl, Level.SEVERE,false);
         loggerComm.addHandler(textHandlerComm);
         
@@ -86,12 +86,12 @@ public class TradeLogger {
             m_infoLogFile = new FileHandler(pathDir + "Log.txt", true);
             m_infoLogFile.setFormatter(formatterSimple);
             logger.addHandler(m_infoLogFile);
-            m_infoLogFile.setLevel(Level.INFO);
+            m_infoLogFile.setLevel(Level.FINE);
 
             m_commLogFile = new FileHandler(pathDir + "LogComm.txt", true);
             m_commLogFile.setFormatter(formatterSimple);
             loggerComm.addHandler(m_commLogFile);
-            m_infoLogFile.setLevel(Level.FINE);
+            m_commLogFile.setLevel(Level.FINER);
             
             m_detailedLogFile = new FileHandler(pathDir + "LogDetailed.txt", true);
             m_detailedLogFile.setFormatter(formatterDetailed);
