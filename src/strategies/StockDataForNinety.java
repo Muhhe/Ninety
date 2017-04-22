@@ -91,7 +91,7 @@ public class StockDataForNinety {
                     CloseData data = dataGetter.readAdjCloseData(TradeTimer.GetLastTradingDay(lastTradingDay.minusDays(1)), ticker, 200, true);
                     if (data == null) {
                         logger.warning("Hist data from " + dataGetter.getName() + " for " + ticker + " are null.");
-                        failedHist = false;
+                        failedHist = true;
                         continue;
                     }
 

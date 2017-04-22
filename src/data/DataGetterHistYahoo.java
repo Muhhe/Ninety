@@ -104,6 +104,7 @@ public class DataGetterHistYahoo implements IDataGetterHist {
             
             if (daysToRead != -1 && daysToRead != totalCount) {
                 logger.warning("Loading " + tickerSymbol + " from " + getName() + " failed. Read only " + totalCount + " out of " + daysToRead);
+                return null;
             }
 
         } catch (Exception ex) {
