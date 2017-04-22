@@ -11,6 +11,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import tradingapp.MailSender;
+import tradingapp.TradeFormatter;
 import tradingapp.TradeOrder;
 
 /**
@@ -151,6 +153,8 @@ public class NinetyRunner implements Runnable {
     // TODO: zlepsit design
     private void ProcessSubmittedOrders() {
         
+        double realizedPL = 0;
+        
         for (Iterator<Map.Entry<Integer, OrderStatus>> it = broker.GetOrderStatuses().entrySet().iterator(); it.hasNext();) {
             Map.Entry<Integer, OrderStatus> entry = it.next();
             OrderStatus order = entry.getValue();
@@ -163,9 +167,18 @@ public class NinetyRunner implements Runnable {
 
             logger.info("Order closed - " + order.toString());
             statusData.UpdateHeldByOrderStatus(order);
+            
+            if (order.order.orderType == TradeOrder.OrderType.SELL) {
+                HeldStock held = statusData.heldStocks.get(order.order.tickerSymbol);
+                realizedPL += held.CalculateProfitIfSold(order.fillPrice);
+            }
 
             it.remove();
         }
+        
+        
+        MailSender.AddLineToMail("Today's realized profit/loss: " + TradeFormatter.toString(realizedPL));
+        logger.info("Unrealized profit/loss: " + TradeFormatter.toString(realizedPL));
     }
 
 }
