@@ -5,7 +5,6 @@
  */
 package strategies;
 
-import communication.BrokerIB;
 import communication.IBroker;
 import data.StockIndicatorsForNinety;
 import data.TickersToTrade;
