@@ -165,9 +165,6 @@ public class NinetyRunner implements Runnable {
                 continue;
             }
 
-            logger.info("Order closed - " + order.toString());
-            statusData.UpdateHeldByOrderStatus(order);
-
             if (order.order.orderType == TradeOrder.OrderType.SELL) {
                 HeldStock held = statusData.heldStocks.get(order.order.tickerSymbol);
                 if (held != null) {
@@ -175,11 +172,16 @@ public class NinetyRunner implements Runnable {
                 }
             }
 
+            logger.info("Order closed - " + order.toString());
+            statusData.UpdateHeldByOrderStatus(order);
+
             it.remove();
         }
 
-        MailSender.AddLineToMail("Today's realized profit/loss: " + TradeFormatter.toString(realizedPL));
-        logger.info("Unrealized profit/loss: " + TradeFormatter.toString(realizedPL));
+        if (realizedPL != 0) {
+            MailSender.AddLineToMail("Today's realized profit/loss: " + TradeFormatter.toString(realizedPL));
+            logger.info("Unrealized profit/loss: " + TradeFormatter.toString(realizedPL));
+        }
     }
 
 }
