@@ -102,7 +102,7 @@ public class StatusDataForNinety {
             logger.info("Stock removed - profit: " + TradeFormatter.toString(profit) + " = " + TradeFormatter.toString(profitPercent) + "%, " + order.toString());
             
             MailSender.AddLineToMail("SELL - " + held.tickerSymbol + 
-                    ", profit: " + TradeFormatter.toString(profit) + " = " + TradeFormatter.toString(profitPercent) + 
+                    ", profit: " + TradeFormatter.toString(profit) + "$ = " + TradeFormatter.toString(profitPercent) + 
                     "%, sellPrice: " + TradeFormatter.toString(order.fillPrice) + 
                     ", portions: " + held.GetPortions());
             

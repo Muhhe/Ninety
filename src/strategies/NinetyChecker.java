@@ -166,6 +166,10 @@ public class NinetyChecker {
     }
 
     public static boolean CheckTickerData(CloseData data, String ticker) {
+        if (data == null) {
+            logger.warning("Failed check hist data for: " + ticker + ". Data is NULL.");
+            return false;
+        }
         if ((data.adjCloses.length != 200) || (data.dates.length != 200)) {
             logger.warning("Failed check hist data for: " + ticker + ". Length is not 200 but " + data.adjCloses.length);
             return false;

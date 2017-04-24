@@ -53,7 +53,7 @@ public class DataGetterHistYahoo implements IDataGetterHist {
 
         StringBuilder urlBuilder = new StringBuilder();
 
-        urlBuilder.append("http://ichart.yahoo.com/table.csv?s=");
+        urlBuilder.append("https://ichart.yahoo.com/table.csv?s=");
         urlBuilder.append(tickerSymbol);
         urlBuilder.append("&a=");
         urlBuilder.append(startMonth - 1);

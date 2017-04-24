@@ -32,7 +32,7 @@ public class NinetyScheduler {
 
     private final static LocalTime FIRST_CHECK_TIME = LocalTime.of(10, 0);
     private final static Duration DURATION_BEFORECLOSE_LASTCALL = Duration.ofMinutes(3);
-    private final static Duration DURATION_BEFORECLOSE_RUNSTRATEGY = Duration.ofMinutes(1);
+    private final static Duration DURATION_BEFORECLOSE_RUNSTRATEGY = Duration.ofMinutes(2);
 
     public StockDataForNinety stockData = new StockDataForNinety();
     public StatusDataForNinety statusData = new StatusDataForNinety();

@@ -236,7 +236,7 @@ public class Ninety {
 
                 if (remainingPortions - newPortions < 0) {
                     logger.info("Cannot buy " + newPortions + " more portions of '" + heldStock.tickerSymbol + 
-                            "' because we currently hold " + statusDataFor90.GetBoughtPortions() + "/20 portions.");
+                            "' because we currently hold " + (20 - remainingPortions) + "/20 portions.");
                     continue;
                 }
 
