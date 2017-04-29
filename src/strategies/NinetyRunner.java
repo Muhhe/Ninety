@@ -179,8 +179,8 @@ public class NinetyRunner implements Runnable {
         }
 
         if (realizedPL != 0) {
-            MailSender.AddLineToMail("Today's realized profit/loss: " + TradeFormatter.toString(realizedPL));
-            logger.info("Unrealized profit/loss: " + TradeFormatter.toString(realizedPL));
+            MailSender.AddLineToMail("Today's realized profit/loss: " + TradeFormatter.toString(realizedPL) + "$");
+            logger.info("Today's realized profit/loss: " + TradeFormatter.toString(realizedPL) + "$");
         }
     }
 
