@@ -5,6 +5,8 @@
  */
 package strategies;
 
+import strategy90.HeldStock;
+import strategy90.StockPurchase;
 import org.junit.Test;
 import static org.junit.Assert.*;
 

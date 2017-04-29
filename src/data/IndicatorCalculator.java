@@ -16,14 +16,19 @@ public class IndicatorCalculator {
     private final static Logger logger = Logger.getLogger( Logger.GLOBAL_LOGGER_NAME );
     
     public static double SMA(int count, double[] data) {
+        return SMA(count, data, 0);
+    }
+    
+    public static double SMA(int count, double[] data, int offset) {
         
-        if (data.length < count) {
-            logger.log(Level.SEVERE, "SMA - not enough data: " + count + " vs " + data.length);
+        if (data.length < count + offset) {
+            logger.severe("SMA - not enough data: " + (count + offset) + " vs " + data.length);
+            return 0;
         }
         
         double total = 0;
         for (int i = 0; i < count; i++) {
-            total += data[i];
+            total += data[i + offset];
         }
         
         return total / count;
@@ -32,10 +37,11 @@ public class IndicatorCalculator {
     public static double RSI(double[] values) {
         if (values == null) {
             logger.severe("RSI - null values");
-            return 0;
+            return Double.MAX_VALUE;
         }
         if (values.length < 14) {
-            logger.log(Level.SEVERE, "RSI - not enough data: " + values.length + "/14");
+            logger.severe("RSI - not enough data: " + values.length + "/14");
+            return Double.MAX_VALUE;
         }
         
         double[] ups = new double[14];

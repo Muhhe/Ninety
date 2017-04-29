@@ -17,10 +17,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import strategies.HeldStock;
-import strategies.NinetyChecker;
-import strategies.NinetyScheduler;
-import strategies.StockPurchase;
+import strategy90.HeldStock;
+import strategy90.NinetyChecker;
+import strategy90.NinetyScheduler;
+import strategy90.StockPurchase;
 
 /**
  *

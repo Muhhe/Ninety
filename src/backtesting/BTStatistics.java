@@ -5,14 +5,19 @@
  */
 package backtesting;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
-import strategies.StatusDataForNinety;
+import strategy90.StatusDataForNinety;
 import tradingapp.TradeFormatter;
 
 /**
@@ -35,21 +40,21 @@ public class BTStatistics {
         public int totalSells = 0;
         public int profitSells = 0;
 
-        public double highestequity = 0;
+        public double highestEquity = 0;
         public double highestDDproc = 0;
         public double highestDD = 0;
         public LocalDate dateOfHighestDD = LocalDate.MIN;
         public double fees = 0;
 
         public int year;
-        public int days = 0; //TODO
+        public int days = 0;
         public double startCapital = 0;
 
         public TradeYearlyStats(int year) {
             this.year = year;
         }
     }
-    
+
     public boolean reinvest;
 
     public double startCapital = 0;
@@ -58,10 +63,7 @@ public class BTStatistics {
 
     List<EquityInTime> equityList = new ArrayList<>();
     private LocalDate currentDate = LocalDate.MIN;
-    private LocalDate startDate = LocalDate.MIN;
-    private LocalDate endDate = LocalDate.MIN;
 
-    //public TradeStats globalStats = new TradeStats();
     public List<TradeYearlyStats> yearlyStats = new ArrayList<>();
 
     public BTStatistics(double capital, boolean reinvest) {
@@ -74,23 +76,18 @@ public class BTStatistics {
     public void StartDay(LocalDate date) {
 
         if (currentDate.isEqual(LocalDate.MIN)
-            || currentDate.getYear() != date.getYear()) {
+                || currentDate.getYear() != date.getYear()) {
             if (reinvest) {
                 capital = equity;
             }
             NewYear(date.getYear());
         }
-        
+
         GetThisYearStats().days++;
-        
-        if (currentDate.isEqual(LocalDate.MIN)) {
-            startDate = date;
-        }
-        endDate = date;
 
         currentDate = date;
     }
-    
+
     public void EndDay() {
         EquityInTime eq = new EquityInTime();
         eq.date = currentDate;
@@ -109,32 +106,39 @@ public class BTStatistics {
         return yearlyStats.get(yearlyStats.size() - 1);
     }
 
+    public void UpdateEquity(double newEq, LocalDate date) {
+
+        GetThisYearStats().profit += newEq - equity;
+
+        equity = newEq;
+
+        if (GetThisYearStats().highestEquity < equity) {
+            GetThisYearStats().highestEquity = equity;
+        }
+
+        double dd = ((GetThisYearStats().highestEquity - equity) / (GetThisYearStats().highestEquity)) * 100;
+
+        if (GetThisYearStats().highestDDproc < dd) {
+            GetThisYearStats().highestDD = GetThisYearStats().highestEquity - equity;
+            GetThisYearStats().highestDDproc = dd;
+            GetThisYearStats().dateOfHighestDD = date;
+        }
+    }
+
     public void AddSell(double profit, int position, LocalDate date) {
+        UpdateEquity(equity + profit, date);
+
         double fee = StatusDataForNinety.GetOrderFee(position);
-        
-        profit -= fee;
-        equity += profit;
-        
+
+        GetThisYearStats().profit -= fee;
+        equity -= fee;
+
         GetThisYearStats().fees += fee;
-        GetThisYearStats().profit += profit;
 
         GetThisYearStats().totalSells++;
-        
+
         if (profit > 0) {
             GetThisYearStats().profitSells++;
-
-            if (GetThisYearStats().highestequity < equity) {
-                GetThisYearStats().highestequity = equity;
-            }
-        } else {
-            //double dd = ((GetThisYearStats().highestequity - equity) / (GetThisYearStats().startCapital)) * 100;
-            double dd = ((GetThisYearStats().highestequity - equity) / (GetThisYearStats().highestequity)) * 100;
-
-            if (GetThisYearStats().highestDDproc < dd) {
-                GetThisYearStats().highestDD = GetThisYearStats().highestequity - equity;
-                GetThisYearStats().highestDDproc = dd;
-                GetThisYearStats().dateOfHighestDD = date;
-            }
         }
     }
 
@@ -146,7 +150,7 @@ public class BTStatistics {
     }
 
     public void LogStats(BTSettings settings) {
-        
+
         logger.log(BTLogLvl.BT_STATS, "Backtest completed with settings | " + settings.toString());
 
         double totalProfit = 0;
@@ -156,50 +160,80 @@ public class BTStatistics {
         LocalDate dateOfHighestDD = LocalDate.MIN;
         int totalSells = 0;
         int profitSells = 0;
-        
+
         for (TradeYearlyStats thisYearStat : yearlyStats) {
-            
+
             double profit = thisYearStat.profit;
             double profitPercent = thisYearStat.profit / thisYearStat.startCapital * 100;
-            
-            logger.log(BTLogLvl.BT_STATS, thisYearStat.year + " days: " + thisYearStat.days + 
-                    " | profit = " + TradeFormatter.toString(profit) + "$ = " + TradeFormatter.toString(profitPercent) + 
-                    "% | max DD = " + TradeFormatter.toString(thisYearStat.highestDDproc) + "% (" + thisYearStat.dateOfHighestDD +
-                    ") | fees = " + TradeFormatter.toString(thisYearStat.fees) + 
-                    "$ | closed trades = " + thisYearStat.totalSells + 
-                    " | successful = " + TradeFormatter.toString((double)thisYearStat.profitSells / (double)thisYearStat.totalSells * 100.0) + 
-                    "%");
-            
+
+            logger.log(BTLogLvl.BT_STATS, thisYearStat.year + " days: " + thisYearStat.days
+                    + " | profit = " + TradeFormatter.toString(profit) + "$ = " + TradeFormatter.toString(profitPercent)
+                    + "% | max DD = " + TradeFormatter.toString(thisYearStat.highestDDproc) + "% (" + thisYearStat.dateOfHighestDD
+                    + ") | fees = " + TradeFormatter.toString(thisYearStat.fees)
+                    + "$ | closed trades = " + thisYearStat.totalSells
+                    + " | successful = " + TradeFormatter.toString((double) thisYearStat.profitSells / (double) thisYearStat.totalSells * 100.0)
+                    + "%");
+
             totalProfit += profit;
             totalDays += thisYearStat.days;
             fees += thisYearStat.fees;
-            
+
             if (thisYearStat.highestDDproc > highestDDproc) {
                 highestDDproc = thisYearStat.highestDDproc;
                 dateOfHighestDD = thisYearStat.dateOfHighestDD;
             }
-            
+
             totalSells += thisYearStat.totalSells;
             profitSells += thisYearStat.profitSells;
         }
-        
-        double profitPercent = totalProfit / startCapital * 100;
-        
-        logger.log(BTLogLvl.BT_STATS, "Total stats" + 
-                    " | profit = " + TradeFormatter.toString(totalProfit) + "$ = " + TradeFormatter.toString(profitPercent) + 
-                    "% | max DD = " + TradeFormatter.toString(highestDDproc) + "% (" + dateOfHighestDD +
-                    ") | fees = " + TradeFormatter.toString(fees) + 
-                    "$ | closed trades = " + totalSells + 
-                    " | successful = " + TradeFormatter.toString((double)profitSells / (double)totalSells * 100.0) + 
-                    "%");
-        
-        double avgProfitPercent = profitPercent / ((double)totalDays / 252.0);
-        logger.log(BTLogLvl.BT_STATS, "Average yearly profit: " + TradeFormatter.toString(avgProfitPercent) + "%");
 
-        /*logger.log(BTLogLvl.BACKTEST, "TestCompleted. Profit = " + TradeFormatter.toString(equity - capital)
-                + ", succesful = " + TradeFormatter.toString((double) GetThisYearStats().profitSells / (double) GetThisYearStats().totalSells * 100) + "%");
-        logger.log(BTLogLvl.BACKTEST, "Highest DD = " + TradeFormatter.toString(GetThisYearStats().highestDD) + "$, " + TradeFormatter.toString(GetThisYearStats().highestDDproc)
-                + "%, date = " + GetThisYearStats().dateOfHighestDD.toString());
-        logger.log(BTLogLvl.BACKTEST, "Paid on fees = " + TradeFormatter.toString(GetThisYearStats().fees) + "$");*/
+        double profitPercent = totalProfit / startCapital * 100;
+
+        logger.log(BTLogLvl.BT_STATS, "Total stats"
+                + " | profit = " + TradeFormatter.toString(totalProfit) + "$ = " + TradeFormatter.toString(profitPercent)
+                + "% | max DD = " + TradeFormatter.toString(highestDDproc) + "% (" + dateOfHighestDD
+                + ") | fees = " + TradeFormatter.toString(fees)
+                + "$ | closed trades = " + totalSells
+                + " | successful = " + TradeFormatter.toString((double) profitSells / (double) totalSells * 100.0)
+                + "%");
+
+        double avgProfitPercent = profitPercent / ((double) totalDays / 252.0);
+        logger.log(BTLogLvl.BT_STATS, "Average yearly profit: " + TradeFormatter.toString(avgProfitPercent) + "%");
+    }
+
+    public void SaveEquityToCsv() {
+
+        logger.log(BTLogLvl.BACKTEST, "Saving equity to CSV");
+
+        File file = new File("backtest/cache/_equity.csv");
+        File directory = new File(file.getParentFile().getAbsolutePath());
+        directory.mkdirs();
+        BufferedWriter output = null;
+        try {
+            file.delete();
+            file.createNewFile();
+            output = new BufferedWriter(new FileWriter(file));
+
+            for (BTStatistics.EquityInTime equityInTime : equityList) {
+                double profit = equityInTime.equity;
+                LocalDate date = equityInTime.date;
+
+                output.write(date.toString());
+                output.write(",");
+                output.write(TradeFormatter.toString(profit));
+                output.newLine();
+            }
+
+        } catch (IOException ex) {
+            logger.warning("Cannot create equity CSV");
+        } finally {
+            if (output != null) {
+                try {
+                    output.close();
+                } catch (IOException ex) {
+                    logger.log(Level.SEVERE, null, ex);
+                }
+            }
+        }
     }
 }

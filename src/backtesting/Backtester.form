@@ -46,12 +46,14 @@
                               <Component id="jLabel5" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="leverageField" min="-2" pref="33" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" pref="184" max="-2" attributes="0"/>
+                              <Component id="backTestVIXButton" max="32767" attributes="0"/>
                           </Group>
                           <Component id="reinvestCheckBox" alignment="0" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace pref="309" max="32767" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                          <Component id="backTestButton" max="32767" attributes="0"/>
+                          <Component id="backTest90Button" max="32767" attributes="0"/>
                           <Group type="102" alignment="1" attributes="0">
                               <Component id="jLabel3" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
@@ -72,11 +74,12 @@
                   <Component id="toBTField" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="jLabel1" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="jLabel2" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="backTestButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="backTest90Button" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="capitalField" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="jLabel4" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="jLabel5" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="leverageField" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="backTestVIXButton" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
@@ -128,12 +131,12 @@
         <Property name="text" type="java.lang.String" value="2017-02-25"/>
       </Properties>
     </Component>
-    <Component class="javax.swing.JButton" name="backTestButton">
+    <Component class="javax.swing.JButton" name="backTest90Button">
       <Properties>
-        <Property name="text" type="java.lang.String" value="RunBacktest"/>
+        <Property name="text" type="java.lang.String" value="RunBacktest 90"/>
       </Properties>
       <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="backTestButtonActionPerformed"/>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="backTest90ButtonActionPerformed"/>
       </Events>
     </Component>
     <Component class="javax.swing.JComboBox" name="logLvlComboBox">
@@ -180,6 +183,14 @@
       <Properties>
         <Property name="text" type="java.lang.String" value="Reinvest"/>
       </Properties>
+    </Component>
+    <Component class="javax.swing.JButton" name="backTestVIXButton">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="RunBacktest VIX"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="backTestVIXButtonActionPerformed"/>
+      </Events>
     </Component>
   </SubComponents>
 </Form>

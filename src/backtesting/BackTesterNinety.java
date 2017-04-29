@@ -39,8 +39,8 @@ import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
-import strategies.Ninety;
-import strategies.StatusDataForNinety;
+import strategy90.Ninety;
+import strategy90.StatusDataForNinety;
 import test.BrokerNoIB;
 import tradingapp.FilePaths;
 import tradingapp.GlobalConfig;
@@ -423,7 +423,7 @@ public class BackTesterNinety {
             }
             broker.clearOrderMaps();
             
-            statusData.UpdateEquityFile();
+            //statusData.UpdateEquityFile();
             
             stats.EndDay();
             
@@ -435,44 +435,8 @@ public class BackTesterNinety {
         stats.LogStats(settings);
         logger.log(BTLogLvl.BT_STATS, "Current cash = " + TradeFormatter.toString(statusData.currentCash) + "$");
         
-        SaveEquityToCsv(stats.equityList);
+        stats.SaveEquityToCsv();
 
         return stats.equity;
-    }
-  
-    private static void SaveEquityToCsv(List<EquityInTime> equityList) {
-        
-        logger.log(BTLogLvl.BACKTEST, "Saving equity to CSV");
-        
-        File file = new File("backtest/cache/_equity.csv");
-        File directory = new File(file.getParentFile().getAbsolutePath());
-        directory.mkdirs();
-        BufferedWriter output = null;
-        try {
-            file.delete();
-            file.createNewFile();
-            output = new BufferedWriter(new FileWriter(file));
-
-            for (EquityInTime equityInTime : equityList) {
-                double profit = equityInTime.equity;
-                LocalDate date = equityInTime.date;
-
-                output.write(date.toString());
-                output.write(",");
-                output.write(TradeFormatter.toString(profit));
-                output.newLine();
-            }
-
-        } catch (IOException ex) {
-            logger.warning("Cannot create equity CSV");
-        } finally {
-            if (output != null) {
-                try {
-                    output.close();
-                } catch (IOException ex) {
-                    logger.log(Level.SEVERE, null, ex);
-                }
-            }
-        }
     }
 }

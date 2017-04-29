@@ -7,9 +7,7 @@ package backtesting;
 
 import data.DataGetterHistQuandl;
 import data.DataGetterHistYahoo;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.logging.Level;
@@ -19,8 +17,6 @@ import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
-import org.jdom2.output.Format;
-import org.jdom2.output.XMLOutputter;
 import tradingapp.FilePaths;
 import tradingapp.GlobalConfig;
 import tradingapp.TextAreaLogHandler;
@@ -70,7 +66,7 @@ public final class Backtester extends javax.swing.JFrame {
         fromBTField = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
         toBTField = new javax.swing.JTextField();
-        backTestButton = new javax.swing.JButton();
+        backTest90Button = new javax.swing.JButton();
         logLvlComboBox = new javax.swing.JComboBox<>();
         jLabel3 = new javax.swing.JLabel();
         capitalField = new javax.swing.JTextField();
@@ -78,6 +74,7 @@ public final class Backtester extends javax.swing.JFrame {
         jLabel5 = new javax.swing.JLabel();
         leverageField = new javax.swing.JTextField();
         reinvestCheckBox = new javax.swing.JCheckBox();
+        backTestVIXButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Trading app 90 - BACKTESTER");
@@ -95,10 +92,10 @@ public final class Backtester extends javax.swing.JFrame {
 
         toBTField.setText("2017-02-25");
 
-        backTestButton.setText("RunBacktest");
-        backTestButton.addActionListener(new java.awt.event.ActionListener() {
+        backTest90Button.setText("RunBacktest 90");
+        backTest90Button.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                backTestButtonActionPerformed(evt);
+                backTest90ButtonActionPerformed(evt);
             }
         });
 
@@ -116,6 +113,13 @@ public final class Backtester extends javax.swing.JFrame {
         leverageField.setText("3");
 
         reinvestCheckBox.setText("Reinvest");
+
+        backTestVIXButton.setText("RunBacktest VIX");
+        backTestVIXButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                backTestVIXButtonActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -142,11 +146,13 @@ public final class Backtester extends javax.swing.JFrame {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jLabel5)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(leverageField, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addComponent(leverageField, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(184, 184, 184)
+                                .addComponent(backTestVIXButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                             .addComponent(reinvestCheckBox))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 309, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(backTestButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(backTest90Button, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                                 .addComponent(jLabel3)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -161,11 +167,12 @@ public final class Backtester extends javax.swing.JFrame {
                     .addComponent(toBTField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1)
                     .addComponent(jLabel2)
-                    .addComponent(backTestButton)
+                    .addComponent(backTest90Button)
                     .addComponent(capitalField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel4)
                     .addComponent(jLabel5)
-                    .addComponent(leverageField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(leverageField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(backTestVIXButton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(logLvlComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -179,10 +186,7 @@ public final class Backtester extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void backTestButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backTestButtonActionPerformed
-        //LocalDate start = LocalDate.parse("2015-01-01");
-        //LocalDate end = LocalDate.parse("2016-01-01");
-
+    private void backTest90ButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backTest90ButtonActionPerformed
         Level logLvl;
         int logIndex = logLvlComboBox.getSelectedIndex();
 
@@ -220,7 +224,37 @@ public final class Backtester extends javax.swing.JFrame {
         new Thread(() -> {
             BackTesterNinety.RunTest(new BTSettings(start, end, capital, leverage, reinvestCheckBox.isSelected()));
         }).start();
-    }//GEN-LAST:event_backTestButtonActionPerformed
+    }//GEN-LAST:event_backTest90ButtonActionPerformed
+
+    private void backTestVIXButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backTestVIXButtonActionPerformed
+        Level logLvl;
+        int logIndex = logLvlComboBox.getSelectedIndex();
+
+        switch (logIndex) {
+            case 0:
+                logLvl = BTLogLvl.BACKTEST;
+                break;
+            case 1:
+                logLvl = BTLogLvl.BT_STATS;
+                break;
+            case 2:
+                logLvl = Level.INFO;
+                break;
+            default:
+                logLvl = BTLogLvl.INFO;
+        }
+
+        logger.setLevel(logLvl);
+
+        LocalDate start = LocalDate.parse(fromBTField.getText());
+        LocalDate end = LocalDate.parse(toBTField.getText());
+        
+        double capital = Double.parseDouble(capitalField.getText());
+        double leverage = Double.parseDouble(leverageField.getText());
+        
+        BacktesterVXVrVXMT.runBacktest(new BTSettings(start, end, capital, leverage, reinvestCheckBox.isSelected()));
+        
+    }//GEN-LAST:event_backTestVIXButtonActionPerformed
 
     public void LoadBTSettings() {
         try {
@@ -299,7 +333,8 @@ public final class Backtester extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton backTestButton;
+    private javax.swing.JButton backTest90Button;
+    private javax.swing.JButton backTestVIXButton;
     private javax.swing.JTextField capitalField;
     private javax.swing.JTextField fromBTField;
     private javax.swing.JLabel jLabel1;
