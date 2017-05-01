@@ -85,6 +85,8 @@ public class BacktesterVXVrVXMT {
         LocalDate startDate = LocalDate.of(2010, Month.NOVEMBER, 30);
         CloseData dataVXX = getter.readAdjCloseData(startDate, LocalDate.now(), "VXX");
         CloseData dataXIV = getter.readAdjCloseData(startDate, LocalDate.now(), "XIV");
+        
+        CloseData dataSPY = getter.readAdjCloseData(startDate, LocalDate.now(), "SPY");
 
         CloseData ratioData = getRatioData();
 
@@ -102,6 +104,7 @@ public class BacktesterVXVrVXMT {
 
         int startInx = ratioData.dates.length - 150;
         int xivPos = (int) (settings.capital / dataXIV.adjCloses[startInx]);
+        int spyPos = (int) (settings.capital / dataSPY.adjCloses[startInx]);
 
         for (int i = startInx; i >= 0; i--) {
 
@@ -119,21 +122,27 @@ public class BacktesterVXVrVXMT {
             double actRatio = ratioData.adjCloses[i];
 
             // Jak to teda pocitat??? (actRatio < sma60 && sma60 < 1) nebo (actRatio < sma60 && actRatio < 1) ???
-            if (actRatio < sma60 && actRatio < 1) {
+            if (actRatio < sma60 && sma60 < 1) {
+            //if (actRatio < sma60 && actRatio < 1) {
                 voteForXIV++;
-            } else if (actRatio > sma60 && actRatio > 1) {
+            } else if (actRatio > sma60 && sma60 > 1) {
+            //} else if (actRatio > sma60 && actRatio > 1) {
                 voteForVXX++;
             }
 
-            if (actRatio < sma125 && actRatio < 1) {
+            if (actRatio < sma125 && sma125 < 1) {
+            //if (actRatio < sma125 && actRatio < 1) {
                 voteForXIV++;
-            } else if (actRatio > sma125 && actRatio > 1) {
+            } else if (actRatio > sma125 && sma125 > 1) {
+            //} else if (actRatio > sma125 && actRatio > 1) {
                 voteForVXX++;
             }
 
-            if (actRatio < sma150 && actRatio < 1) {
+            if (actRatio < sma150 && sma150 < 1) {
+            //if (actRatio < sma150 && actRatio < 1) {
                 voteForXIV++;
-            } else if (actRatio > sma150 && actRatio > 1) {
+            } else if (actRatio > sma150 && sma150 > 1) {
+            //} else if (actRatio > sma150 && actRatio > 1) {
                 voteForVXX++;
             }
 
@@ -151,6 +160,7 @@ public class BacktesterVXVrVXMT {
             stats.UpdateEquity(eq, date);
             UpdateEquityFile(eq, "equity.csv", (stat.heldType.toString() + Integer.toString(stat.portion)));
             UpdateEquityFile(xivPos * dataXIV.adjCloses[i], "vix.csv", null);
+            UpdateEquityFile(spyPos * dataSPY.adjCloses[i], "spy.csv", null);
 
             stats.EndDay();
 
