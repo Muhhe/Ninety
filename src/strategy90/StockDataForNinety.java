@@ -7,11 +7,11 @@ package strategy90;
 
 import communication.IBroker;
 import data.CloseData;
-import data.DataGetterActGoogle;
-import data.DataGetterHistQuandl;
-import data.DataGetterHistYahoo;
-import data.IDataGetterAct;
-import data.IDataGetterHist;
+import data.getters.DataGetterActGoogle;
+import data.getters.DataGetterHistQuandl;
+import data.getters.DataGetterHistYahoo;
+import data.getters.IDataGetterAct;
+import data.getters.IDataGetterHist;
 import data.IndicatorCalculator;
 import data.StockIndicatorsForNinety;
 import data.TickersToTrade;

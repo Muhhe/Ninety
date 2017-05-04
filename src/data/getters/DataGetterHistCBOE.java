@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package data;
+package data.getters;
 
+import data.CloseData;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -43,14 +44,6 @@ public class DataGetterHistCBOE implements IDataGetterHist {
         
         ArrayList<Double> arrCloseVals = new ArrayList<>();
         ArrayList<LocalDate> arrDates = new ArrayList<>();
-        
-        /*int startYear = startDate.getYear();
-        int startMonth = startDate.getMonth().getValue();
-        int startDay = startDate.getDayOfMonth();
-        
-        int endYear = endDate.getYear();
-        int endMonth = endDate.getMonth().getValue();
-        int endDay = endDate.getDayOfMonth();*/
 
         StringBuilder urlBuilder = new StringBuilder();
 

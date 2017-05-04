@@ -6,10 +6,11 @@
 package backtesting;
 
 import data.CloseData;
-import data.DataGetterHistCBOE;
-import data.DataGetterHistYahoo;
-import data.IDataGetterHist;
+import data.getters.DataGetterHistCBOE;
+import data.getters.DataGetterHistYahoo;
+import data.getters.IDataGetterHist;
 import data.IndicatorCalculator;
+import data.getters.DataGetterHistFile;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -36,34 +37,37 @@ public class BacktesterVXVrVXMT {
         VXX, XIV, None
     }
 
-    static public CloseData getRatioData() {
-        IDataGetterHist getter = new DataGetterHistCBOE();
+    static public CloseData getRatioData(BTSettings settings) {
+        //IDataGetterHist getter = new DataGetterHistCBOE();
+        IDataGetterHist getter = new DataGetterHistFile("backtest/VolData/");
 
-        LocalDate startDate = LocalDate.of(2010, Month.NOVEMBER, 30);
+        //LocalDate startDate = LocalDate.of(2010, Month.NOVEMBER, 30);
+        //LocalDate endDate = LocalDate.of(2017, Month.APRIL, 28);
 
         logger.info("Loading VXV");
-        CloseData dataVXV = getter.readAdjCloseData(startDate, LocalDate.now(), "VXV");
+        CloseData dataVXV = getter.readAdjCloseData(settings.startDate, settings.endDate, "VXV");
         logger.info("Loading VXMT");
-        CloseData dataVXMT = getter.readAdjCloseData(startDate, LocalDate.now(), "VXMT");
+        CloseData dataVXMT = getter.readAdjCloseData(settings.startDate, settings.endDate, "VXMT");
 
         if (dataVXV.adjCloses.length != dataVXMT.adjCloses.length) {
             logger.warning("data not equal");
         }
 
-        int ratVN1 = 0;
         int dataLength = dataVXV.adjCloses.length;
         double[] ratio = new double[dataLength];
         LocalDate[] dates = new LocalDate[dataLength];
         for (int i = 0; i < dataLength; i++) {
-            ratio[dataLength - 1 - i] = dataVXV.adjCloses[i] / dataVXMT.adjCloses[i];
+            /*ratio[dataLength - 1 - i] = dataVXV.adjCloses[i] / dataVXMT.adjCloses[i];
             dates[dataLength - 1 - i] = dataVXV.dates[i];
 
             if (ratio[dataLength - 1 - i] > 1) {
                 ratVN1++;
-            }
+            }*/
+            
+            ratio[i] = dataVXV.adjCloses[i] / dataVXMT.adjCloses[i];
+            dates[i] = dataVXV.dates[i];
         }
 
-        logger.log(BTLogLvl.BACKTEST, "Ration above 1 " + ratVN1 + " from " + dataLength);
 
         CloseData dataRatio = new CloseData(0);
         dataRatio.adjCloses = ratio;
@@ -81,14 +85,15 @@ public class BacktesterVXVrVXMT {
 
     static public void runBacktest(BTSettings settings) {
 
-        IDataGetterHist getter = new DataGetterHistYahoo();
-        LocalDate startDate = LocalDate.of(2010, Month.NOVEMBER, 30);
-        CloseData dataVXX = getter.readAdjCloseData(startDate, LocalDate.now(), "VXX");
-        CloseData dataXIV = getter.readAdjCloseData(startDate, LocalDate.now(), "XIV");
+        IDataGetterHist getter = new DataGetterHistFile("backtest/VolData/");
+        //LocalDate startDate = LocalDate.of(2010, Month.NOVEMBER, 30);
+        //LocalDate endDate = LocalDate.of(2017, Month.APRIL, 28);
+        CloseData dataVXX = getter.readAdjCloseData(settings.startDate, settings.endDate, "VXX");
+        CloseData dataXIV = getter.readAdjCloseData(settings.startDate, settings.endDate, "XIV");
         
-        CloseData dataSPY = getter.readAdjCloseData(startDate, LocalDate.now(), "SPY");
+        CloseData dataSPY = getter.readAdjCloseData(settings.startDate, settings.endDate, "SPY");
 
-        CloseData ratioData = getRatioData();
+        CloseData ratioData = getRatioData(settings);
 
         logger.log(BTLogLvl.BACKTEST, "Ratio data loaded");
 
@@ -104,7 +109,7 @@ public class BacktesterVXVrVXMT {
 
         int startInx = ratioData.dates.length - 150;
         int xivPos = (int) (settings.capital / dataXIV.adjCloses[startInx]);
-        int spyPos = (int) (settings.capital / dataSPY.adjCloses[startInx]);
+        //int spyPos = (int) (settings.capital / dataSPY.adjCloses[startInx]);
 
         for (int i = startInx; i >= 0; i--) {
 
@@ -122,29 +127,45 @@ public class BacktesterVXVrVXMT {
             double actRatio = ratioData.adjCloses[i];
 
             // Jak to teda pocitat??? (actRatio < sma60 && sma60 < 1) nebo (actRatio < sma60 && actRatio < 1) ???
-            if (actRatio < sma60 && sma60 < 1) {
-            //if (actRatio < sma60 && actRatio < 1) {
+            // QST
+            if (actRatio < sma60 && actRatio < 1) {
+                voteForXIV++;
+            } else if (actRatio > sma60 && actRatio > 1) {
+                voteForVXX++;
+            }
+
+            /*if (actRatio < sma125 && actRatio < 1) {
+                voteForXIV++;
+            } else if (actRatio > sma125 && actRatio > 1) {
+                voteForVXX++;
+            }
+
+            if (actRatio < sma150 && actRatio < 1) {
+                voteForXIV++;
+            } else if (actRatio > sma150 && actRatio > 1) {
+                voteForVXX++;
+            }*/
+            
+            //VMS
+            /*if (actRatio < sma60 && sma60 < 1) {
                 voteForXIV++;
             } else if (actRatio > sma60 && sma60 > 1) {
-            //} else if (actRatio > sma60 && actRatio > 1) {
                 voteForVXX++;
             }
 
             if (actRatio < sma125 && sma125 < 1) {
-            //if (actRatio < sma125 && actRatio < 1) {
                 voteForXIV++;
             } else if (actRatio > sma125 && sma125 > 1) {
-            //} else if (actRatio > sma125 && actRatio > 1) {
                 voteForVXX++;
             }
 
             if (actRatio < sma150 && sma150 < 1) {
-            //if (actRatio < sma150 && actRatio < 1) {
                 voteForXIV++;
             } else if (actRatio > sma150 && sma150 > 1) {
-            //} else if (actRatio > sma150 && actRatio > 1) {
                 voteForVXX++;
-            }
+            }*/
+            
+            double voteCount = 1;
 
             double currentValue;
             if (stat.heldType == Signal.XIV) {
@@ -160,7 +181,7 @@ public class BacktesterVXVrVXMT {
             stats.UpdateEquity(eq, date);
             UpdateEquityFile(eq, "equity.csv", (stat.heldType.toString() + Integer.toString(stat.portion)));
             UpdateEquityFile(xivPos * dataXIV.adjCloses[i], "vix.csv", null);
-            UpdateEquityFile(spyPos * dataSPY.adjCloses[i], "spy.csv", null);
+            //UpdateEquityFile(spyPos * dataSPY.adjCloses[i], "spy.csv", null);
 
             stats.EndDay();
 
@@ -184,9 +205,9 @@ public class BacktesterVXVrVXMT {
 
             double onePortionValue;
             if (settings.reinvest) {
-                onePortionValue = eq / 3.0;
+                onePortionValue = eq / voteCount;
             } else {
-                onePortionValue = settings.capital / 3.0;
+                onePortionValue = settings.capital / voteCount;
             }
 
             double selectedValue;
@@ -199,7 +220,7 @@ public class BacktesterVXVrVXMT {
             if (stat.heldType != selectedSignal) {
                 if (stat.heldType != Signal.None) {
 
-                    logger.log(BTLogLvl.BACKTEST, "Change from " + stat.heldType + " to " + selectedSignal + ", por: " + targetPortion);
+                    //logger.log(BTLogLvl.BACKTEST, "Change from " + stat.heldType + " to " + selectedSignal + ", por: " + targetPortion);
 
                     double heldValue;
                     if (stat.heldType == Signal.XIV) {
@@ -223,7 +244,7 @@ public class BacktesterVXVrVXMT {
 
                     }
                 } else {
-                    logger.log(BTLogLvl.BACKTEST, "Buy new " + selectedSignal + ", por: " + targetPortion);
+                    //logger.log(BTLogLvl.BACKTEST, "Buy new " + selectedSignal + ", por: " + targetPortion);
                     int newPos = (int) (onePortionValue * targetPortion / selectedValue);
                     stat.capital -= newPos * selectedValue;
                     stat.position = newPos;
@@ -231,7 +252,7 @@ public class BacktesterVXVrVXMT {
                     stat.portion = targetPortion;
                 }
             } else if (stat.portion != targetPortion) {
-                logger.log(BTLogLvl.BACKTEST, "Modify " + selectedSignal + ", por: " + targetPortion);
+                //logger.log(BTLogLvl.BACKTEST, "Modify " + selectedSignal + ", por: " + targetPortion);
                 int newPos = (int) (onePortionValue * targetPortion / selectedValue);
                 int diffPos = newPos - stat.position;
 

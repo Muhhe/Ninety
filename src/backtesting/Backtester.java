@@ -5,9 +5,11 @@
  */
 package backtesting;
 
-import data.DataGetterHistQuandl;
-import data.DataGetterHistYahoo;
+import data.getters.DataGetterHistQuandl;
+import data.getters.DataGetterHistYahoo;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.logging.Level;
@@ -17,6 +19,8 @@ import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
+import org.jdom2.output.Format;
+import org.jdom2.output.XMLOutputter;
 import tradingapp.FilePaths;
 import tradingapp.GlobalConfig;
 import tradingapp.TextAreaLogHandler;
@@ -48,7 +52,7 @@ public final class Backtester extends javax.swing.JFrame {
         GlobalConfig.AddDataGetterHist(new DataGetterHistYahoo());
         GlobalConfig.AddDataGetterHist(new DataGetterHistQuandl());
         
-        LoadBTSettings();
+        LoadBTSettingsFromFile();
     }
 
     /**
@@ -187,30 +191,7 @@ public final class Backtester extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void backTest90ButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backTest90ButtonActionPerformed
-        Level logLvl;
-        int logIndex = logLvlComboBox.getSelectedIndex();
-
-        switch (logIndex) {
-            case 0:
-                logLvl = BTLogLvl.BACKTEST;
-                break;
-            case 1:
-                logLvl = BTLogLvl.BT_STATS;
-                break;
-            case 2:
-                logLvl = Level.INFO;
-                break;
-            default:
-                logLvl = BTLogLvl.INFO;
-        }
-
-        logger.setLevel(logLvl);
-
-        LocalDate start = LocalDate.parse(fromBTField.getText());
-        LocalDate end = LocalDate.parse(toBTField.getText());
-        
-        double capital = Double.parseDouble(capitalField.getText());
-        double leverage = Double.parseDouble(leverageField.getText());
+        UpdateLogLevel();
         
         FilePaths.tradingStatusPathFileInput = "backtest/TradingStatus.xml";
         FilePaths.tradingStatusPathFileInput = "backtest/TradingStatus.xml";
@@ -221,12 +202,36 @@ public final class Backtester extends javax.swing.JFrame {
         FilePaths.equityPathFile = "backtest/Equity.csv";
         FilePaths.tickerListPathFile = "backtest/tickerList.txt";
 
-        new Thread(() -> {
-            BackTesterNinety.RunTest(new BTSettings(start, end, capital, leverage, reinvestCheckBox.isSelected()));
+        new Thread(() -> {         
+            BTSettings settings = GetBTSettings();
+            BackTesterNinety.RunTest(settings);
+            SaveBTSettings(settings);
         }).start();
     }//GEN-LAST:event_backTest90ButtonActionPerformed
 
     private void backTestVIXButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backTestVIXButtonActionPerformed
+        UpdateLogLevel();
+
+        BTSettings settings = GetBTSettings();
+        BacktesterVXVrVXMT.runBacktest(settings);
+        SaveBTSettings(settings);
+        
+    }//GEN-LAST:event_backTestVIXButtonActionPerformed
+
+    private BTSettings GetBTSettings() {
+        
+        LocalDate start = LocalDate.parse(fromBTField.getText());
+        LocalDate end = LocalDate.parse(toBTField.getText());
+        
+        double capital = Double.parseDouble(capitalField.getText());
+        double leverage = Double.parseDouble(leverageField.getText());
+        
+        BTSettings sett = new BTSettings(start, end, capital, leverage, reinvestCheckBox.isSelected());
+        
+        return sett;
+    }
+    
+    private void UpdateLogLevel() {
         Level logLvl;
         int logIndex = logLvlComboBox.getSelectedIndex();
 
@@ -245,18 +250,9 @@ public final class Backtester extends javax.swing.JFrame {
         }
 
         logger.setLevel(logLvl);
-
-        LocalDate start = LocalDate.parse(fromBTField.getText());
-        LocalDate end = LocalDate.parse(toBTField.getText());
-        
-        double capital = Double.parseDouble(capitalField.getText());
-        double leverage = Double.parseDouble(leverageField.getText());
-        
-        BacktesterVXVrVXMT.runBacktest(new BTSettings(start, end, capital, leverage, reinvestCheckBox.isSelected()));
-        
-    }//GEN-LAST:event_backTestVIXButtonActionPerformed
-
-    public void LoadBTSettings() {
+    }
+    
+    public void LoadBTSettingsFromFile() {
         try {
             File inputFile = new File(FilePaths.backtestSettings);
             
@@ -294,6 +290,41 @@ public final class Backtester extends javax.swing.JFrame {
         } catch (IOException ioe) {
             ioe.printStackTrace();
             logger.severe("Error in loading from XML: IOException.\r\n" + ioe);
+        }
+    }
+    
+    private static void SaveBTSettings(BTSettings settings) {
+        BufferedWriter output = null;
+        try {            
+            Element rootElement = new Element("Settings");
+            Document doc = new Document(rootElement);
+            rootElement.setAttribute("start", settings.startDate.toString());
+            rootElement.setAttribute("end", settings.endDate.toString());
+            
+            rootElement.setAttribute("capital", Double.toString(settings.capital));
+            rootElement.setAttribute("leverage", Double.toString(settings.leverage));
+            
+            rootElement.setAttribute("reinvest", Boolean.toString(settings.reinvest));
+
+            XMLOutputter xmlOutput = new XMLOutputter();
+
+            File fileSettings = new File("backtest/cache/_settings.xml");
+            fileSettings.createNewFile();
+            FileOutputStream oFile = new FileOutputStream(fileSettings, false);
+
+            xmlOutput.setFormat(Format.getPrettyFormat());
+            xmlOutput.output(doc, oFile);
+
+        } catch (IOException ex) {
+            Logger.getLogger(BackTesterNinety.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            if (output != null) {
+                try {
+                    output.close();
+                } catch (IOException ex) {
+                    logger.log(Level.SEVERE, null, ex);
+                }
+            }
         }
     }
     

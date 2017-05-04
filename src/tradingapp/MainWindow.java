@@ -7,10 +7,10 @@ package tradingapp;
 
 import communication.BrokerIB;
 import communication.IBroker;
-import data.DataGetterActGoogle;
-import data.DataGetterActIB;
-import data.DataGetterHistQuandl;
-import data.DataGetterHistYahoo;
+import data.getters.DataGetterActGoogle;
+import data.getters.DataGetterActIB;
+import data.getters.DataGetterHistQuandl;
+import data.getters.DataGetterHistYahoo;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;

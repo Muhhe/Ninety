@@ -7,12 +7,12 @@ package test;
 
 import communication.IBroker;
 import data.CloseData;
-import data.DataGetterActGoogle;
-import data.DataGetterActIB;
-import data.DataGetterHistCBOE;
-import data.DataGetterHistQuandl;
-import data.DataGetterHistYahoo;
-import data.IDataGetterHist;
+import data.getters.DataGetterActGoogle;
+import data.getters.DataGetterActIB;
+import data.getters.DataGetterHistCBOE;
+import data.getters.DataGetterHistQuandl;
+import data.getters.DataGetterHistYahoo;
+import data.getters.IDataGetterHist;
 import data.IndicatorCalculator;
 import static java.lang.Math.abs;
 import java.time.LocalDate;

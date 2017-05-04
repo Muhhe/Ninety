@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package data;
+package data.getters;
 
+import data.CloseData;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -13,7 +14,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.logging.Logger;
-import tradingapp.FilePaths;
 
 /**
  *
@@ -59,6 +59,16 @@ public class DataGetterHistFile implements IDataGetterHist {
 
                 double adjClose = Double.parseDouble(tokens[1]);
                 LocalDate parsedDate = LocalDate.parse(tokens[0], DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                
+                if (parsedDate.compareTo(endDate) > 0) {
+                    continue;
+                }
+                if (parsedDate.compareTo(startDate) < 0) {
+                    break;
+                }
+                //if ((totalCount == 0) && (parsedDate.compareTo(startDate) > 1)) {
+                //    logger.severe("Loading " + tickerSymbol + ": first date loaded: " + parsedDate + " expected " + startDate);
+                //}
 
                 if (totalCount == 0 && skipFirstIndex) {
                     arrDates.add(LocalDate.MIN);

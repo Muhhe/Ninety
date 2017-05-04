@@ -5,11 +5,10 @@
  */
 package backtesting;
 
-import backtesting.BTStatistics.EquityInTime;
 import communication.IBroker;
 import communication.OrderStatus;
 import data.CloseData;
-import data.IDataGetterHist;
+import data.getters.IDataGetterHist;
 import data.IndicatorCalculator;
 import data.StockIndicatorsForNinety;
 import data.TickersToTrade;
@@ -122,41 +121,6 @@ public class BackTesterNinety {
                     } catch (IOException ex) {
                         logger.log(Level.SEVERE, null, ex);
                     }
-                }
-            }
-        }
-    }
-    
-    private static void SaveSettings(BTSettings settings) {
-        BufferedWriter output = null;
-        try {            
-            Element rootElement = new Element("Settings");
-            Document doc = new Document(rootElement);
-            rootElement.setAttribute("start", settings.startDate.toString());
-            rootElement.setAttribute("end", settings.endDate.toString());
-            
-            rootElement.setAttribute("capital", Double.toString(settings.capital));
-            rootElement.setAttribute("leverage", Double.toString(settings.leverage));
-            
-            rootElement.setAttribute("reinvest", Boolean.toString(settings.reinvest));
-
-            XMLOutputter xmlOutput = new XMLOutputter();
-
-            File fileSettings = new File("backtest/cache/_settings.xml");
-            fileSettings.createNewFile();
-            FileOutputStream oFile = new FileOutputStream(fileSettings, false);
-
-            xmlOutput.setFormat(Format.getPrettyFormat());
-            xmlOutput.output(doc, oFile);
-
-        } catch (IOException ex) {
-            Logger.getLogger(BackTesterNinety.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            if (output != null) {
-                try {
-                    output.close();
-                } catch (IOException ex) {
-                    logger.log(Level.SEVERE, null, ex);
                 }
             }
         }
@@ -343,7 +307,6 @@ public class BackTesterNinety {
 
         Map<String, CloseData> dataMap = LoadData(settings.startDate, settings.endDate);
         SaveLoadedData(dataMap, settings.startDate, settings.endDate);
-        SaveSettings(settings);
         StatusDataForNinety statusData = new StatusDataForNinety();
 
         statusData.moneyToInvest = settings.capital * settings.leverage;

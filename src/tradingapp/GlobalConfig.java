@@ -5,8 +5,8 @@
  */
 package tradingapp;
 
-import data.IDataGetterAct;
-import data.IDataGetterHist;
+import data.getters.IDataGetterAct;
+import data.getters.IDataGetterHist;
 import java.util.ArrayList;
 import java.util.List;
 
