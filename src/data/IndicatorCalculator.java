@@ -5,7 +5,6 @@
  */
 package data;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -32,6 +31,27 @@ public class IndicatorCalculator {
         }
         
         return total / count;
+    }
+    
+    public static double EMA(int count, double[] data) {
+        return EMA(count, data, 0);
+    }
+    
+    public static double EMA(int count, double[] data, int offset) {
+        
+        if (data.length < 2*count + offset - 1) {
+            logger.severe("EMA - not enough data: " + (2*count + offset - 1) + " vs " + data.length);
+            return 0;
+        }
+        
+        double k = 2.0 /(double)(count + 1);
+        double lastEMA = SMA(count, data, offset + count - 1);
+        
+        for (int i = count + offset - 2; i >= offset; i--) {
+            lastEMA = (data[i] * k) + lastEMA * (1 - k);
+        }
+        
+        return lastEMA;
     }
     
     public static double RSI(double[] values) {

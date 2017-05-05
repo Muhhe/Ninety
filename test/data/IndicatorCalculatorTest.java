@@ -237,7 +237,7 @@ public class IndicatorCalculatorTest {
             72.441,
             70.988};
         //</editor-fold>
-        
+
         double expResult = 79.371;
         double result = IndicatorCalculator.SMA(count, data);
 
@@ -254,11 +254,53 @@ public class IndicatorCalculatorTest {
             80.65,
             81.13,
             81.75};
-        
+
         double expResult = 80.778;
         double result = IndicatorCalculator.SMA(count, data);
 
         assertEquals(expResult, result, 0.001);
+    }
+
+    @Test
+    public void testEMA() {
+        System.out.println("EMA");
+
+        double[] data = {
+            22.17250,
+            22.40250,
+            23.09760,
+            22.68050,
+            23.32600,
+            23.09760,
+            23.18700,
+            23.65370,
+            23.87220,
+            23.82250,
+            23.63380,
+            23.95160,
+            23.83240,
+            23.75300,
+            24.05190,
+            23.35580,
+            22.61090,
+            22.38160,
+            22.39260,
+            22.15420,
+            22.29330,
+            22.24360,
+            22.43230,
+            22.23370,
+            22.13440,
+            22.18400,
+            22.17410,
+            22.08470,
+            22.19400,
+            22.27340
+        };
+
+        double expResult = 23.2772053411254;
+        double result = IndicatorCalculator.EMA(10, data, 11);
+        assertEquals(expResult, result, 0.0000001);
     }
 
     /**

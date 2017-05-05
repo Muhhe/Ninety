@@ -169,10 +169,10 @@ public class BTStatistics {
             logger.log(BTLogLvl.BT_STATS, thisYearStat.year + " days: " + thisYearStat.days
                     + " | profit = " + TradeFormatter.toString(profit) + "$ = " + TradeFormatter.toString(profitPercent)
                     + "% | max DD = " + TradeFormatter.toString(thisYearStat.highestDDproc) + "% (" + thisYearStat.dateOfHighestDD
-                    + ") | fees = " + TradeFormatter.toString(thisYearStat.fees)
+                    + ") "/*| fees = " + TradeFormatter.toString(thisYearStat.fees)
                     + "$ | closed trades = " + thisYearStat.totalSells
                     + " | successful = " + TradeFormatter.toString((double) thisYearStat.profitSells / (double) thisYearStat.totalSells * 100.0)
-                    + "%");
+                    + "%"*/);
 
             totalProfit += profit;
             totalDays += thisYearStat.days;

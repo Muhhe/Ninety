@@ -23,6 +23,7 @@ import java.time.Month;
 import java.util.logging.Logger;
 import test.TestPlatform;
 import tradingapp.FilePaths;
+import tradingapp.TradeOrder;
 import tradingapp.TradeTimer;
 
 /**
@@ -43,7 +44,6 @@ public class BacktesterVXVrVXMT {
 
         //LocalDate startDate = LocalDate.of(2010, Month.NOVEMBER, 30);
         //LocalDate endDate = LocalDate.of(2017, Month.APRIL, 28);
-
         logger.info("Loading VXV");
         CloseData dataVXV = getter.readAdjCloseData(settings.startDate, settings.endDate, "VXV");
         logger.info("Loading VXMT");
@@ -63,11 +63,10 @@ public class BacktesterVXVrVXMT {
             if (ratio[dataLength - 1 - i] > 1) {
                 ratVN1++;
             }*/
-            
+
             ratio[i] = dataVXV.adjCloses[i] / dataVXMT.adjCloses[i];
             dates[i] = dataVXV.dates[i];
         }
-
 
         CloseData dataRatio = new CloseData(0);
         dataRatio.adjCloses = ratio;
@@ -80,17 +79,72 @@ public class BacktesterVXVrVXMT {
         double capital = 0;
         Signal heldType = Signal.None;
         int position = 0;
-        int portion = 0;
+    }
+
+    static private class NewStatus {
+
+        double ratio = 0;
+        Signal heldType = Signal.None;
+    }
+
+    static private NewStatus CalcStratQST(CloseData ratioData, int index) {
+
+        double actRatio = ratioData.adjCloses[index];
+        //double actRatio = IndicatorCalculator.SMA(3, ratioData.adjCloses, index);
+
+        double[] smas = new double[]{
+            IndicatorCalculator.SMA(60, ratioData.adjCloses, index)
+            //, IndicatorCalculator.SMA(125, ratioData.adjCloses, index)
+            //, IndicatorCalculator.SMA(150, ratioData.adjCloses, index)
+        };
+
+        double[] weights = new double[]{
+            1.0 / smas.length
+            , 1.0 / smas.length
+            , 1.0 / smas.length
+        };
+        
+        double sum = 0;
+        for (double weight : weights) {
+            sum += weight;
+        }
+        
+        assert(sum == 1);
+
+        double voteForXIV = 0;
+        double voteForVXX = 0;
+
+        for (int i = 0; i < smas.length; i++) {
+            if (actRatio < smas[i] && actRatio < 1) {
+                voteForXIV += weights[i];
+            } else if (actRatio > smas[i] && actRatio > 1) {
+                voteForVXX += weights[i];
+            }
+        }
+
+        Signal selectedSignal = Signal.None;
+        double targetPortion = 0;
+        if (voteForVXX > voteForXIV) {
+            selectedSignal = Signal.VXX;
+            targetPortion = voteForVXX;
+        } else if (voteForVXX < voteForXIV) {
+            selectedSignal = Signal.XIV;
+            targetPortion = voteForXIV;
+        }
+
+        NewStatus newStatus = new NewStatus();
+        newStatus.heldType = selectedSignal;
+        newStatus.ratio = targetPortion;
+
+        return newStatus;
     }
 
     static public void runBacktest(BTSettings settings) {
 
         IDataGetterHist getter = new DataGetterHistFile("backtest/VolData/");
-        //LocalDate startDate = LocalDate.of(2010, Month.NOVEMBER, 30);
-        //LocalDate endDate = LocalDate.of(2017, Month.APRIL, 28);
         CloseData dataVXX = getter.readAdjCloseData(settings.startDate, settings.endDate, "VXX");
         CloseData dataXIV = getter.readAdjCloseData(settings.startDate, settings.endDate, "XIV");
-        
+
         CloseData dataSPY = getter.readAdjCloseData(settings.startDate, settings.endDate, "SPY");
 
         CloseData ratioData = getRatioData(settings);
@@ -113,39 +167,10 @@ public class BacktesterVXVrVXMT {
 
         for (int i = startInx; i >= 0; i--) {
 
-            double sma60 = IndicatorCalculator.SMA(60, ratioData.adjCloses, i);
-            double sma125 = IndicatorCalculator.SMA(125, ratioData.adjCloses, i);
-            double sma150 = IndicatorCalculator.SMA(150, ratioData.adjCloses, i);
-
             if (!dataXIV.dates[i].equals(ratioData.dates[i])) {
                 logger.severe("DatesNotEqual!!!!!!!!!!");
             }
 
-            int voteForXIV = 0;
-            int voteForVXX = 0;
-
-            double actRatio = ratioData.adjCloses[i];
-
-            // Jak to teda pocitat??? (actRatio < sma60 && sma60 < 1) nebo (actRatio < sma60 && actRatio < 1) ???
-            // QST
-            if (actRatio < sma60 && actRatio < 1) {
-                voteForXIV++;
-            } else if (actRatio > sma60 && actRatio > 1) {
-                voteForVXX++;
-            }
-
-            /*if (actRatio < sma125 && actRatio < 1) {
-                voteForXIV++;
-            } else if (actRatio > sma125 && actRatio > 1) {
-                voteForVXX++;
-            }
-
-            if (actRatio < sma150 && actRatio < 1) {
-                voteForXIV++;
-            } else if (actRatio > sma150 && actRatio > 1) {
-                voteForVXX++;
-            }*/
-            
             //VMS
             /*if (actRatio < sma60 && sma60 < 1) {
                 voteForXIV++;
@@ -164,9 +189,6 @@ public class BacktesterVXVrVXMT {
             } else if (actRatio > sma150 && sma150 > 1) {
                 voteForVXX++;
             }*/
-            
-            double voteCount = 1;
-
             double currentValue;
             if (stat.heldType == Signal.XIV) {
                 currentValue = dataXIV.adjCloses[i];
@@ -179,7 +201,7 @@ public class BacktesterVXVrVXMT {
             double eq = (stat.capital + stat.position * currentValue);
             stats.StartDay(date);
             stats.UpdateEquity(eq, date);
-            UpdateEquityFile(eq, "equity.csv", (stat.heldType.toString() + Integer.toString(stat.portion)));
+            UpdateEquityFile(eq, "equity.csv", (stat.heldType.toString() /*+ Integer.toString(stat.portion)*/));
             UpdateEquityFile(xivPos * dataXIV.adjCloses[i], "vix.csv", null);
             //UpdateEquityFile(spyPos * dataSPY.adjCloses[i], "spy.csv", null);
 
@@ -189,39 +211,42 @@ public class BacktesterVXVrVXMT {
                 continue;
             }
 
-            Signal selectedSignal;
-            int targetPortion = 0;
-            if (voteForVXX > voteForXIV) {
-                selectedSignal = Signal.VXX;
-                targetPortion = voteForVXX;
-            } else {
-                selectedSignal = Signal.XIV;
-                targetPortion = voteForXIV;
+            NewStatus newStat = CalcStratQST(ratioData, i);
+
+            // Sell all
+            if (stat.heldType != Signal.None) {
+                double heldValue;
+                if (stat.heldType == Signal.XIV) {
+                    heldValue = dataXIV.adjCloses[i - 1];
+                } else {
+                    heldValue = dataVXX.adjCloses[i - 1];
+                }
+
+                stat.capital += stat.position * heldValue;
+                stat.position = 0;
+                stat.heldType = Signal.None;
             }
 
-            if (targetPortion == 0) {
-                selectedSignal = Signal.None;
+            //Buy new
+            if (newStat.heldType != Signal.None) {
+                double newValue;
+                if (newStat.heldType == Signal.XIV) {
+                    newValue = dataXIV.adjCloses[i - 1];
+                } else {
+                    newValue = dataVXX.adjCloses[i - 1];
+                }
+
+                int newPos = (int) (newStat.ratio * stat.capital / newValue);
+                stat.capital -= newPos * newValue;
+                stat.position = newPos;
+                stat.heldType = newStat.heldType;
+
             }
 
-            double onePortionValue;
-            if (settings.reinvest) {
-                onePortionValue = eq / voteCount;
-            } else {
-                onePortionValue = settings.capital / voteCount;
-            }
-
-            double selectedValue;
-            if (selectedSignal == Signal.XIV) {
-                selectedValue = dataXIV.adjCloses[i - 1];
-            } else {
-                selectedValue = dataVXX.adjCloses[i - 1];
-            }
-
-            if (stat.heldType != selectedSignal) {
+            /*if (stat.heldType != selectedSignal) {
                 if (stat.heldType != Signal.None) {
 
                     //logger.log(BTLogLvl.BACKTEST, "Change from " + stat.heldType + " to " + selectedSignal + ", por: " + targetPortion);
-
                     double heldValue;
                     if (stat.heldType == Signal.XIV) {
                         heldValue = dataXIV.adjCloses[i - 1];
@@ -265,7 +290,7 @@ public class BacktesterVXVrVXMT {
                 stat.position = newPos;
                 stat.heldType = selectedSignal;
                 stat.portion = targetPortion;
-            }
+            }*/
         }
 
         stats.LogStats(settings);
