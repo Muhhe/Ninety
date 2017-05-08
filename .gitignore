@@ -9,7 +9,7 @@
 
 *.txt
 *.txt.1
-*.csv
+#*.csv
 *.lck
 private.xml
 _settings.xml
