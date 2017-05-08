@@ -6,6 +6,8 @@
 package tradingapp;
 
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 
 /**
  *
@@ -14,7 +16,7 @@ import java.text.DecimalFormat;
 public class TradeFormatter {
     private static TradeFormatter instance = new TradeFormatter();
     
-    private final DecimalFormat decim = new DecimalFormat("0.00#");
+    private final DecimalFormat decim = new DecimalFormat("0.00#", DecimalFormatSymbols.getInstance(Locale.US));
     
     protected TradeFormatter() {
         // Exists only to defeat instantiation.

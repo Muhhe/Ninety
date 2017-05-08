@@ -7,12 +7,14 @@ package backtesting;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.time.Duration;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -99,6 +101,9 @@ public class BTStatistics {
     private void NewYear(int year) {
         TradeYearlyStats yearStats = new TradeYearlyStats(year);
         yearStats.startCapital = capital;
+        if (!yearlyStats.isEmpty()) {
+            yearStats.highestEquity = GetThisYearStats().highestEquity;
+        }
         yearlyStats.add(yearStats);
     }
 
@@ -154,17 +159,26 @@ public class BTStatistics {
         logger.log(BTLogLvl.BT_STATS, "Backtest completed with settings | " + settings.toString());
 
         double totalProfit = 0;
+        double totalProfitProc = 0;
         long totalDays = 0;
         double fees = 0;
         double highestDDproc = 0;
         LocalDate dateOfHighestDD = LocalDate.MIN;
         int totalSells = 0;
         int profitSells = 0;
+        
+        CreateYearlyStatsFile();
 
         for (TradeYearlyStats thisYearStat : yearlyStats) {
 
             double profit = thisYearStat.profit;
             double profitPercent = thisYearStat.profit / thisYearStat.startCapital * 100;
+            
+            String row = thisYearStat.year + "," + thisYearStat.days
+                    + "," + TradeFormatter.toString(profitPercent)
+                    + "," + TradeFormatter.toString(thisYearStat.highestDDproc) + "," + thisYearStat.dateOfHighestDD;
+            
+            UpdateYearlyStats(row);
 
             logger.log(BTLogLvl.BT_STATS, thisYearStat.year + " days: " + thisYearStat.days
                     + " | profit = " + TradeFormatter.toString(profit) + "$ = " + TradeFormatter.toString(profitPercent)
@@ -175,6 +189,7 @@ public class BTStatistics {
                     + "%"*/);
 
             totalProfit += profit;
+            totalProfitProc += profitPercent / ((double) thisYearStat.days / 252.0);
             totalDays += thisYearStat.days;
             fees += thisYearStat.fees;
 
@@ -197,7 +212,8 @@ public class BTStatistics {
                 + " | successful = " + TradeFormatter.toString((double) profitSells / (double) totalSells * 100.0)
                 + "%");
 
-        double avgProfitPercent = profitPercent / ((double) totalDays / 252.0);
+        //double avgProfitPercent = profitPercent / ((double) totalDays / 252.0);
+        double avgProfitPercent = totalProfitProc / yearlyStats.size();
         logger.log(BTLogLvl.BT_STATS, "Average yearly profit: " + TradeFormatter.toString(avgProfitPercent) + "%");
     }
 
@@ -233,6 +249,57 @@ public class BTStatistics {
                 } catch (IOException ex) {
                     logger.log(Level.SEVERE, null, ex);
                 }
+            }
+        }
+    }
+    
+    static public void CreateYearlyStatsFile() {
+        File file = new File("yearlyStats.csv");
+        file.delete();
+
+        Writer writer = null;
+        try {
+            File equityFile = new File("yearlyStats.csv");
+            equityFile.createNewFile();
+            writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(equityFile, true), "UTF-8"));
+            writer.write("Year, Days, Profit%, MaxDD, Date of maxDD");
+            writer.write("\r\n");
+
+        } catch (FileNotFoundException ex) {
+            logger.severe("Cannot find equity file: " + ex);
+        } catch (IOException ex) {
+            logger.severe("Error updating equity file: " + ex);
+        } finally {
+            try {
+                if (writer != null) {
+                    writer.close();
+                }
+            } catch (IOException ex) {
+                logger.severe("Error updating equity file: " + ex);
+            }
+        }
+    }
+
+    static public void UpdateYearlyStats(String row) {
+        Writer writer = null;
+        try {
+            File equityFile = new File("yearlyStats.csv");
+            equityFile.createNewFile();
+            writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(equityFile, true), "UTF-8"));
+            writer.write(row);
+            writer.write("\r\n");
+
+        } catch (FileNotFoundException ex) {
+            logger.severe("Cannot find equity file: " + ex);
+        } catch (IOException ex) {
+            logger.severe("Error updating equity file: " + ex);
+        } finally {
+            try {
+                if (writer != null) {
+                    writer.close();
+                }
+            } catch (IOException ex) {
+                logger.severe("Error updating equity file: " + ex);
             }
         }
     }
