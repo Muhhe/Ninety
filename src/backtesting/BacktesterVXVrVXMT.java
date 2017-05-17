@@ -110,10 +110,10 @@ public class BacktesterVXVrVXMT {
         };
 
         double[] weights = new double[]{
-            1.0 / smas.length,
-            1.0 / smas.length,
-            1.0 / smas.length
-            //0.6, 0.4
+            //1.0 / smas.length,
+            //1.0 / smas.length,
+            //1.0 / smas.length
+        0.45, 0.35, 0.20
         };
 
         double sum = 0;
@@ -131,6 +131,9 @@ public class BacktesterVXVrVXMT {
                 voteForXIV += weights[i];
             } else if (actRatio > smas[i] && actRatio > 1) {
                 voteForVXX += weights[i];
+                /*if (i == 0) {
+                    voteForVXX = 1;
+                }*/
             }
             /*if (actRatio < smas[i] && smas[i] < 1) {
                 voteForXIV += weights[i];
@@ -142,10 +145,12 @@ public class BacktesterVXVrVXMT {
         Signal selectedSignal = Signal.None;
         double targetPortion = 0;
         if (voteForVXX > voteForXIV) {
-            //selectedSignal = Signal.VXX;
-            //targetPortion = voteForVXX;
-            selectedSignal = Signal.None;
-            targetPortion = 0;
+            selectedSignal = Signal.VXX;
+            targetPortion = voteForVXX;
+            if (voteForVXX < 0.7) {
+                selectedSignal = Signal.None;
+                targetPortion = 0;
+            }
         } else if (voteForVXX < voteForXIV) {
             selectedSignal = Signal.XIV;
             targetPortion = voteForXIV;
@@ -264,21 +269,25 @@ public class BacktesterVXVrVXMT {
                 stat.exposure = 0;
             }
 
-            //Buy new
-            if (newStat.heldType != Signal.None) {
-                double newValue;
-                if (newStat.heldType == Signal.XIV) {
-                    newValue = dataXIV.adjCloses[i - 1];
-                } else {
-                    newValue = dataVXX.adjCloses[i - 1];
+            NewStatus tomorowStat = CalcStrat(ratioData, i - 1);
+            if ((tomorowStat.heldType == newStat.heldType) || (newStat.heldType != Signal.VXX) ){
+
+                //Buy new
+                if (newStat.heldType != Signal.None) {
+                    double newValue;
+                    if (newStat.heldType == Signal.XIV) {
+                        newValue = dataXIV.adjCloses[i - 1];
+                    } else {
+                        newValue = dataVXX.adjCloses[i - 1];
+                    }
+
+                    int newPos = (int) (newStat.ratio * stat.capital / newValue);
+                    stat.capital -= newPos * newValue;
+                    stat.position = newPos;
+                    stat.heldType = newStat.heldType;
+                    stat.exposure = newStat.ratio;
+
                 }
-
-                int newPos = (int) (newStat.ratio * stat.capital / newValue);
-                stat.capital -= newPos * newValue;
-                stat.position = newPos;
-                stat.heldType = newStat.heldType;
-                stat.exposure = newStat.ratio;
-
             }
         }
 
@@ -289,11 +298,11 @@ public class BacktesterVXVrVXMT {
         double totalProfit = profitXIV + profitVXX;
         double profitXIVProc = profitXIV;// / totalProfit * 100;
         double profitVXXProc = profitVXX;// / totalProfit * 100;
-        logger.log(BTLogLvl.BACKTEST, "Profit XIV: " /*+ TradeFormatter.toString(profitXIV) + "$ = " */+ TradeFormatter.toString(profitXIVProc) + 
-                "%, Profit VXX: " /*+ TradeFormatter.toString(profitVXX) + "$ = "*/ + TradeFormatter.toString(profitVXXProc) + "%");
-        
-        double daysXIVproc = (double )daysXIV / startInx * 100.0;
-        double daysVXXproc = (double )daysVXX / startInx * 100.0;
+        logger.log(BTLogLvl.BACKTEST, "Profit XIV: " /*+ TradeFormatter.toString(profitXIV) + "$ = " */ + TradeFormatter.toString(profitXIVProc)
+                + "%, Profit VXX: " /*+ TradeFormatter.toString(profitVXX) + "$ = "*/ + TradeFormatter.toString(profitVXXProc) + "%");
+
+        double daysXIVproc = (double) daysXIV / startInx * 100.0;
+        double daysVXXproc = (double) daysVXX / startInx * 100.0;
         logger.log(BTLogLvl.BACKTEST, "Days in XIV: " + daysXIV + " = " + TradeFormatter.toString(daysXIVproc)
                 + "%, Days in VXX: " + daysVXX + " = " + TradeFormatter.toString(daysVXXproc) + "%, Days total: " + startInx);
     }
