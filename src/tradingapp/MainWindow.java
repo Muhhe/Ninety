@@ -12,15 +12,12 @@ import data.DataGetterActIB;
 import data.DataGetterHistQuandl;
 import data.DataGetterHistYahoo;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import strategies.HeldStock;
 import strategies.NinetyChecker;
 import strategies.NinetyScheduler;
-import strategies.StockPurchase;
 
 /**
  *

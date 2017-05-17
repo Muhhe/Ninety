@@ -173,7 +173,7 @@ public class NinetyScheduler {
 
     public void PrepareData() {
         try {
-            CheckingThread checkThread = CheckingThread.StartNewCheckingThread(Duration.ofMinutes(2), "Failed to prepare data");
+            CheckingThread checkThread = CheckingThread.StartNewCheckingThread(Duration.ofMinutes(5), "Failed to prepare data");
         
             logger.finer("Acquiring lock for LoadingHistData run.");
             dataMutex.acquire();

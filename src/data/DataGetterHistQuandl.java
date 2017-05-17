@@ -104,7 +104,7 @@ public class DataGetterHistQuandl implements IDataGetterHist {
             }
 
         } catch (Exception ex) {
-            logger.log(Level.SEVERE, "Failed to read data from Quandl - '" + tickerSymbol + "'", ex);
+            logger.log(Level.WARNING, "Failed to read data from Quandl - '" + tickerSymbol + "'" + ex);
             return null;
         }
         CloseData retData = new CloseData(0);

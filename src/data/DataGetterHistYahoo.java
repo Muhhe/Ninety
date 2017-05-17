@@ -108,7 +108,7 @@ public class DataGetterHistYahoo implements IDataGetterHist {
             }
 
         } catch (Exception ex) {
-            logger.log(Level.SEVERE, "Failed to read data from Yahoo - '" + tickerSymbol + "'", ex);
+            logger.log(Level.WARNING, "Failed to read data from Yahoo - '" + tickerSymbol + "'" + ex);
             return null;
         }
         CloseData retData = new CloseData(0);
