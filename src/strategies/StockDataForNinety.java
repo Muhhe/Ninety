@@ -7,9 +7,6 @@ package strategies;
 
 import communication.IBroker;
 import data.CloseData;
-import data.DataGetterActGoogle;
-import data.DataGetterHistQuandl;
-import data.DataGetterHistYahoo;
 import data.IDataGetterAct;
 import data.IDataGetterHist;
 import data.IndicatorCalculator;
