@@ -7,7 +7,7 @@ package test;
 
 import communication.BrokerIB;
 import communication.OrderStatus;
-import tradingapp.TradeOrder;
+import communication.TradeOrder;
 
 /**
  *

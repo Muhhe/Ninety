@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 import tradingapp.MailSender;
 import tradingapp.TradeFormatter;
-import tradingapp.TradeOrder;
+import communication.TradeOrder;
 
 /**
  *

@@ -13,14 +13,16 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.logging.Level;
 import java.util.logging.Logger;
+import strategyVXVMT.VXVMTDataPreparator;
+import strategyVXVMT.VXVMTIndicators;
+import strategyVXVMT.VXVMTSignal;
+import strategyVXVMT.VXVMTStrategy;
 import tradingapp.TradeFormatter;
 import tradingapp.TradeTimer;
 
@@ -75,7 +77,7 @@ public class BacktesterVXVrVXMT {
     static private class Status {
 
         double capital = 0;
-        Signal heldType = Signal.None;
+        VXVMTSignal.Type heldType = VXVMTSignal.Type.None;
         int position = 0;
         double exposure;
     }
@@ -113,7 +115,7 @@ public class BacktesterVXVrVXMT {
             //1.0 / smas.length,
             //1.0 / smas.length,
             //1.0 / smas.length
-        0.45, 0.35, 0.20
+            0.45, 0.35, 0.20
         };
 
         double sum = 0;
@@ -185,7 +187,7 @@ public class BacktesterVXVrVXMT {
         File vixFile = new File("vix.csv");
         vixFile.delete();
 
-        int startInx = ratioData.dates.length - 150;
+        int startInx = ratioData.dates.length - 151;
         int xivPos = (int) (settings.capital / dataXIV.adjCloses[startInx]);
         //int spyPos = (int) (settings.capital / dataSPY.adjCloses[startInx]);
 
@@ -207,7 +209,7 @@ public class BacktesterVXVrVXMT {
             }
 
             double currentValue;
-            if (stat.heldType == Signal.XIV) {
+            if (stat.heldType == VXVMTSignal.Type.XIV) {
                 currentValue = dataXIV.adjCloses[i];
             } else {
                 currentValue = dataVXX.adjCloses[i];
@@ -234,17 +236,31 @@ public class BacktesterVXVrVXMT {
 
             monthStats.totalDays++;
 
-            NewStatus newStat = CalcStrat(ratioData, i);
+            VXVMTIndicators indicators = new VXVMTIndicators();
+
+            indicators.actRatioLagged = ratioData.adjCloses[i + 1];
+            indicators.ratiosLagged[0] = IndicatorCalculator.SMA(60, ratioData.adjCloses, i + 1);
+            indicators.ratiosLagged[1] = IndicatorCalculator.SMA(125, ratioData.adjCloses, i + 1);
+            indicators.ratiosLagged[2] = IndicatorCalculator.SMA(150, ratioData.adjCloses, i + 1);
+
+            indicators.actRatio = ratioData.adjCloses[i];
+            indicators.ratios[0] = IndicatorCalculator.SMA(60, ratioData.adjCloses, i);
+            indicators.ratios[1] = IndicatorCalculator.SMA(125, ratioData.adjCloses, i);
+            indicators.ratios[2] = IndicatorCalculator.SMA(150, ratioData.adjCloses, i);
+            
+            VXVMTSignal signal = VXVMTStrategy.CalculateFinalSignal(indicators);
+
+            //NewStatus newStat = CalcStrat(ratioData, i);
 
             // Sell all
-            if (stat.heldType != Signal.None) {
+            if (stat.heldType != VXVMTSignal.Type.None) {
                 double heldValue;
-                if (stat.heldType == Signal.XIV) {
-                    heldValue = dataXIV.adjCloses[i - 1];
+                if (stat.heldType == VXVMTSignal.Type.XIV) {
+                    heldValue = dataXIV.adjCloses[i];
                     daysXIV++;
                     monthStats.daysXIV++;
                 } else {
-                    heldValue = dataVXX.adjCloses[i - 1];
+                    heldValue = dataVXX.adjCloses[i];
                     daysVXX++;
                     monthStats.daysVXX++;
                 }
@@ -256,7 +272,7 @@ public class BacktesterVXVrVXMT {
                 monthStats.profit += profit;
                 lastCapital = stat.capital;
 
-                if (stat.heldType == Signal.XIV) {
+                if (stat.heldType == VXVMTSignal.Type.XIV) {
                     profitXIV += profitProc;
                     monthStats.profitXIV += profit;
                 } else {
@@ -265,30 +281,30 @@ public class BacktesterVXVrVXMT {
                 }
 
                 stat.position = 0;
-                stat.heldType = Signal.None;
+                stat.heldType = VXVMTSignal.Type.None;
                 stat.exposure = 0;
             }
 
-            NewStatus tomorowStat = CalcStrat(ratioData, i - 1);
-            if ((tomorowStat.heldType == newStat.heldType) || (newStat.heldType != Signal.VXX) ){
+            //VXVMTSignal tomorowStat = CalcStrat(ratioData, i - 1);
+            //if ((tomorowStat.heldType == signal.type) || (signal.type != Signal.VXX)) {
 
                 //Buy new
-                if (newStat.heldType != Signal.None) {
+                if (signal.type != VXVMTSignal.Type.None) {
                     double newValue;
-                    if (newStat.heldType == Signal.XIV) {
-                        newValue = dataXIV.adjCloses[i - 1];
+                    if (signal.type == VXVMTSignal.Type.XIV) {
+                        newValue = dataXIV.adjCloses[i];
                     } else {
-                        newValue = dataVXX.adjCloses[i - 1];
+                        newValue = dataVXX.adjCloses[i];
                     }
 
-                    int newPos = (int) (newStat.ratio * stat.capital / newValue);
+                    int newPos = (int) (signal.exposure * stat.capital / newValue);
                     stat.capital -= newPos * newValue;
                     stat.position = newPos;
-                    stat.heldType = newStat.heldType;
-                    stat.exposure = newStat.ratio;
+                    stat.heldType = signal.type;
+                    stat.exposure = signal.exposure;
 
                 }
-            }
+            //}
         }
 
         UpdateMonthlyStats(lastDate, monthStats);

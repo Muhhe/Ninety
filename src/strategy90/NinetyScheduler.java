@@ -6,8 +6,6 @@
 package strategy90;
 
 import communication.IBroker;
-import data.StockIndicatorsForNinety;
-import data.TickersToTrade;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;

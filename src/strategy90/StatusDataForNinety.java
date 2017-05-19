@@ -30,7 +30,7 @@ import tradingapp.FilePaths;
 import tradingapp.TradeFormatter;
 import tradingapp.MailSender;
 import tradingapp.Settings;
-import tradingapp.TradeOrder;
+import communication.TradeOrder;
 import tradingapp.TradeTimer;
 
 /**

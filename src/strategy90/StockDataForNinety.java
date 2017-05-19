@@ -13,8 +13,6 @@ import data.getters.DataGetterHistYahoo;
 import data.getters.IDataGetterAct;
 import data.getters.IDataGetterHist;
 import data.IndicatorCalculator;
-import data.StockIndicatorsForNinety;
-import data.TickersToTrade;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;

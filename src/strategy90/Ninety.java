@@ -5,7 +5,6 @@
  */
 package strategy90;
 
-import data.StockIndicatorsForNinety;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -14,7 +13,7 @@ import java.util.logging.Logger;
 import java.util.Map;
 import tradingapp.TradeFormatter;
 import tradingapp.TradeTimer;
-import tradingapp.TradeOrder;
+import communication.TradeOrder;
 
 /**
  *

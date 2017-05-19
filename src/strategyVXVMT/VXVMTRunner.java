@@ -5,12 +5,20 @@
  */
 package strategyVXVMT;
 
+import communication.TradeOrder;
+
 /**
  *
  * @author Muhe
  */
 public class VXVMTRunner {
+    public TradeOrder PrepareOrder(VXVMTSignal signal) {
+        return new TradeOrder();
+    }
+    
     public void Run() {
-        
+        VXVMTIndicators indicators = VXVMTDataPreparator.LoadData();
+        VXVMTSignal signal = VXVMTStrategy.CalculateFinalSignal(indicators);
+        TradeOrder order = PrepareOrder(signal);
     }
 }

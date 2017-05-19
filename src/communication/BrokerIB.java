@@ -21,7 +21,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import tradingapp.TradeOrder;
 import tradingapp.TradeTimer;
 import static tradingapp.MainWindow.LOGGER_COMM_NAME;
 

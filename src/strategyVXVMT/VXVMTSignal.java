@@ -9,7 +9,7 @@ package strategyVXVMT;
  *
  * @author Muhe
  */
-public class Signal {
+public class VXVMTSignal {
     public enum Type {
         VXX, XIV, None
     }

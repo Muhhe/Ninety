@@ -26,7 +26,7 @@ import tradingapp.GlobalConfig;
 import tradingapp.Settings;
 import tradingapp.TradeFormatter;
 import tradingapp.TradeLogger;
-import tradingapp.TradeOrder;
+import communication.TradeOrder;
 import tradingapp.TradeTimer;
 
 /**

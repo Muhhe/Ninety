@@ -9,7 +9,6 @@ import communication.BrokerIB;
 import communication.IBroker;
 import communication.Position;
 import data.CloseData;
-import data.TickersToTrade;
 import static java.lang.Math.abs;
 import java.time.LocalDate;
 import java.util.List;

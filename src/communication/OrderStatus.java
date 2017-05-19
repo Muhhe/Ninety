@@ -8,7 +8,6 @@ package communication;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import tradingapp.TradeFormatter;
-import tradingapp.TradeOrder;
 import tradingapp.TradeTimer;
 
 /**
