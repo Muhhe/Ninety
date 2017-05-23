@@ -5,6 +5,7 @@
  */
 package backtesting;
 
+import communication.IBroker;
 import data.CloseData;
 import data.getters.IDataGetterHist;
 import data.IndicatorCalculator;
@@ -21,8 +22,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.logging.Logger;
 import strategyVXVMT.VXVMTDataPreparator;
 import strategyVXVMT.VXVMTIndicators;
+import strategyVXVMT.VXVMTRunner;
 import strategyVXVMT.VXVMTSignal;
+import strategyVXVMT.VXVMTStatus;
 import strategyVXVMT.VXVMTStrategy;
+import test.BrokerNoIB;
 import tradingapp.TradeFormatter;
 import tradingapp.TradeTimer;
 
@@ -30,7 +34,7 @@ import tradingapp.TradeTimer;
  *
  * @author Muhe
  */
-public class BacktesterVXVrVXMT {
+public class BacktesterVXVMT {
 
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
@@ -164,8 +168,105 @@ public class BacktesterVXVrVXMT {
 
         return newStatus;
     }
-
+    
     static public void runBacktest(BTSettings settings) {
+        IDataGetterHist getter = new DataGetterHistFile("backtest/VolData/");
+        CloseData dataVXX = getter.readAdjCloseData(settings.startDate, settings.endDate, "VXX");
+        CloseData dataXIV = getter.readAdjCloseData(settings.startDate, settings.endDate, "XIV");
+        
+        CloseData ratioData = getRatioData(settings);
+        
+        BTStatistics stats = new BTStatistics(settings.capital, settings.reinvest);
+        
+        File equityFile = new File("equity.csv");
+        equityFile.delete();
+        
+        int startInx = ratioData.dates.length - 152;
+        int xivPos = (int) (settings.capital / dataXIV.adjCloses[startInx]);
+        //int spyPos = (int) (settings.capital / dataSPY.adjCloses[startInx]);
+
+        double profitXIV = 0;
+        double profitVXX = 0;
+        double lastCapital = settings.capital;
+
+        int daysXIV = 0;
+        int daysVXX = 0;
+
+        MonthlyStats monthStats = new MonthlyStats();
+        LocalDate lastDate = LocalDate.MIN;
+        CreateMonthlyStatsFile();
+        
+        IBroker broker = new BrokerNoIB();
+        VXVMTStatus status = new VXVMTStatus();
+        status.capital = 100000;
+        
+        VXVMTRunner runner = new VXVMTRunner(status, broker);
+
+        for (int i = startInx; i >= 1; i--) {
+            
+            if (!dataXIV.dates[i].equals(ratioData.dates[i])) {
+                logger.severe("DatesNotEqual!!!!!!!!!!");
+            }
+
+            LocalDate date = dataXIV.dates[i];
+            TradeTimer.SetToday(date);
+            
+            VXVMTIndicators indicators = new VXVMTIndicators();
+            indicators.actRatioLagged = ratioData.adjCloses[i + 1];
+            indicators.ratiosLagged[0] = IndicatorCalculator.SMA(60, ratioData.adjCloses, i + 1);
+            indicators.ratiosLagged[1] = IndicatorCalculator.SMA(125, ratioData.adjCloses, i + 1);
+            indicators.ratiosLagged[2] = IndicatorCalculator.SMA(150, ratioData.adjCloses, i + 1);
+
+            indicators.actRatio = ratioData.adjCloses[i];
+            indicators.ratios[0] = IndicatorCalculator.SMA(60, ratioData.adjCloses, i);
+            indicators.ratios[1] = IndicatorCalculator.SMA(125, ratioData.adjCloses, i);
+            indicators.ratios[2] = IndicatorCalculator.SMA(150, ratioData.adjCloses, i);
+            
+            indicators.actVXXvalue = dataVXX.adjCloses[i];
+            indicators.actXIVvalue = dataXIV.adjCloses[i];
+            
+            runner.RunStrategy(indicators);
+            
+            stats.StartDay(date);
+            
+            double eq = status.GetEquity(indicators.actXIVvalue, indicators.actVXXvalue);
+            stats.UpdateEquity(eq, date);
+            UpdateEquityFile(eq, "equity.csv", (status.heldType.toString() + " - " + TradeFormatter.toString(status.heldPosition)));
+            //UpdateEquityFile(xivPos * dataXIV.adjCloses[i], "vix.csv", null);
+            //UpdateEquityFile(spyPos * dataSPY.adjCloses[i], "spy.csv", null);
+
+            stats.EndDay();
+
+            if (lastDate.getMonth() != date.getMonth() && !lastDate.isEqual(LocalDate.MIN)) {
+                UpdateMonthlyStats(lastDate, monthStats);
+                monthStats = new MonthlyStats();
+            }
+
+            lastDate = date;
+
+            monthStats.totalDays++;
+        }
+
+        UpdateMonthlyStats(lastDate, monthStats);
+
+        stats.LogStats(settings);
+        stats.SaveEquityToCsv();
+        double totalProfit = profitXIV + profitVXX;
+        double profitXIVProc = profitXIV;// / totalProfit * 100;
+        double profitVXXProc = profitVXX;// / totalProfit * 100;
+        logger.log(BTLogLvl.BACKTEST, "Profit XIV: " /*+ TradeFormatter.toString(profitXIV) + "$ = " */ + TradeFormatter.toString(profitXIVProc)
+                + "%, Profit VXX: " /*+ TradeFormatter.toString(profitVXX) + "$ = "*/ + TradeFormatter.toString(profitVXXProc) + "%");
+
+        double daysXIVproc = (double) daysXIV / startInx * 100.0;
+        double daysVXXproc = (double) daysVXX / startInx * 100.0;
+        logger.log(BTLogLvl.BACKTEST, "Days in XIV: " + daysXIV + " = " + TradeFormatter.toString(daysXIVproc)
+                + "%, Days in VXX: " + daysVXX + " = " + TradeFormatter.toString(daysVXXproc) + "%, Days total: " + startInx);
+        
+        logger.log(BTLogLvl.BACKTEST, "Fees: " + status.fees);
+        
+    }
+
+    static public void runBacktest2(BTSettings settings) {
 
         IDataGetterHist getter = new DataGetterHistFile("backtest/VolData/");
         CloseData dataVXX = getter.readAdjCloseData(settings.startDate, settings.endDate, "VXX");

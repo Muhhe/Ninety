@@ -14,4 +14,7 @@ public class VXVMTIndicators {
     public double[] ratios = {0,0,0};
     public double actRatioLagged = 0;
     public double actRatio = 0;
+    
+    public double actXIVvalue = 0;
+    public double actVXXvalue = 0;
 }

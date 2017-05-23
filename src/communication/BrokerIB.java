@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import tradingapp.TradeTimer;
-import static tradingapp.MainWindow.LOGGER_COMM_NAME;
+import static tradingapp.MainWindow90.LOGGER_COMM_NAME;
 
 /**
  *
@@ -34,6 +34,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
     
     protected int port;
     protected int clientId;
+    protected boolean useCFD;
     
     protected final Map<Integer, OrderStatus> orderStatusMap = new ConcurrentHashMap<>();
     protected final Map<Integer, OrderStatus> activeOrdersMap = new HashMap<>();
@@ -52,9 +53,10 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
     protected AccountSummary accountSummary = new AccountSummary();
     protected boolean accountSummarySubscribed = false;
 
-    public BrokerIB(int port, int clientId) {
+    public BrokerIB(int port, int clientId, boolean useCFD) {
         this.port = port;
         this.clientId = clientId;
+        this.useCFD = useCFD;
     }
     
     @Override
@@ -333,7 +335,11 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
         Contract contract = new Contract();
         contract.m_symbol = ticker;
         contract.m_exchange = "SMART";
-        contract.m_secType = "CFD";
+        if (useCFD) {
+            contract.m_secType = "CFD";
+        } else {
+            contract.m_secType = "STK";
+        }
         contract.m_currency = "USD";
 
         return contract;

@@ -5,7 +5,7 @@
  */
 package strategyVXVMT;
 
-import backtesting.BacktesterVXVrVXMT;
+import backtesting.BacktesterVXVMT;
 
 /**
  *

@@ -14,6 +14,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Logger;
 import tradingapp.CheckingThread;
+import tradingapp.FilePaths;
 import tradingapp.TradeFormatter;
 import tradingapp.MailSender;
 import tradingapp.Settings;
@@ -37,18 +38,42 @@ public class NinetyScheduler {
 
     public final IBroker broker;
     public boolean isStartScheduled = false;
-    
+
     public final Semaphore dataMutex = new Semaphore(1);
 
     public NinetyScheduler(IBroker broker) {
         statusData.LoadTradingStatus();
         statusData.PrintStatus();
-        
+
         this.broker = broker;
     }
-    
+
     public void NewDayInit() {
-        TradeLogger.getInstance().clearLogs(); 
+        String todayString = TradeTimer.GetLocalDateNow().toString();
+        String[] attachmentsTradeLog = {FilePaths.dataLogDirectory + todayString + FilePaths.logPathFile,
+            FilePaths.dataLogDirectory + todayString + FilePaths.logCommPathFile,
+            FilePaths.dataLogDirectory + todayString + FilePaths.logDetailedPathFile,
+            FilePaths.equityPathFile,
+            FilePaths.tradingStatusPathFileInput,
+            FilePaths.tradeLogPathFile,
+            FilePaths.tradeLogDetailedPathFile,
+            FilePaths.dataLogDirectory + todayString + FilePaths.indicatorsPathFile
+        };
+        
+        String[] attachmentsError = {FilePaths.dataLogDirectory + todayString + FilePaths.logPathFile,
+            FilePaths.dataLogDirectory + todayString + FilePaths.logCommPathFile,
+            FilePaths.dataLogDirectory + todayString + FilePaths.logDetailedPathFile,
+            FilePaths.equityPathFile,
+            FilePaths.tradingStatusPathFileInput};
+
+        MailSender.SetTradeLogAttachments(attachmentsTradeLog);
+        MailSender.SetErrorAttachments(attachmentsError);
+        
+        MailSender.SetTradeLogSubject("AOS Trade log 90");
+        MailSender.SetCheckSubject("AOS Check 90");
+        MailSender.SetErrorSubject("AOS Errors 90");
+        
+        TradeLogger.getInstance().clearLogs();
         TradeLogger.getInstance().initializeFiles(LocalDate.now());
         TradeTimer.LoadSpecialTradingDays();
         TickersToTrade.LoadTickers();
@@ -58,15 +83,15 @@ public class NinetyScheduler {
         statusData.UpdateCashSettings();
         statusData.LoadTradingStatus();
         statusData.PrintStatus();
-        
+
         stockData.ClearData();
     }
 
     public void RunNow() {
         NewDayInit();
-        
+
         isStartScheduled = true;
-        
+
         ScheduleLoadingHistData(TradeTimer.GetNYTimeNow().plusSeconds(2));
         ScheduleTradingRun(TradeTimer.GetNYTimeNow().plusSeconds(20));
     }
@@ -78,7 +103,7 @@ public class NinetyScheduler {
         TradeTimer.startTaskAt(tomorrowCheck, this::PrepareForTrading);
 
         Duration durationToNextRun = Duration.ofSeconds(TradeTimer.computeTimeFromNowTo(tomorrowCheck));
-        
+
         logger.info("Next check is scheduled for " + tomorrowCheck.format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
         logger.info("Starting in " + durationToNextRun.toString());
 
@@ -87,12 +112,12 @@ public class NinetyScheduler {
 
     public void ScheduleFirstCheck() {
         ZonedDateTime earliestCheckTime = TradeTimer.GetNYTimeNow().with(FIRST_CHECK_TIME);
-        
+
         ZonedDateTime checkTime = TradeTimer.GetNYTimeNow().plusSeconds(1);
 
         if (checkTime.compareTo(earliestCheckTime) <= 0) {
             checkTime = earliestCheckTime;
-        
+
             Duration durationToNextRun = Duration.ofSeconds(TradeTimer.computeTimeFromNowTo(checkTime));
 
             logger.info("First check is scheduled for " + checkTime.format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
@@ -133,27 +158,27 @@ public class NinetyScheduler {
             ZonedDateTime closeTimeZoned = now.with(closeTimeLocal);
 
             PrepareData();
-            
-            if (!broker.connect() ) {
+
+            if (!broker.connect()) {
                 isCheckOk = false;
                 return;
             }
-            
+
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException ex) {
-                    throw new IllegalStateException("InterruptedException");
+                throw new IllegalStateException("InterruptedException");
             }
-            
+
             isCheckOk &= NinetyChecker.PerformChecks(statusData, stockData, broker);
-            
+
             logger.fine(broker.GetAccountSummary().toString());
             broker.disconnect();
 
             if (isCheckOk) {
                 ScheduleTradingRun(closeTimeZoned.minus(DURATION_BEFORECLOSE_RUNSTRATEGY));
             }
-            
+
         } finally {
             if (!isCheckOk) {
                 logger.severe("Check failed. Scheduling check for next hour.");
@@ -172,14 +197,14 @@ public class NinetyScheduler {
     public void PrepareData() {
         try {
             CheckingThread checkThread = CheckingThread.StartNewCheckingThread(Duration.ofMinutes(2), "Failed to prepare data");
-        
+
             logger.finer("Acquiring lock for LoadingHistData run.");
             dataMutex.acquire();
             new NinetyDataPreparator(stockData, broker).run();
             stockData.SaveHistDataToFiles();
             dataMutex.release();
             logger.finer("Released lock for LoadingHistData run.");
-            
+
             checkThread.SetChecked();
         } catch (InterruptedException ex) {
             throw new IllegalStateException("InterruptedException");
@@ -193,7 +218,7 @@ public class NinetyScheduler {
                 PrepareData();
             }
         };
-        
+
         TradeTimer.startTaskAt(runTime, taskWrapper);
 
         Duration timeToHist = Duration.ofSeconds(TradeTimer.computeTimeFromNowTo(runTime));
@@ -201,19 +226,19 @@ public class NinetyScheduler {
         logger.info("Reading historic data is scheduled for " + runTime.format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
         logger.info("Starting in " + timeToHist.toString());
     }
-    
+
     public void ScheduleTradingRun(ZonedDateTime runTime) {
         Duration timeToStart = Duration.ofSeconds(TradeTimer.computeTimeFromNowTo(runTime));
 
         logger.info("Starting Ninety strategy is scheduled for " + runTime.format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
         logger.info("Starting in " + timeToStart.toString());
-        
+
         Runnable taskWrapper = new Runnable() {
             @Override
             public void run() {
                 try {
                     CheckingThread checkThread = CheckingThread.StartNewCheckingThread(Duration.ofMinutes(2), "Trade run did not end properly.");
-            
+
                     logger.finer("Acquiring lock for trading run.");
                     dataMutex.acquire();
                     new NinetyRunner(stockData, statusData, broker).run();
@@ -225,15 +250,15 @@ public class NinetyScheduler {
                     stockData.SaveHistDataToFiles();
                     stockData.SaveIndicatorsToCSVFile();
                     stockData.SaveStockIndicatorsToFiles();
-                    
+
                     AddProfitLossToMail();
-                    
+
                     MailSender.AddLineToMail(broker.GetAccountSummary().toString());
                     MailSender.AddLineToMail("Saved current cash: " + TradeFormatter.toString(statusData.currentCash));
-                    
+
                     MailSender.SendTradingLog();
                     MailSender.SendErrors();
-                    
+
                     checkThread.SetChecked();
                 } catch (InterruptedException ex) {
                     throw new IllegalStateException("InterruptedException");
@@ -243,37 +268,37 @@ public class NinetyScheduler {
 
         TradeTimer.startTaskAt(runTime, taskWrapper);
     }
-    
+
     public void Stop() {
         logger.info("Stopping execution of Ninety strategy.");
         TradeTimer.stop();
         logger.info("Execution of Ninety strategy is stopped.");
         isStartScheduled = false;
     }
-    
+
     public void AddProfitLossToMail() {
         if (stockData.indicatorsMap.isEmpty()) { // This happens during no trade days
             return;
         }
-        
+
         int heldAboveSMA200 = 0;
         for (StockIndicatorsForNinety inds : stockData.indicatorsMap.values()) {
             if (inds.actValue > inds.sma200) {
                 heldAboveSMA200++;
             }
         }
-        
+
         double heldAboveSMA200Percent = (double) heldAboveSMA200 / stockData.indicatorsMap.size() * 100.0;
-        
-        String strTickersAboveSMA200 = "Tickers with actual value above SMA200: " + heldAboveSMA200 + "/" + stockData.indicatorsMap.size() 
+
+        String strTickersAboveSMA200 = "Tickers with actual value above SMA200: " + heldAboveSMA200 + "/" + stockData.indicatorsMap.size()
                 + " = " + TradeFormatter.toString(heldAboveSMA200Percent) + "%";
-        
+
         MailSender.AddLineToMail(strTickersAboveSMA200);
         logger.info(strTickersAboveSMA200);
-        
+
         MailSender.AddLineToMail("Unrealized profit/loss:");
         logger.info("Unrealized profit/loss:");
-        
+
         double totalPL = 0;
         for (HeldStock held : statusData.heldStocks.values()) {
             StockIndicatorsForNinety indicators = stockData.indicatorsMap.get(held.tickerSymbol);
@@ -283,23 +308,23 @@ public class NinetyScheduler {
             double actValue = indicators.actValue;
             double profit = held.CalculateProfitIfSold(actValue);
             double profitPercent = held.CalculatePercentProfitIfSold(actValue);
-            
+
             totalPL += profit;
-            
-            String strHeldStats = held.tickerSymbol + 
-                    ": " + TradeFormatter.toString(profit) + "$ = " + TradeFormatter.toString(profitPercent) + 
-                    "%. Last buy value: " + TradeFormatter.toString(held.GetLastBuyValue()) + 
-                    ", actual value: " + TradeFormatter.toString(actValue) + 
-                    ", SMA5: " + TradeFormatter.toString(indicators.sma5) +
-                    ", portions: " + held.GetPortions();
-            
+
+            String strHeldStats = held.tickerSymbol
+                    + ": " + TradeFormatter.toString(profit) + "$ = " + TradeFormatter.toString(profitPercent)
+                    + "%. Last buy value: " + TradeFormatter.toString(held.GetLastBuyValue())
+                    + ", actual value: " + TradeFormatter.toString(actValue)
+                    + ", SMA5: " + TradeFormatter.toString(indicators.sma5)
+                    + ", portions: " + held.GetPortions();
+
             MailSender.AddLineToMail(strHeldStats);
             logger.info(strHeldStats);
         }
-        
-        String strTotalPL = "Total unrealized profit/loss: " + TradeFormatter.toString(totalPL) 
+
+        String strTotalPL = "Total unrealized profit/loss: " + TradeFormatter.toString(totalPL)
                 + "$ = " + TradeFormatter.toString(totalPL / Settings.investCash * 100) + "%";
-        
+
         MailSender.AddLineToMail(strTotalPL);
         logger.info(strTotalPL);
     }

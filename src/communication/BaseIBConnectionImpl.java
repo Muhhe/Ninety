@@ -14,7 +14,7 @@ import com.ib.client.Order;
 import com.ib.client.OrderState;
 import com.ib.client.UnderComp;
 import java.util.logging.Logger;
-import static tradingapp.MainWindow.LOGGER_COMM_NAME;
+import static tradingapp.MainWindow90.LOGGER_COMM_NAME;
 
 /**
  *

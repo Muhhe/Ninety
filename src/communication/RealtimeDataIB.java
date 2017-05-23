@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
-import static tradingapp.MainWindow.LOGGER_COMM_NAME;
+import static tradingapp.MainWindow90.LOGGER_COMM_NAME;
 
 /**
  *

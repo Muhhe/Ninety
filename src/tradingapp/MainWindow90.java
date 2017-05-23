@@ -26,7 +26,7 @@ import strategy90.StockPurchase;
  *
  * @author Muhe
  */
-public class MainWindow extends javax.swing.JFrame {
+public class MainWindow90 extends javax.swing.JFrame {
 
     public final static String LOGGER_COMM_NAME = "COMM";
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
@@ -36,7 +36,7 @@ public class MainWindow extends javax.swing.JFrame {
     /**
      * Creates new form MainWindow
      */
-    public MainWindow() {
+    public MainWindow90() {
         initComponents();
 
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
@@ -51,7 +51,7 @@ public class MainWindow extends javax.swing.JFrame {
         
         Settings.ReadSettings();
         
-        IBroker broker = new BrokerIB(Settings.port, Settings.clientId);
+        IBroker broker = new BrokerIB(Settings.port, Settings.clientId, true);
         
         GlobalConfig.AddDataGetterAct(new DataGetterActIB(broker));
         GlobalConfig.AddDataGetterAct(new DataGetterActGoogle());
@@ -61,7 +61,7 @@ public class MainWindow extends javax.swing.JFrame {
 
         ninetyScheduler = new NinetyScheduler( broker );
         
-        new Thread(MainWindow::StartSocketServer).start();
+        new Thread(MainWindow90::StartSocketServer).start();
     }
 
     public static void StartSocketServer() {
@@ -221,7 +221,7 @@ public class MainWindow extends javax.swing.JFrame {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException ex) {
-                Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(MainWindow90.class.getName()).log(Level.SEVERE, null, ex);
             }
 
             NinetyChecker.CheckHeldPositions(ninetyScheduler.statusData, ninetyScheduler.broker);
@@ -277,7 +277,7 @@ public class MainWindow extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new MainWindow().setVisible(true);
+                new MainWindow90().setVisible(true);
             }
         });
     }

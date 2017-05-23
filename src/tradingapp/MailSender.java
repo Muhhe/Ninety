@@ -24,6 +24,13 @@ public class MailSender {
 
     private static StringBuilder m_mailBody = new StringBuilder();
     private static StringBuilder m_mailBodyError = new StringBuilder();
+    
+    private static String[] m_attachmentsLog = {};
+    private static String[] m_attachmentsError = {};
+    
+    private static String m_tradeLogSubject = "AOS Trade log";
+    private static String m_checkSubject = "AOS Check";
+    private static String m_errorSubject = "AOS Errors";
 
     protected MailSender() {
         // Exists only to defeat instantiation.
@@ -35,6 +42,26 @@ public class MailSender {
 
     static public void AddErrorLineToMail(String str) {
         m_mailBodyError.append(str + "\r\n");
+    }
+    
+    static public void SetTradeLogAttachments(String[] attachments) {
+        m_attachmentsLog = attachments;
+    }
+    
+    static public void SetErrorAttachments(String[] attachments) {
+        m_attachmentsError = attachments;
+    }
+    
+    static public void SetTradeLogSubject(String subject) {
+        m_tradeLogSubject = subject;
+    }
+    
+    static public void SetCheckSubject(String subject) {
+        m_checkSubject = subject;
+    }
+    
+    static public void SetErrorSubject(String subject) {
+        m_errorSubject = subject;
     }
 
     private static Properties SetupProperties() {
@@ -74,18 +101,7 @@ public class MailSender {
 
         logger.fine("Sending trade log mail!");
 
-        String todayString = TradeTimer.GetLocalDateNow().toString();
-        String[] attachments = {FilePaths.dataLogDirectory + todayString + FilePaths.logPathFile,
-            FilePaths.dataLogDirectory + todayString + FilePaths.logCommPathFile,
-            FilePaths.dataLogDirectory + todayString + FilePaths.logDetailedPathFile,
-            FilePaths.equityPathFile,
-            FilePaths.tradingStatusPathFileInput,
-            FilePaths.tradeLogPathFile,
-            FilePaths.tradeLogDetailedPathFile,
-            FilePaths.dataLogDirectory + todayString + FilePaths.indicatorsPathFile
-        };
-
-        if (Send("Trading log 90", Settings.mailAddressTradeLog, m_mailBody.toString(), attachments)) {
+        if (Send(m_tradeLogSubject, Settings.mailAddressTradeLog, m_mailBody.toString(), m_attachmentsLog)) {
             m_mailBody.setLength(0);
             logger.info("Trade mail sent!");
         } else {
@@ -100,14 +116,7 @@ public class MailSender {
 
         logger.fine("Sending check mail!");
 
-        String todayString = TradeTimer.GetLocalDateNow().toString();
-        String[] attachments = {FilePaths.dataLogDirectory + todayString + FilePaths.logPathFile,
-            FilePaths.dataLogDirectory + todayString + FilePaths.logCommPathFile,
-            FilePaths.dataLogDirectory + todayString + FilePaths.logDetailedPathFile,
-            FilePaths.equityPathFile,
-            FilePaths.tradingStatusPathFileInput,};
-
-        if (Send("Check 90", Settings.mailAddressCheck, m_mailBody.toString(), attachments)) {
+        if (Send(m_checkSubject, Settings.mailAddressCheck, m_mailBody.toString(), m_attachmentsError)) {
             m_mailBody.setLength(0);
             logger.info("Check mail sent!");
         } else {
@@ -123,14 +132,7 @@ public class MailSender {
         if (m_mailBodyError.length() > 0) {
             logger.fine("Sending error mail!");
 
-            String todayString = TradeTimer.GetLocalDateNow().toString();
-            String[] attachments = {FilePaths.dataLogDirectory + todayString + FilePaths.logPathFile,
-                FilePaths.dataLogDirectory + todayString + FilePaths.logCommPathFile,
-                FilePaths.dataLogDirectory + todayString + FilePaths.logDetailedPathFile,
-                FilePaths.equityPathFile,
-                FilePaths.tradingStatusPathFileInput,};
-
-            if (Send("Errors!!!", Settings.mailAddressError, m_mailBodyError.toString(), attachments)) {
+            if (Send(m_errorSubject, Settings.mailAddressError, m_mailBodyError.toString(), m_attachmentsError)) {
                 m_mailBodyError.setLength(0);
                 logger.info("Error mail sent!");
             } else {
@@ -180,7 +182,7 @@ public class MailSender {
         return true;
     }
 
-    public static void AddAttachment(String filename, Multipart multipart) {
+    private static void AddAttachment(String filename, Multipart multipart) {
         try {
             MimeBodyPart messageBodyPart = new MimeBodyPart();
 

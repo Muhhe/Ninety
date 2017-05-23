@@ -283,7 +283,7 @@ public class TestPlatform extends javax.swing.JFrame {
 
         Settings.ReadSettings();
 
-        IBroker broker = new BrokerIBReadOnly(Settings.port, Settings.clientId);
+        IBroker broker = new BrokerIBReadOnly(Settings.port, Settings.clientId, true);
 
         GlobalConfig.sendMails = false;
         GlobalConfig.ClearGetters();
@@ -359,7 +359,7 @@ public class TestPlatform extends javax.swing.JFrame {
         //GlobalConfig.AddDataGetterHist(new DataGetterHistFile(pathToSourceData));
         //GlobalConfig.AddDataGetterHist(new DataGetterHistYahoo());
         //GlobalConfig.AddDataGetterHist(new DataGetterHistQuandl());
-        IBroker broker = new BrokerIBReadOnly(4001, 1);
+        IBroker broker = new BrokerIBReadOnly(4001, 1, true);
         broker.connect();
         /*for (String ticker : TickersToTrade.GetTickers()) {
             broker.RequestRealtimeData(ticker);

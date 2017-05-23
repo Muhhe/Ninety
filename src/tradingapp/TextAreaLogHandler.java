@@ -54,7 +54,7 @@ public class TextAreaLogHandler extends Handler {
             }
             
             String loggerName = record.getLoggerName();
-            if (loggerName != null && loggerName.equals(MainWindow.LOGGER_COMM_NAME)) {
+            if (loggerName != null && loggerName.equals(MainWindow90.LOGGER_COMM_NAME)) {
                 msg.append("(" + loggerName + ") - ");
             }
 

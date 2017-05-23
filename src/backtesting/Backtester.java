@@ -213,7 +213,7 @@ public final class Backtester extends javax.swing.JFrame {
         UpdateLogLevel();
 
         BTSettings settings = GetBTSettings();
-        BacktesterVXVrVXMT.runBacktest(settings);
+        BacktesterVXVMT.runBacktest(settings);
         SaveBTSettings(settings);
         
     }//GEN-LAST:event_backTestVIXButtonActionPerformed

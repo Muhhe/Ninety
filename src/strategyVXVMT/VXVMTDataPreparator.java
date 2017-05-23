@@ -12,8 +12,6 @@ import data.getters.DataGetterHistCBOE;
 import data.getters.IDataGetterAct;
 import data.getters.IDataGetterHist;
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Logger;
 import tradingapp.TradeTimer;
 
@@ -25,8 +23,7 @@ public class VXVMTDataPreparator {
 
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     
-    //public Map<String, CloseData> closeDataMap = new HashMap<>();
-    
+        
     static public VXVMTIndicators LoadData() {
         IDataGetterHist getter = new DataGetterHistCBOE();
         
@@ -48,9 +45,6 @@ public class VXVMTDataPreparator {
         dataVXMT.adjCloses[0] = actGetter.readActualData("VXMT");
         dataVXMT.dates[0] = TradeTimer.GetLocalDateNow();
         
-        //closeDataMap.put("VXV", dataVXV);
-        //closeDataMap.put("VXMT", dataVXMT);
-
         double[] ratio = new double[151];
         LocalDate[] dates = new LocalDate[151];
         for (int i = 0; i < 151; i++) {
@@ -63,8 +57,6 @@ public class VXVMTDataPreparator {
         dataRatio.adjCloses = ratio;
         dataRatio.dates = dates;
         
-        //closeDataMap.put("Ratio", dataRatio);
-        
         VXVMTIndicators indicators = new VXVMTIndicators();
         
         indicators.actRatioLagged = ratio[1];
@@ -76,6 +68,10 @@ public class VXVMTDataPreparator {
         indicators.ratios[0] = IndicatorCalculator.SMA(60, ratio, 0);
         indicators.ratios[1] = IndicatorCalculator.SMA(125, ratio, 0);
         indicators.ratios[2] = IndicatorCalculator.SMA(150, ratio, 0);
+        
+        logger.warning("Adjusting XIV VXX data cause google sucks!");
+        indicators.actVXXvalue = actGetter.readActualData("VXX") * 2.5;
+        indicators.actXIVvalue = actGetter.readActualData("XIV") * 2.5;
         
         return indicators;
     }
