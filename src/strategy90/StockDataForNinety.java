@@ -131,7 +131,7 @@ public class StockDataForNinety {
     public void SubscribeRealtimeData(IBroker broker) {
         if (!isRealtimeDataSubscribed) {
             for (String ticker : TickersToTrade.GetTickers()) {
-                broker.RequestRealtimeData(ticker);
+                broker.SubscribeRealtimeData(ticker);
             }
             isRealtimeDataSubscribed = true;
             logger.fine("Subscribed actual IB data.");

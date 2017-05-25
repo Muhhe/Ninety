@@ -9,6 +9,7 @@ import communication.IBroker;
 import data.CloseData;
 import data.getters.IDataGetterHist;
 import data.IndicatorCalculator;
+import data.getters.DataGetterHistCBOE;
 import data.getters.DataGetterHistFile;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -20,7 +21,6 @@ import java.io.Writer;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.logging.Logger;
-import strategyVXVMT.VXVMTDataPreparator;
 import strategyVXVMT.VXVMTIndicators;
 import strategyVXVMT.VXVMTRunner;
 import strategyVXVMT.VXVMTSignal;
@@ -43,8 +43,8 @@ public class BacktesterVXVMT {
     }
 
     static public CloseData getRatioData(BTSettings settings) {
-        //IDataGetterHist getter = new DataGetterHistCBOE();
-        IDataGetterHist getter = new DataGetterHistFile("backtest/VolData/");
+        IDataGetterHist getter = new DataGetterHistCBOE();
+        //IDataGetterHist getter = new DataGetterHistFile("backtest/VolData/");
 
         //LocalDate startDate = LocalDate.of(2010, Month.NOVEMBER, 30);
         //LocalDate endDate = LocalDate.of(2017, Month.APRIL, 28);
@@ -137,15 +137,7 @@ public class BacktesterVXVMT {
                 voteForXIV += weights[i];
             } else if (actRatio > smas[i] && actRatio > 1) {
                 voteForVXX += weights[i];
-                /*if (i == 0) {
-                    voteForVXX = 1;
-                }*/
             }
-            /*if (actRatio < smas[i] && smas[i] < 1) {
-                voteForXIV += weights[i];
-            } else if (actRatio > smas[i] && smas[i] > 1) {
-                voteForVXX += weights[i];
-            }*/
         }
 
         Signal selectedSignal = Signal.None;
@@ -171,6 +163,7 @@ public class BacktesterVXVMT {
     
     static public void runBacktest(BTSettings settings) {
         IDataGetterHist getter = new DataGetterHistFile("backtest/VolData/");
+        //IDataGetterHist getter = new DataGetterHistYahoo();
         CloseData dataVXX = getter.readAdjCloseData(settings.startDate, settings.endDate, "VXX");
         CloseData dataXIV = getter.readAdjCloseData(settings.startDate, settings.endDate, "XIV");
         
@@ -198,7 +191,7 @@ public class BacktesterVXVMT {
         
         IBroker broker = new BrokerNoIB();
         VXVMTStatus status = new VXVMTStatus();
-        status.capital = 100000;
+        status.freeCapital = 100000;
         
         VXVMTRunner runner = new VXVMTRunner(status, broker);
 
@@ -232,7 +225,7 @@ public class BacktesterVXVMT {
             double eq = status.GetEquity(indicators.actXIVvalue, indicators.actVXXvalue);
             stats.UpdateEquity(eq, date);
             UpdateEquityFile(eq, "equity.csv", (status.heldType.toString() + " - " + TradeFormatter.toString(status.heldPosition)));
-            //UpdateEquityFile(xivPos * dataXIV.adjCloses[i], "vix.csv", null);
+            UpdateEquityFile(xivPos * dataXIV.adjCloses[i], "vix.csv", null);
             //UpdateEquityFile(spyPos * dataSPY.adjCloses[i], "spy.csv", null);
 
             stats.EndDay();

@@ -29,18 +29,19 @@ import static tradingapp.MainWindow90.LOGGER_COMM_NAME;
  * @author Muhe
  */
 public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
+
     protected final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
-    protected final static Logger loggerComm = Logger.getLogger(LOGGER_COMM_NAME );
-    
+    protected final static Logger loggerComm = Logger.getLogger(LOGGER_COMM_NAME);
+
     protected int port;
     protected int clientId;
-    protected boolean useCFD;
-    
+    protected SecType secType;
+
     protected final Map<Integer, OrderStatus> orderStatusMap = new ConcurrentHashMap<>();
     protected final Map<Integer, OrderStatus> activeOrdersMap = new HashMap<>();
-    
+
     protected final RealtimeDataIB realtimeData = new RealtimeDataIB();
-    
+
     protected EClientSocket ibClientSocket = new EClientSocket(this);
     protected boolean connected = false;
     protected BlockingQueue<Integer> nextIdQueue = new LinkedBlockingQueue<>();
@@ -49,21 +50,21 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
     protected CountDownLatch connectionLatch = null;
     protected List<Position> positionsList = new ArrayList<>();
     protected int nextOrderId = -1;
-    
+
     protected AccountSummary accountSummary = new AccountSummary();
     protected boolean accountSummarySubscribed = false;
 
-    public BrokerIB(int port, int clientId, boolean useCFD) {
+    public BrokerIB(int port, int clientId, SecType secType) {
         this.port = port;
         this.clientId = clientId;
-        this.useCFD = useCFD;
+        this.secType = secType;
     }
-    
+
     @Override
     public synchronized boolean connect() {
-        if( !connected ) {
+        if (!connected) {
             logger.fine("Connecting to IB.");
-            ibClientSocket.eConnect(null, port, clientId );
+            ibClientSocket.eConnect(null, port, clientId);
             connectionLatch = new CountDownLatch(1);
             try {
                 if (!connectionLatch.await(5, TimeUnit.SECONDS) || !connected) {
@@ -73,28 +74,28 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
             } catch (InterruptedException ex) {
                 loggerComm.log(Level.SEVERE, null, ex);
             }
-            
+
             RequestAccountSummary();
         }
-        
+
         return true;
     }
-    
+
     @Override
     public synchronized boolean isConnected() {
         return connected;
     }
-    
+
     @Override
     public synchronized void disconnect() {
-        if( connected ) {
+        if (connected) {
             loggerComm.info("Disconnecting from IB.");
             ibClientSocket.eDisconnect();
             connected = false;
             accountSummarySubscribed = false;
         }
     }
-    
+
     @Override
     public void connectionClosed() {
         loggerComm.info("Connection to IB closed.");
@@ -104,7 +105,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
         realtimeData.ClearMaps();
         connectionLatch.countDown();    // if connection fails
     }
-    
+
     @Override
     public void nextValidId(int orderId) {
         try {
@@ -119,7 +120,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
             connectionLatch.countDown();
         }
     }
-    
+
     protected synchronized int getNextOrderId() {
         if (nextOrderId == -1) {
             try {
@@ -138,38 +139,38 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
         }
         return ++nextOrderId;
     }
-    
+
     @Override
-    public synchronized boolean PlaceOrder(TradeOrder tradeOrder) {        
+    public synchronized boolean PlaceOrder(TradeOrder tradeOrder) {
         if (!connected) {
             logger.severe("IB not connected. Cannot place order.");
             return false;
         }
-        
+
         Contract contract = CreateOrderContract(tradeOrder.tickerSymbol);
-        
+
         Order ibOrder = new Order();
         if (tradeOrder.orderType == TradeOrder.OrderType.BUY) {
             ibOrder.m_action = "BUY";
         } else {
             ibOrder.m_action = "SELL";
         }
-        
+
         ibOrder.m_orderId = getNextOrderId();
-        
+
         if (orderStatusMap.containsKey(ibOrder.m_orderId)) {
             logger.severe("Trying to use duplicate ID for order: " + tradeOrder.tickerSymbol + ", " + ibOrder.m_action);
             return false;
             //TODO: co s tim? omezenej while?
         }
-        
+
         ibOrder.m_totalQuantity = tradeOrder.position;
         ibOrder.m_orderType = "MKT";
         ibOrder.m_tif = "DAY";
-        
+
         logger.fine("Placing order - ID: " + ibOrder.m_orderId + ", Ticker: " + tradeOrder.tickerSymbol + ", " + ibOrder.m_action);
-        
-        synchronized(activeOrdersMap) {
+
+        synchronized (activeOrdersMap) {
             if (activeOrdersMap.isEmpty()) {
                 loggerComm.finest("Creating new latch for ordersClosedWaitCountdownLatch");
                 ordersClosedWaitCountdownLatch = new CountDownLatch(1);
@@ -178,29 +179,29 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
             OrderStatus orderStatus = new OrderStatus(tradeOrder, ibOrder.m_orderId);
             orderStatusMap.put(ibOrder.m_orderId, orderStatus);
             activeOrdersMap.put(ibOrder.m_orderId, orderStatus);
-        
+
             loggerComm.info("Placing order - ID: " + ibOrder.m_orderId + ", " + tradeOrder.toString());
             ibClientSocket.placeOrder(ibOrder.m_orderId, contract, ibOrder);
         }
-        
+
         return true;
     }
-    
+
     @Override
     public void orderStatus(int orderId, String status, int filled, int remaining, double avgFillPrice, int permId, int parentId, double lastFillPrice, int clientId, String whyHeld) {
         loggerComm.finer("OrderStatus(): orderId: " + orderId + " Status: " + status + " filled: " + filled + " remaining: " + remaining + " avgFillPrice: " + avgFillPrice + " permId: " + permId + " parentId: " + parentId + " lastFillePrice: " + lastFillPrice + " clientId: " + clientId + " whyHeld: " + whyHeld);
-        
+
         OrderStatus orderStatus = orderStatusMap.get(orderId);
-        
+
         if (orderStatus == null) {
-            if (OrderStatus.getOrderStatus(status)  == OrderStatus.Status.FILLED) {
+            if (OrderStatus.getOrderStatus(status) == OrderStatus.Status.FILLED) {
                 loggerComm.info("Open Order with ID: " + orderId + " not found");
             } else {
                 loggerComm.severe("Open Order with ID: " + orderId + " not found");
             }
             return;
         }
-        
+
         orderStatus.status = OrderStatus.getOrderStatus(status);
 
         orderStatus.filled = filled;
@@ -228,7 +229,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
             logger.severe("IB not connected. Cannot get positions.");
             return positionsList;
         }
-        
+
         getPositionsCountdownLatch = new CountDownLatch(1);
         ibClientSocket.reqPositions();
         try {
@@ -244,7 +245,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
     @Override
     public void position(String account, Contract contract, int pos, double avgCost) {
         positionsList.add(new Position(contract.m_symbol, avgCost, pos));
-        loggerComm.fine("Position - Account: " + account + " Contract: " + contract.m_symbol + " size: " + pos + " avgCost: " + avgCost );
+        loggerComm.fine("Position - Account: " + account + " Contract: " + contract.m_symbol + " size: " + pos + " avgCost: " + avgCost);
     }
 
     @Override
@@ -268,7 +269,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
         }
         return false;
     }
-    
+
     @Override
     public Map<Integer, OrderStatus> GetOrderStatuses() {
         return orderStatusMap;
@@ -282,27 +283,32 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
             ordersClosedWaitCountdownLatch = null;
         }
     }
-    
+
     @Override
-    public void RequestRealtimeData(String ticker) {
+    public void SubscribeRealtimeData(String ticker) {
+        SubscribeRealtimeData(ticker, SecType.STK);
+    }
+
+    @Override
+    public void SubscribeRealtimeData(String ticker, SecType secType) {
         if (!connected) {
             logger.severe("IB not connected. Cannot RequestRealtimeData.");
             return;
         }
-        
-        Contract contract = CreateDataContract(ticker);
-        
+
+        Contract contract = CreateDataContract(ticker, secType);
+
         int orderId = getNextOrderId();
-    
+
         ibClientSocket.reqMktData(orderId, contract, null, false, new Vector<TagValue>());
         realtimeData.CreateNew(ticker, orderId);
-        
+
         try {
             Thread.sleep(20);   //max number of commands to IB is 50/s
         } catch (InterruptedException ex) {
         }
     }
-    
+
     @Override
     public void CancelAllRealtimeData() {
         for (Integer orderId : realtimeData.GetAllOrderIds()) {
@@ -322,10 +328,10 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
         // 1 = bid,  2 = ask, 4 = last
         // 6 = high, 7 = low, 9 = close
         //loggerComm.finest("tickPrice: " + orderId + "," + RealtimeDataIB.GetTickPriceFieldString(field) + "," + price);
-        
+
         realtimeData.UpdateValue(orderId, field, price);
     }
-    
+
     @Override
     public double GetLastPrice(String ticker) {
         return realtimeData.GetLastPrice(ticker);
@@ -335,27 +341,29 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
         Contract contract = new Contract();
         contract.m_symbol = ticker;
         contract.m_exchange = "SMART";
-        if (useCFD) {
-            contract.m_secType = "CFD";
-        } else {
-            contract.m_secType = "STK";
-        }
+        contract.m_secType = secType.toString();
         contract.m_currency = "USD";
 
         return contract;
     }
-    
-    protected Contract CreateDataContract(String ticker) {
+
+    protected Contract CreateDataContract(String ticker, SecType secType) {
         Contract contract = new Contract();
         contract.m_symbol = ticker;
+        contract.m_localSymbol = ticker;
         contract.m_exchange = "SMART";
-        contract.m_secType = "STK"; //Cannot be CFD for req data
+        contract.m_secType = secType.toString();
         contract.m_currency = "USD";
 
         if (ticker.equals("MSFT")
-            || ticker.equals("CSCO")
-            || ticker.equals("INTC")) {
+                || ticker.equals("CSCO")
+                || ticker.equals("INTC")) {
             contract.m_exchange = "BATS";
+        }
+        
+        if (ticker.equals("VXV")
+                || ticker.equals("VXMT")) {
+            contract.m_exchange = "CBOE";
         }
 
         return contract;

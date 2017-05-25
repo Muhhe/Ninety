@@ -15,8 +15,8 @@ import communication.TradeOrder;
  */
 public class BrokerIBReadOnly extends BrokerIB {
     
-    public BrokerIBReadOnly(int port, int clientId, boolean useCFD) {
-        super(port, clientId, useCFD);
+    public BrokerIBReadOnly(int port, int clientId, SecType secType) {
+        super(port, clientId, secType);
     }
 
     @Override

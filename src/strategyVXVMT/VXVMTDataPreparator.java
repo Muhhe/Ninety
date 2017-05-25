@@ -5,9 +5,10 @@
  */
 package strategyVXVMT;
 
+import communication.IBroker;
 import data.CloseData;
 import data.IndicatorCalculator;
-import data.getters.DataGetterActGoogle;
+import data.getters.DataGetterActIB;
 import data.getters.DataGetterHistCBOE;
 import data.getters.IDataGetterAct;
 import data.getters.IDataGetterHist;
@@ -24,7 +25,7 @@ public class VXVMTDataPreparator {
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     
         
-    static public VXVMTIndicators LoadData() {
+    static public VXVMTIndicators LoadData(IBroker broker) {
         IDataGetterHist getter = new DataGetterHistCBOE();
         
         logger.info("Loading VXV");
@@ -37,7 +38,7 @@ public class VXVMTDataPreparator {
             return null;
         }
         
-        IDataGetterAct actGetter = new DataGetterActGoogle();
+        IDataGetterAct actGetter = new DataGetterActIB(broker);
         
         dataVXV.adjCloses[0] = actGetter.readActualData("VXV");
         dataVXV.dates[0] = TradeTimer.GetLocalDateNow();
@@ -69,9 +70,8 @@ public class VXVMTDataPreparator {
         indicators.ratios[1] = IndicatorCalculator.SMA(125, ratio, 0);
         indicators.ratios[2] = IndicatorCalculator.SMA(150, ratio, 0);
         
-        logger.warning("Adjusting XIV VXX data cause google sucks!");
-        indicators.actVXXvalue = actGetter.readActualData("VXX") * 2.5;
-        indicators.actXIVvalue = actGetter.readActualData("XIV") * 2.5;
+        indicators.actVXXvalue = actGetter.readActualData("VXX");
+        indicators.actXIVvalue = actGetter.readActualData("XIV");
         
         return indicators;
     }

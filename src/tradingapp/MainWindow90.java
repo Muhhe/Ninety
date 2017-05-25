@@ -12,15 +12,12 @@ import data.getters.DataGetterActIB;
 import data.getters.DataGetterHistQuandl;
 import data.getters.DataGetterHistYahoo;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import strategy90.HeldStock;
 import strategy90.NinetyChecker;
 import strategy90.NinetyScheduler;
-import strategy90.StockPurchase;
 
 /**
  *
@@ -51,7 +48,7 @@ public class MainWindow90 extends javax.swing.JFrame {
         
         Settings.ReadSettings();
         
-        IBroker broker = new BrokerIB(Settings.port, Settings.clientId, true);
+        IBroker broker = new BrokerIB(Settings.port, Settings.clientId, IBroker.SecType.CFD);
         
         GlobalConfig.AddDataGetterAct(new DataGetterActIB(broker));
         GlobalConfig.AddDataGetterAct(new DataGetterActGoogle());

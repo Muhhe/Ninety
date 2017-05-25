@@ -13,7 +13,12 @@ import java.util.Map;
  * @author Muhe
  */
 public interface IBroker {  
-
+    public enum SecType {
+        STK,
+        CFD,
+        IND
+    }
+    
     public boolean connect();
     
     public boolean isConnected();
@@ -30,7 +35,9 @@ public interface IBroker {
     
     public void clearOrderMaps();
     
-    public void RequestRealtimeData(String ticker);
+    public void SubscribeRealtimeData(String ticker);
+    
+    public void SubscribeRealtimeData(String ticker, SecType secType);
     
     public void CancelAllRealtimeData();
     

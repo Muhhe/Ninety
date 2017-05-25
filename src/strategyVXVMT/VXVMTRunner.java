@@ -8,8 +8,6 @@ package strategyVXVMT;
 import communication.IBroker;
 import communication.OrderStatus;
 import communication.TradeOrder;
-import data.getters.DataGetterActGoogle;
-import data.getters.IDataGetterAct;
 import static java.lang.Double.max;
 import static java.lang.Math.abs;
 import java.util.ArrayList;
@@ -17,7 +15,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-import strategy90.HeldStock;
 import tradingapp.MailSender;
 import tradingapp.TradeFormatter;
 
@@ -91,7 +88,7 @@ public class VXVMTRunner {
     }
 
     private List<TradeOrder> PrepareOrders(VXVMTSignal signal, VXVMTIndicators indicators) {
-        logger.info("Signal - type: " + signal.type + ", exposure: " + signal.exposure);
+        logger.info("Signal - type: " + signal.type + ", exposure: " + TradeFormatter.toString(signal.exposure));
 
         List<TradeOrder> tradeOrders = new ArrayList<TradeOrder>();
         if (signal.type != status.heldType) {
@@ -121,12 +118,41 @@ public class VXVMTRunner {
     }
 
     public void Run() {
-        broker.connect();
-        VXVMTIndicators indicators = VXVMTDataPreparator.LoadData();
+        if (!broker.connect()) {
+            return;
+        }
+        
+        logger.info("Subscribing data. (10 sec wait)");
+        broker.SubscribeRealtimeData("XIV");
+        broker.SubscribeRealtimeData("VXX");
+        broker.SubscribeRealtimeData("VXV", IBroker.SecType.IND);
+        broker.SubscribeRealtimeData("VXMT", IBroker.SecType.IND);
+        
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException ex) {
+        }
+        
+        VXVMTIndicators indicators = VXVMTDataPreparator.LoadData(broker);
+        
+        status.PrintStatus(indicators.actXIVvalue, indicators.actVXXvalue);
+        
         RunStrategy(indicators);
+        
+        status.PrintStatus(indicators.actXIVvalue, indicators.actVXXvalue);
+        
+        double equity = status.GetEquity(indicators.actXIVvalue, indicators.actVXXvalue);
+        double diff = (equity - status.closingEquity);
+        double prc = diff / status.closingEquity * 100.0;
+        
+        MailSender.AddLineToMail("Held '" + status.heldType + "', position: " + status.heldPosition);
+        MailSender.AddLineToMail("Equity - " + TradeFormatter.toString(status.GetEquity(indicators.actXIVvalue, indicators.actVXXvalue)));
+        MailSender.AddLineToMail("Today's profit/loss - " + TradeFormatter.toString(diff) + " = " + TradeFormatter.toString(prc));
+        
         broker.disconnect();
         
-        status.UpdateEquityFile(indicators.actXIVvalue, indicators.actVXXvalue);
+        status.UpdateEquity(indicators.actXIVvalue, indicators.actVXXvalue);
+        status.SaveTradingStatus();
     }
 
     public void RunStrategy(VXVMTIndicators indicators) {
@@ -141,7 +167,7 @@ public class VXVMTRunner {
             logger.warning("Some orders were not closed on time.");
         }
         
-        MailSender.AddLineToMail("Today's signal - type: " + signal.type + ", exposure: " + signal.exposure);
+        MailSender.AddLineToMail("Today's signal - type: " + signal.type + ", exposure: " + TradeFormatter.toString(signal.exposure));
         
         ProcessSubmittedOrders();
         
@@ -149,7 +175,6 @@ public class VXVMTRunner {
     
     public static double GetOrderFee(int position) {
         return max(1.0, position * 0.005);
-        //return 0;
     }
 
     private void ProcessSubmittedOrders() {
@@ -164,9 +189,9 @@ public class VXVMTRunner {
             }
 
             if (order.order.orderType == TradeOrder.OrderType.SELL) {
-                status.capital += order.filled * order.fillPrice;
+                status.freeCapital += order.filled * order.fillPrice;
                 double fee = GetOrderFee(order.filled);
-                status.capital -= fee;
+                status.freeCapital -= fee;
                 status.fees += fee;
 
                 status.heldPosition -= order.filled;
@@ -179,9 +204,9 @@ public class VXVMTRunner {
             }
 
             if (order.order.orderType == TradeOrder.OrderType.BUY) {
-                status.capital -= order.filled * order.fillPrice;
+                status.freeCapital -= order.filled * order.fillPrice;
                 double fee = GetOrderFee(order.filled);
-                status.capital -= fee;
+                status.freeCapital -= fee;
                 status.fees += fee;
                 
                 status.heldPosition += order.filled;

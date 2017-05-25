@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <status>
-  <money freeCapital="10000" fees="0" />
-  <held type="None" position="0" />
+  <money freeCapital="10000" closingEquity="10000" fees="0" />
+  <held type="XIV" position="0" />
 </status>

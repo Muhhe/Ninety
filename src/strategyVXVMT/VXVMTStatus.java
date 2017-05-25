@@ -36,7 +36,8 @@ public class VXVMTStatus {
     
     public VXVMTSignal.Type heldType = VXVMTSignal.Type.None;
     public int heldPosition = 0;
-    public double capital = 0;
+    public double freeCapital = 0;
+    public double closingEquity = 0;
     public double fees = 0;
     
     
@@ -48,7 +49,7 @@ public class VXVMTStatus {
             value = valueXIV;
         }
         
-        return capital + heldPosition * value;
+        return freeCapital + heldPosition * value;
     }
 
     public void LoadTradingStatus() {
@@ -63,7 +64,10 @@ public class VXVMTStatus {
             Element moneyElement = rootElement.getChild("money");
             
             Attribute attribute = moneyElement.getAttribute("freeCapital");
-            capital = attribute.getDoubleValue();
+            freeCapital = attribute.getDoubleValue();
+            
+            attribute = moneyElement.getAttribute("closingEquity");
+            closingEquity = attribute.getDoubleValue();
             
             attribute = moneyElement.getAttribute("fees");
             fees = attribute.getDoubleValue();
@@ -99,7 +103,8 @@ public class VXVMTStatus {
             Document doc = new Document(rootElement);
             
             Element moneyElement = new Element("money");
-            moneyElement.setAttribute("freeCapital", TradeFormatter.toString(capital));
+            moneyElement.setAttribute("freeCapital", TradeFormatter.toString(freeCapital));
+            moneyElement.setAttribute("closingEquity", TradeFormatter.toString(closingEquity));
             moneyElement.setAttribute("fees", TradeFormatter.toString(fees));
             rootElement.addContent(moneyElement);
             
@@ -127,7 +132,10 @@ public class VXVMTStatus {
         }
     }
     
-    public void UpdateEquityFile(double valueXIV, double valueVXX) {
+    public void UpdateEquity(double valueXIV, double valueVXX) {
+        
+        closingEquity = GetEquity(valueXIV, valueVXX);
+        
         Writer writer = null;
         try {
             File equityFile = new File(FilePaths.equityPathFile);
@@ -150,5 +158,14 @@ public class VXVMTStatus {
                 logger.severe("Error updating equity file: " + ex);
             }
         }
+    }
+    public void PrintStatus() {
+        logger.fine("Free cash: " + freeCapital);
+        logger.fine("Held " + heldType + ", position: " + heldPosition);
+    }
+    
+    public void PrintStatus(double XIV, double VXX) {
+        logger.fine("Status report - currentEquity: " + GetEquity(XIV, VXX));
+        PrintStatus();
     }
 }

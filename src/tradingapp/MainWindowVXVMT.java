@@ -21,6 +21,7 @@ import strategy90.HeldStock;
 import strategy90.NinetyChecker;
 import strategy90.NinetyScheduler;
 import strategy90.StockPurchase;
+import strategyVXVMT.VXVMTChecker;
 import strategyVXVMT.VXVMTScheduler;
 import test.BrokerNoIB;
 
@@ -51,21 +52,21 @@ public class MainWindowVXVMT extends javax.swing.JFrame {
         });
 
         TradeLogger.getInstance().initializeTextAreas(logArea, Level.INFO, fineLogArea, Level.FINE, commArea, Level.FINEST);
-        
+
         Settings.ReadSettings();
-        
-        IBroker broker = new BrokerIB(Settings.port, Settings.clientId, false);
+
+        IBroker broker = new BrokerIB(Settings.port, Settings.clientId, IBroker.SecType.STK);
         //IBroker broker = new BrokerNoIB();
-        
+
         GlobalConfig.AddDataGetterAct(new DataGetterActIB(broker));
         GlobalConfig.AddDataGetterAct(new DataGetterActGoogle());
-        
+
         GlobalConfig.AddDataGetterHist(new DataGetterHistYahoo());
         GlobalConfig.AddDataGetterHist(new DataGetterHistQuandl());
 
         //ninetyScheduler = new NinetyScheduler( broker );
         vxvmtScheduler = new VXVMTScheduler(broker);
-        
+
         new Thread(MainWindowVXVMT::StartSocketServer).start();
     }
 
@@ -196,7 +197,10 @@ public class MainWindowVXVMT extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void startButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startButtonActionPerformed
-        vxvmtScheduler.ScheduleRun();
+
+        new Thread(() -> {
+            vxvmtScheduler.ScheduleRun();
+        }).start();
         /*if (!ninetyScheduler.isStartScheduled) {
             new Thread(() -> {
                 ninetyScheduler.ScheduleFirstCheck();
@@ -213,30 +217,17 @@ public class MainWindowVXVMT extends javax.swing.JFrame {
     }//GEN-LAST:event_startButtonActionPerformed
 
     private void checkPositionsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkPositionsButtonActionPerformed
-        
+
         new Thread(() -> {
-            boolean connected = ninetyScheduler.broker.isConnected();
-            if (!connected) {
-                ninetyScheduler.broker.connect();
-            }
-
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(MainWindowVXVMT.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-            NinetyChecker.CheckHeldPositions(ninetyScheduler.statusData, ninetyScheduler.broker);
-            NinetyChecker.CheckCash(ninetyScheduler.statusData, ninetyScheduler.broker);
-
-            if (!connected) {
-                ninetyScheduler.broker.disconnect();
-            }
+            vxvmtScheduler.CheckHeldPositions();
         }).start();
     }//GEN-LAST:event_checkPositionsButtonActionPerformed
 
     private void startNowButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startNowButtonActionPerformed
-        vxvmtScheduler.ScheduleForNow();
+
+        new Thread(() -> {
+            vxvmtScheduler.ScheduleForNow();
+        }).start();
         /*if (!ninetyScheduler.isStartScheduled) {
             vxvmtScheduler.RunNow();
             isOnCheckbox.setSelected(true);

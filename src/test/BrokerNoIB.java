@@ -78,7 +78,12 @@ public class BrokerNoIB implements IBroker {
     }
 
     @Override
-    public void RequestRealtimeData(String ticker) {
+    public void SubscribeRealtimeData(String ticker) {
+        
+    }
+
+    @Override
+    public void SubscribeRealtimeData(String ticker, SecType secType) {
         
     }
 
