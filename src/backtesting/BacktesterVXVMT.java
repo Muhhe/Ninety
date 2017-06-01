@@ -21,7 +21,7 @@ import java.io.Writer;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.logging.Logger;
-import strategyVXVMT.VXVMTIndicators;
+import strategyVXVMT.VXVMTData;
 import strategyVXVMT.VXVMTRunner;
 import strategyVXVMT.VXVMTSignal;
 import strategyVXVMT.VXVMTStatus;
@@ -204,7 +204,7 @@ public class BacktesterVXVMT {
             LocalDate date = dataXIV.dates[i];
             TradeTimer.SetToday(date);
             
-            VXVMTIndicators indicators = new VXVMTIndicators();
+            VXVMTData indicators = new VXVMTData();
             indicators.actRatioLagged = ratioData.adjCloses[i + 1];
             indicators.ratiosLagged[0] = IndicatorCalculator.SMA(60, ratioData.adjCloses, i + 1);
             indicators.ratiosLagged[1] = IndicatorCalculator.SMA(125, ratioData.adjCloses, i + 1);
@@ -330,7 +330,7 @@ public class BacktesterVXVMT {
 
             monthStats.totalDays++;
 
-            VXVMTIndicators indicators = new VXVMTIndicators();
+            VXVMTData indicators = new VXVMTData();
 
             indicators.actRatioLagged = ratioData.adjCloses[i + 1];
             indicators.ratiosLagged[0] = IndicatorCalculator.SMA(60, ratioData.adjCloses, i + 1);

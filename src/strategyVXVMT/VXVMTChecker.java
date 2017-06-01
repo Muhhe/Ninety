@@ -19,6 +19,11 @@ public class VXVMTChecker {
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     public static boolean CheckHeldPositions(VXVMTStatus statusData, IBroker broker) {
+        if (!broker.isConnected()) {
+            logger.severe("Broker is not connected!");
+            return false;
+        }
+        
         List<Position> allPositions = broker.getAllPositions();
 
         int posSize = 0;
@@ -70,5 +75,29 @@ public class VXVMTChecker {
         }
 
         return isOk;
+    }
+
+    public static boolean CheckData(VXVMTData data) {
+
+        if (data == null) {
+            logger.severe("Data is null!");
+            return false;
+        }
+
+        if ((data.actRatio == 0)
+                || (data.actRatioLagged == 0)
+                || (data.actVXXvalue == 0)
+                || (data.actXIVvalue == 0)) {
+            logger.severe("Some data is 0!");
+            return false;
+        }
+
+        if ((data.ratios == null)
+                || (data.ratiosLagged == null)) {
+            logger.severe("Some ratio is NULL!");
+            return false;
+        }
+        
+        return true;
     }
 }

@@ -25,7 +25,7 @@ public class VXVMTDataPreparator {
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
     
         
-    static public VXVMTIndicators LoadData(IBroker broker) {
+    static public VXVMTData LoadData(IBroker broker) {
         IDataGetterHist getter = new DataGetterHistCBOE();
         
         logger.info("Loading VXV");
@@ -58,21 +58,27 @@ public class VXVMTDataPreparator {
         dataRatio.adjCloses = ratio;
         dataRatio.dates = dates;
         
-        VXVMTIndicators indicators = new VXVMTIndicators();
+        VXVMTData data = new VXVMTData();
         
-        indicators.actRatioLagged = ratio[1];
-        indicators.ratiosLagged[0] = IndicatorCalculator.SMA(60, ratio, 1);
-        indicators.ratiosLagged[1] = IndicatorCalculator.SMA(125, ratio, 1);
-        indicators.ratiosLagged[2] = IndicatorCalculator.SMA(150, ratio, 1);
+        data.actRatioLagged = ratio[1];
+        data.ratiosLagged[0] = IndicatorCalculator.SMA(60, ratio, 1);
+        data.ratiosLagged[1] = IndicatorCalculator.SMA(125, ratio, 1);
+        data.ratiosLagged[2] = IndicatorCalculator.SMA(150, ratio, 1);
         
-        indicators.actRatio = ratio[0];
-        indicators.ratios[0] = IndicatorCalculator.SMA(60, ratio, 0);
-        indicators.ratios[1] = IndicatorCalculator.SMA(125, ratio, 0);
-        indicators.ratios[2] = IndicatorCalculator.SMA(150, ratio, 0);
+        data.actRatio = ratio[0];
+        data.ratios[0] = IndicatorCalculator.SMA(60, ratio, 0);
+        data.ratios[1] = IndicatorCalculator.SMA(125, ratio, 0);
+        data.ratios[2] = IndicatorCalculator.SMA(150, ratio, 0);
         
-        indicators.actVXXvalue = actGetter.readActualData("VXX");
-        indicators.actXIVvalue = actGetter.readActualData("XIV");
+        data.actVXXvalue = actGetter.readActualData("VXX");
+        data.actXIVvalue = actGetter.readActualData("XIV");
         
-        return indicators;
+        return data;
+    }
+    
+    static void UpdateActData(IBroker broker, VXVMTData data) {
+        IDataGetterAct actGetter = new DataGetterActIB(broker);
+        data.actVXXvalue = actGetter.readActualData("VXX");
+        data.actXIVvalue = actGetter.readActualData("XIV");
     }
 }

@@ -49,7 +49,7 @@ public class VXVMTStrategy {
         return signal;
     }
 
-    static public VXVMTSignal CalculateFinalSignal(VXVMTIndicators indicators) {
+    static public VXVMTSignal CalculateFinalSignal(VXVMTData indicators) {
 
         VXVMTSignal laggedSignal = CalculateSignalForDay(indicators.ratiosLagged, indicators.actRatioLagged);
         

@@ -9,7 +9,7 @@ package strategyVXVMT;
  *
  * @author Muhe
  */
-public class VXVMTIndicators {
+public class VXVMTData {
     public double[] ratiosLagged = {0,0,0};
     public double[] ratios = {0,0,0};
     public double actRatioLagged = 0;

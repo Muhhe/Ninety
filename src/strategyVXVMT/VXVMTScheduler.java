@@ -13,11 +13,11 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import tradingapp.FilePaths;
 import tradingapp.MailSender;
 import tradingapp.Settings;
+import tradingapp.TradeFormatter;
 import tradingapp.TradeLogger;
 import tradingapp.TradeTimer;
 
@@ -33,6 +33,7 @@ public class VXVMTScheduler {
     private final static Duration DURATION_BEFORECLOSE_RUNSTRATEGY = Duration.ofMinutes(2);
 
     public final VXVMTStatus status = new VXVMTStatus();
+    public VXVMTData data = null;
     public final IBroker broker;
 
     public VXVMTScheduler(IBroker broker) {
@@ -43,7 +44,7 @@ public class VXVMTScheduler {
 
     private void RunNow() {
         logger.info("Starting run!");
-        new VXVMTRunner(status, broker).Run();
+        new VXVMTRunner(status, broker).Run(data);
         logger.info("Run finished!");
     }
 
@@ -92,7 +93,23 @@ public class VXVMTScheduler {
 
     public void ScheduleForNow() {
         NewDayInit();
-        logger.info("Starting in 2 seconds.");
+        broker.connect();
+        logger.info("Subscribing data (3 sec).");
+        broker.SubscribeRealtimeData("XIV");
+        broker.SubscribeRealtimeData("VXX");
+        broker.SubscribeRealtimeData("VXV", IBroker.SecType.IND);
+        broker.SubscribeRealtimeData("VXMT", IBroker.SecType.IND);
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException ex) {
+        }
+        data = VXVMTDataPreparator.LoadData(broker);
+        if (!VXVMTChecker.CheckData(data)) {
+            logger.severe("Data check failed!");
+            return;
+        }
+
         TradeTimer.startTaskAt(TradeTimer.GetNYTimeNow().plusSeconds(2), this::RunNow);
     }
 
@@ -101,7 +118,12 @@ public class VXVMTScheduler {
 
         broker.connect();
 
-        VXVMTChecker.CheckHeldPositions(status, broker);
+        if (!VXVMTChecker.CheckHeldPositions(status, broker)) {
+            logger.severe("Held position check failed! Scheduling check for next hour.");
+            TradeTimer.startTaskAt(TradeTimer.GetNYTimeNow().plusHours(1), this::ScheduleRun);
+            MailSender.SendErrors();
+            return;
+        }
 
         ZonedDateTime now = TradeTimer.GetNYTimeNow();
         LocalTime closeTimeLocal = TradeTimer.GetTodayCloseTime();
@@ -113,19 +135,27 @@ public class VXVMTScheduler {
             return;
         }
 
-        // Ulozit data
-        VXVMTIndicators indicators = VXVMTDataPreparator.LoadData(broker);
+        logger.info("Subscribing data (10 sec).");
         broker.SubscribeRealtimeData("XIV");
         broker.SubscribeRealtimeData("VXX");
         broker.SubscribeRealtimeData("VXV", IBroker.SecType.IND);
         broker.SubscribeRealtimeData("VXMT", IBroker.SecType.IND);
-        
+
         try {
-            Thread.sleep(2000);
+            Thread.sleep(10000);
         } catch (InterruptedException ex) {
         }
-        
-        status.PrintStatus(indicators.actXIVvalue, indicators.actVXXvalue);
+
+        data = VXVMTDataPreparator.LoadData(broker);
+
+        if (!VXVMTChecker.CheckData(data)) {
+            logger.severe("Data check failed! Scheduling check for next hour.");
+            TradeTimer.startTaskAt(TradeTimer.GetNYTimeNow().plusHours(1), this::ScheduleRun);
+            MailSender.SendErrors();
+            return;
+        }
+
+        status.PrintStatus(data.actXIVvalue, data.actVXXvalue);
 
         broker.disconnect();
 
@@ -145,15 +175,32 @@ public class VXVMTScheduler {
         Runnable taskWrapper = new Runnable() {
             @Override
             public void run() {
+                broker.connect();
                 VXVMTChecker.CheckHeldPositions(status, broker);
                 RunNow();
+                
+                broker.disconnect();
 
+                status.UpdateEquity(data.actXIVvalue, data.actVXXvalue);
+                status.SaveTradingStatus();
+                
                 ScheduleForTomorrow();
                 MailSender.SendTradingLog();
             }
         };
 
         TradeTimer.startTaskAt(runTime, taskWrapper);
+
+        double equity = status.GetEquity(data.actXIVvalue, data.actVXXvalue);
+        double diff = (equity - status.closingEquity);
+        double prc = diff / status.closingEquity * 100.0;
+
+        MailSender.AddLineToMail("Check ok");
+        MailSender.AddLineToMail("Held '" + status.heldType + "', position: " + status.heldPosition);
+        MailSender.AddLineToMail("Equity - " + TradeFormatter.toString(status.GetEquity(data.actXIVvalue, data.actVXXvalue)));
+        MailSender.AddLineToMail("Current profit/loss - " + TradeFormatter.toString(diff) + " = " + TradeFormatter.toString(prc) + "%");
+
+        MailSender.SendCheckResult();
     }
 
     public void CheckHeldPositions() {
