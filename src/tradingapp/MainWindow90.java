@@ -232,7 +232,7 @@ public class MainWindow90 extends javax.swing.JFrame {
 
     private void startNowButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startNowButtonActionPerformed
         if (!ninetyScheduler.isStartScheduled) {
-            ninetyScheduler.RunNow();
+            ninetyScheduler.ScheduleForNow();
             isOnCheckbox.setSelected(true);
             startNowButton.setText("Stop");
             startButton.setText("Stop");

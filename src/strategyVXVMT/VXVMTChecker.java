@@ -7,8 +7,18 @@ package strategyVXVMT;
 
 import communication.IBroker;
 import communication.Position;
+import data.CloseData;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
+import strategy90.HeldStock;
+import static strategy90.NinetyChecker.CheckTickerAdjCloses;
+import static strategy90.NinetyChecker.CheckTickerData;
+import strategy90.StatusDataForNinety;
+import strategy90.StockDataForNinety;
+import strategy90.TickersToTrade;
+import tradingapp.TradeTimer;
 
 /**
  *
@@ -23,7 +33,7 @@ public class VXVMTChecker {
             logger.severe("Broker is not connected!");
             return false;
         }
-        
+
         List<Position> allPositions = broker.getAllPositions();
 
         int posSize = 0;
@@ -97,7 +107,46 @@ public class VXVMTChecker {
             logger.severe("Some ratio is NULL!");
             return false;
         }
-        
+
         return true;
+    }
+
+    public static boolean CheckTickerData(CloseData data, String ticker) {
+        if (data == null) {
+            logger.warning("Failed check hist data for: " + ticker + ". Data is NULL.");
+            return false;
+        }
+        if ((data.adjCloses.length != 151) || (data.dates.length != 151)) {
+            logger.warning("Failed check hist data for: " + ticker + ". Length is not 151 but " + data.adjCloses.length);
+            return false;
+        }
+
+        boolean isOk = true;
+        LocalDate checkDate = TradeTimer.GetLocalDateNow();
+        while (!TradeTimer.IsTradingDay(checkDate)) {
+            checkDate = checkDate.minusDays(1);
+        }
+        for (LocalDate date : data.dates) {
+            if (date.compareTo(checkDate) != 0) {
+                logger.warning("Failed check hist data for: " + ticker + ". Date should be " + checkDate + " but is " + date);
+                isOk = false;
+                break;
+            }
+
+            checkDate = checkDate.minusDays(1);
+            while (!TradeTimer.IsTradingDay(checkDate)) {
+                checkDate = checkDate.minusDays(1);
+            }
+        }
+
+        for (int i = 0; i < data.adjCloses.length; i++) {
+            if (data.adjCloses[i] == 0) {
+                logger.warning("Failed check hist data for: " + ticker + ". AdjClose value is 0. Date " + data.dates[i]);
+                isOk = false;
+                break;
+            }
+        }
+
+        return isOk;
     }
 }

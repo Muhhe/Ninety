@@ -87,7 +87,7 @@ public class NinetyScheduler {
         stockData.ClearData();
     }
 
-    public void RunNow() {
+    public void ScheduleForNow() {
         NewDayInit();
 
         isStartScheduled = true;

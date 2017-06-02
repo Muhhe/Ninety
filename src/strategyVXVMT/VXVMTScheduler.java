@@ -36,6 +36,8 @@ public class VXVMTScheduler {
     public VXVMTData data = null;
     public final IBroker broker;
 
+    public boolean isStartScheduled = false;
+
     public VXVMTScheduler(IBroker broker) {
         Settings.ReadSettings();
         status.LoadTradingStatus();
@@ -92,6 +94,8 @@ public class VXVMTScheduler {
     }
 
     public void ScheduleForNow() {
+        isStartScheduled = true;
+
         NewDayInit();
         broker.connect();
         logger.info("Subscribing data (3 sec).");
@@ -107,6 +111,7 @@ public class VXVMTScheduler {
         data = VXVMTDataPreparator.LoadData(broker);
         if (!VXVMTChecker.CheckData(data)) {
             logger.severe("Data check failed!");
+            isStartScheduled = false;
             return;
         }
 
@@ -114,9 +119,15 @@ public class VXVMTScheduler {
     }
 
     public void ScheduleRun() {
+        isStartScheduled = true;
         NewDayInit();
 
-        broker.connect();
+        if (!broker.connect()) {
+            logger.severe("Failed to connect to IB! Scheduling check for next hour.");
+            TradeTimer.startTaskAt(TradeTimer.GetNYTimeNow().plusHours(1), this::ScheduleRun);
+            MailSender.SendErrors();
+            return;
+        }
 
         if (!VXVMTChecker.CheckHeldPositions(status, broker)) {
             logger.severe("Held position check failed! Scheduling check for next hour.");
@@ -178,12 +189,12 @@ public class VXVMTScheduler {
                 broker.connect();
                 VXVMTChecker.CheckHeldPositions(status, broker);
                 RunNow();
-                
+
                 broker.disconnect();
 
                 status.UpdateEquity(data.actXIVvalue, data.actVXXvalue);
                 status.SaveTradingStatus();
-                
+
                 ScheduleForTomorrow();
                 MailSender.SendTradingLog();
             }
@@ -228,5 +239,12 @@ public class VXVMTScheduler {
         if (!connected) {
             broker.disconnect();
         }
+    }
+    
+    public void Stop() {
+        logger.info("Stopping execution of VXVMT strategy.");
+        TradeTimer.stop();
+        logger.info("Execution of VXVMT strategy is stopped.");
+        isStartScheduled = false;
     }
 }

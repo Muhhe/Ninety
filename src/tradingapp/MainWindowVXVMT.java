@@ -7,23 +7,17 @@ package tradingapp;
 
 import communication.BrokerIB;
 import communication.IBroker;
-import data.getters.DataGetterActGoogle;
 import data.getters.DataGetterActIB;
+import data.getters.DataGetterHistCBOE;
 import data.getters.DataGetterHistQuandl;
 import data.getters.DataGetterHistYahoo;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import strategy90.HeldStock;
-import strategy90.NinetyChecker;
 import strategy90.NinetyScheduler;
-import strategy90.StockPurchase;
-import strategyVXVMT.VXVMTChecker;
 import strategyVXVMT.VXVMTScheduler;
-import test.BrokerNoIB;
 
 /**
  *
@@ -56,15 +50,13 @@ public class MainWindowVXVMT extends javax.swing.JFrame {
         Settings.ReadSettings();
 
         IBroker broker = new BrokerIB(Settings.port, Settings.clientId, IBroker.SecType.STK);
-        //IBroker broker = new BrokerNoIB();
 
         GlobalConfig.AddDataGetterAct(new DataGetterActIB(broker));
-        GlobalConfig.AddDataGetterAct(new DataGetterActGoogle());
 
-        GlobalConfig.AddDataGetterHist(new DataGetterHistYahoo());
+        GlobalConfig.AddDataGetterHist(new DataGetterHistCBOE());
+        GlobalConfig.AddDataGetterHist(new DataGetterHistGoogle());
         GlobalConfig.AddDataGetterHist(new DataGetterHistQuandl());
 
-        //ninetyScheduler = new NinetyScheduler( broker );
         vxvmtScheduler = new VXVMTScheduler(broker);
 
         new Thread(MainWindowVXVMT::StartSocketServer).start();
@@ -198,22 +190,19 @@ public class MainWindowVXVMT extends javax.swing.JFrame {
 
     private void startButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startButtonActionPerformed
 
-        new Thread(() -> {
-            vxvmtScheduler.ScheduleRun();
-        }).start();
-        /*if (!ninetyScheduler.isStartScheduled) {
+        if (!vxvmtScheduler.isStartScheduled) {
             new Thread(() -> {
-                ninetyScheduler.ScheduleFirstCheck();
+                vxvmtScheduler.ScheduleRun();
             }).start();
             isOnCheckbox.setSelected(true);
             startButton.setText("Stop");
             startNowButton.setText("Stop");
         } else {
-            ninetyScheduler.Stop();
+            vxvmtScheduler.Stop();
             isOnCheckbox.setSelected(false);
             startButton.setText("Start");
             startNowButton.setText("StartNow");
-        }*/
+        }
     }//GEN-LAST:event_startButtonActionPerformed
 
     private void checkPositionsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkPositionsButtonActionPerformed
@@ -225,20 +214,19 @@ public class MainWindowVXVMT extends javax.swing.JFrame {
 
     private void startNowButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startNowButtonActionPerformed
 
-        new Thread(() -> {
-            vxvmtScheduler.ScheduleForNow();
-        }).start();
-        /*if (!ninetyScheduler.isStartScheduled) {
-            vxvmtScheduler.RunNow();
+        if (!vxvmtScheduler.isStartScheduled) {
+            new Thread(() -> {
+                vxvmtScheduler.ScheduleForNow();
+            }).start();
             isOnCheckbox.setSelected(true);
             startNowButton.setText("Stop");
             startButton.setText("Stop");
         } else {
-            ninetyScheduler.Stop();
+            vxvmtScheduler.Stop();
             isOnCheckbox.setSelected(false);
             startNowButton.setText("StartNow");
             startButton.setText("Start");
-        }*/
+        }
     }//GEN-LAST:event_startNowButtonActionPerformed
 
     /**

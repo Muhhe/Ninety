@@ -297,7 +297,7 @@ public class TestPlatform extends javax.swing.JFrame {
         ninetySchedulerNoBroker = new NinetyScheduler(broker);
 
         if (!ninetySchedulerNoBroker.isStartScheduled) {
-            ninetySchedulerNoBroker.RunNow();
+            ninetySchedulerNoBroker.ScheduleForNow();
             isOnCheckbox.setSelected(true);
             startNowButton.setText("Stop");
             startButton.setText("Stop");
