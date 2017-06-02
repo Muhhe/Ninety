@@ -70,17 +70,7 @@ public class VXVMTStatus {
             closingEquity = attribute.getDoubleValue();
             
             attribute = moneyElement.getAttribute("fees");
-            fees = attribute.getDoubleValue();
-            
-            /*Element yesterdayElement = rootElement.getChild("yesterdaySignal");
-            
-            attribute = yesterdayElement.getAttribute("type");
-            String type = attribute.getValue();
-            yesterdaySignal.type = VXVMTSignal.typeFromString(type);
-            
-            attribute = yesterdayElement.getAttribute("exposure");
-            yesterdaySignal.exposure = attribute.getDoubleValue();*/
-            
+            fees = attribute.getDoubleValue();            
             
             Element heldElement = rootElement.getChild("held");
             attribute = heldElement.getAttribute("type");
@@ -108,11 +98,6 @@ public class VXVMTStatus {
             moneyElement.setAttribute("fees", TradeFormatter.toString(fees));
             rootElement.addContent(moneyElement);
             
-            /*Element yesterdayElement = new Element("yesterdaySignal");
-            yesterdayElement.setAttribute("type", yesterdaySignal.typeToString());
-            yesterdayElement.setAttribute("exposure", TradeFormatter.toString(yesterdaySignal.exposure));
-            rootElement.addContent(yesterdayElement);*/
-            
             Element heldElement = new Element("held");
             heldElement.setAttribute("type", heldType.toString());
             heldElement.setAttribute("position", Integer.toString(heldPosition));
@@ -132,7 +117,7 @@ public class VXVMTStatus {
         }
     }
     
-    public void UpdateEquity(double valueXIV, double valueVXX) {
+    public void UpdateEquity(double valueXIV, double valueVXX, String signal) {
         
         closingEquity = GetEquity(valueXIV, valueVXX);
         
@@ -141,7 +126,7 @@ public class VXVMTStatus {
             File equityFile = new File(FilePaths.equityPathFile);
             equityFile.createNewFile();
             writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(equityFile, true), "UTF-8"));
-            String line = TradeTimer.GetLocalDateNow().toString() + "," + GetEquity(valueXIV, valueVXX) + "\r\n";
+            String line = TradeTimer.GetLocalDateNow().toString() + "," + GetEquity(valueXIV, valueVXX) + "," + signal + "\r\n";
             writer.append(line);
             
             logger.fine("Updated equity file with value " + GetEquity(valueXIV, valueVXX));

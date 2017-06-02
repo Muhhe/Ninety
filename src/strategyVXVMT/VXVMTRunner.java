@@ -37,7 +37,7 @@ public class VXVMTRunner {
         this.broker = broker;
     }
 
-    private TradeOrder GetSellAllOrder(VXVMTData indicators) {
+    private TradeOrder GetSellAllOrder(VXVMTData data) {
         if ((status.heldType == VXVMTSignal.Type.None) || (status.heldPosition == 0)) {
             return null;
         }
@@ -45,10 +45,10 @@ public class VXVMTRunner {
         TradeOrder order = new TradeOrder();
         order.orderType = TradeOrder.OrderType.SELL;
         if (status.heldType == VXVMTSignal.Type.VXX) {
-            order.expectedPrice = indicators.actVXXvalue;
+            order.expectedPrice = data.indicators.actVXXvalue;
             order.tickerSymbol = "VXX";
         } else {
-            order.expectedPrice = indicators.actXIVvalue;
+            order.expectedPrice = data.indicators.actXIVvalue;
             order.tickerSymbol = "XIV";
         }
 
@@ -57,7 +57,7 @@ public class VXVMTRunner {
         return order;
     }
 
-    private TradeOrder GetBuyOrder(VXVMTSignal.Type ticker, int position, VXVMTData indicators) {
+    private TradeOrder GetBuyOrder(VXVMTSignal.Type ticker, int position, VXVMTData data) {
         if ((ticker == VXVMTSignal.Type.None) || (position == 0)) {
             logger.warning("Invalid trade order request.");
             return null;
@@ -66,10 +66,10 @@ public class VXVMTRunner {
         TradeOrder order = new TradeOrder();
         order.orderType = position > 0 ? TradeOrder.OrderType.BUY : TradeOrder.OrderType.SELL;
         if (ticker == VXVMTSignal.Type.VXX) {
-            order.expectedPrice = indicators.actVXXvalue;
+            order.expectedPrice = data.indicators.actVXXvalue;
             order.tickerSymbol = "VXX";
         } else {
-            order.expectedPrice = indicators.actXIVvalue;
+            order.expectedPrice = data.indicators.actXIVvalue;
             order.tickerSymbol = "XIV";
         }
 
@@ -78,16 +78,16 @@ public class VXVMTRunner {
         return order;
     }
 
-    private int GetDesiredPosition(VXVMTSignal signal, VXVMTData indicators) {
+    private int GetDesiredPosition(VXVMTSignal signal, VXVMTData data) {
         double value = 0;
 
         if (signal.type == VXVMTSignal.Type.VXX) {
-            value = indicators.actVXXvalue;
+            value = data.indicators.actVXXvalue;
         } else {
-            value = indicators.actXIVvalue;
+            value = data.indicators.actXIVvalue;
         }
 
-        return (int) (status.GetEquity(indicators.actXIVvalue, indicators.actVXXvalue) / value * signal.exposure);
+        return (int) (status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue) / value * signal.exposure);
     }
 
     private List<TradeOrder> PrepareOrders(VXVMTSignal signal, VXVMTData data) {
@@ -120,54 +120,49 @@ public class VXVMTRunner {
         return tradeOrders;
     }
 
-    public void Run(VXVMTData data) {
+    public VXVMTSignal Run(VXVMTData data) {
         if (data == null) {
             logger.severe("VXVMT run: data is null !!!");
-            return;
+            return null;
         }
-        
+
         if (!broker.isConnected()) {
             logger.severe("Broker not connected!");
-            return;
+            return null;
         }
-        
-        logger.info("Subscribing data. (10 sec wait)");
+
+        logger.info("Subscribing data. (30 sec wait)");
         broker.SubscribeRealtimeData("XIV");
         broker.SubscribeRealtimeData("VXX");
         broker.SubscribeRealtimeData("VXV", IBroker.SecType.IND);
         broker.SubscribeRealtimeData("VXMT", IBroker.SecType.IND);
-        
+
         try {
-            Thread.sleep(10000);
+            Thread.sleep(30000);
         } catch (InterruptedException ex) {
         }
-        
-        status.PrintStatus(data.actXIVvalue, data.actVXXvalue);
-        
+
+        status.PrintStatus(data.indicators.actXIVvalue, data.indicators.actVXXvalue);
+
         VXVMTDataPreparator.UpdateActData(broker, data);
-        
-        if (!VXVMTChecker.CheckData(data)) {
+        VXVMTDataPreparator.ComputeIndicators(data);
+
+        if (!VXVMTChecker.CheckDataIndicators(data)) {
             logger.severe("Failed data chek!");
-            return;
+            return null;
         }
-        
-        RunStrategy(data);
-        
-        status.PrintStatus(data.actXIVvalue, data.actVXXvalue);
-        
-        double equity = status.GetEquity(data.actXIVvalue, data.actVXXvalue);
-        double diff = (equity - status.closingEquity);
-        double prc = diff / status.closingEquity * 100.0;
-        
-        MailSender.AddLineToMail("Held '" + status.heldType + "', position: " + status.heldPosition);
-        MailSender.AddLineToMail("Equity - " + TradeFormatter.toString(status.GetEquity(data.actXIVvalue, data.actVXXvalue)));
-        MailSender.AddLineToMail("Today's profit/loss - " + TradeFormatter.toString(diff) + " = " + TradeFormatter.toString(prc) + "%");
+
+        VXVMTSignal signal = RunStrategy(data);
+
+        status.PrintStatus(data.indicators.actXIVvalue, data.indicators.actVXXvalue);
+
+        return signal;
     }
 
-    public void RunStrategy(VXVMTData indicators) {
-        VXVMTSignal signal = VXVMTStrategy.CalculateFinalSignal(indicators);
+    public VXVMTSignal RunStrategy(VXVMTData data) {
+        VXVMTSignal signal = VXVMTStrategy.CalculateFinalSignal(data);
 
-        List<TradeOrder> orders = PrepareOrders(signal, indicators);
+        List<TradeOrder> orders = PrepareOrders(signal, data);
         for (TradeOrder tradeOrder : orders) {
             broker.PlaceOrder(tradeOrder);
         }
@@ -175,13 +170,13 @@ public class VXVMTRunner {
         if (!broker.waitUntilOrdersClosed(60)) {
             logger.warning("Some orders were not closed on time.");
         }
-        
-        MailSender.AddLineToMail("Today's signal - type: " + signal.type + ", exposure: " + TradeFormatter.toString(signal.exposure));
-        
+
         ProcessSubmittedOrders();
-        
+        broker.clearOrderMaps();
+
+        return signal;
     }
-    
+
     public static double GetOrderFee(int position) {
         return max(1.0, position * 0.005);
     }
@@ -217,7 +212,7 @@ public class VXVMTRunner {
                 double fee = GetOrderFee(order.filled);
                 status.freeCapital -= fee;
                 status.fees += fee;
-                
+
                 status.heldPosition += order.filled;
                 status.heldType = VXVMTSignal.typeFromString(order.order.tickerSymbol);
             }

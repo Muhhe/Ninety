@@ -19,6 +19,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import strategy90.NinetyScheduler;
 import strategyVXVMT.VXVMTScheduler;
+import test.BrokerIBReadOnly;
 
 /**
  *
@@ -51,6 +52,7 @@ public class MainWindowVXVMT extends javax.swing.JFrame {
         Settings.ReadSettings();
 
         IBroker broker = new BrokerIB(Settings.port, Settings.clientId, IBroker.SecType.STK);
+        //IBroker broker = new BrokerIBReadOnly(Settings.port, Settings.clientId, IBroker.SecType.STK);
 
         GlobalConfig.AddDataGetterAct(new DataGetterActIB(broker));
 

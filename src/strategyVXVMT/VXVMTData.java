@@ -5,16 +5,15 @@
  */
 package strategyVXVMT;
 
+import data.CloseData;
+
 /**
  *
  * @author Muhe
  */
 public class VXVMTData {
-    public double[] ratiosLagged = {0,0,0};
-    public double[] ratios = {0,0,0};
-    public double actRatioLagged = 0;
-    public double actRatio = 0;
+    public CloseData dataVXV = null;
+    public CloseData dataVXMT = null;
     
-    public double actXIVvalue = 0;
-    public double actVXXvalue = 0;
+    public VXVMTIndicators indicators = null;
 }

@@ -17,6 +17,9 @@ public class VXVMTSignal {
     public double exposure = 0;
     public Type type = Type.None;
     
+    public boolean[] XIVSignals = {false, false, false};
+    public boolean[] VXXSignals = {false, false, false};
+    
     static VXVMTSignal.Type typeFromString(String str) {
         switch (str) {
             case "VXX":

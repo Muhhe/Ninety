@@ -205,7 +205,7 @@ public class BacktesterVXVMT {
             TradeTimer.SetToday(date);
             
             VXVMTData indicators = new VXVMTData();
-            indicators.actRatioLagged = ratioData.adjCloses[i + 1];
+            /*indicators.actRatioLagged = ratioData.adjCloses[i + 1];
             indicators.ratiosLagged[0] = IndicatorCalculator.SMA(60, ratioData.adjCloses, i + 1);
             indicators.ratiosLagged[1] = IndicatorCalculator.SMA(125, ratioData.adjCloses, i + 1);
             indicators.ratiosLagged[2] = IndicatorCalculator.SMA(150, ratioData.adjCloses, i + 1);
@@ -226,7 +226,7 @@ public class BacktesterVXVMT {
             stats.UpdateEquity(eq, date);
             UpdateEquityFile(eq, "equity.csv", (status.heldType.toString() + " - " + TradeFormatter.toString(status.heldPosition)));
             UpdateEquityFile(xivPos * dataXIV.adjCloses[i], "vix.csv", null);
-            //UpdateEquityFile(spyPos * dataSPY.adjCloses[i], "spy.csv", null);
+            //UpdateEquityFile(spyPos * dataSPY.adjCloses[i], "spy.csv", null);*/
 
             stats.EndDay();
 
@@ -332,7 +332,7 @@ public class BacktesterVXVMT {
 
             VXVMTData indicators = new VXVMTData();
 
-            indicators.actRatioLagged = ratioData.adjCloses[i + 1];
+            /*indicators.actRatioLagged = ratioData.adjCloses[i + 1];
             indicators.ratiosLagged[0] = IndicatorCalculator.SMA(60, ratioData.adjCloses, i + 1);
             indicators.ratiosLagged[1] = IndicatorCalculator.SMA(125, ratioData.adjCloses, i + 1);
             indicators.ratiosLagged[2] = IndicatorCalculator.SMA(150, ratioData.adjCloses, i + 1);
@@ -340,7 +340,7 @@ public class BacktesterVXVMT {
             indicators.actRatio = ratioData.adjCloses[i];
             indicators.ratios[0] = IndicatorCalculator.SMA(60, ratioData.adjCloses, i);
             indicators.ratios[1] = IndicatorCalculator.SMA(125, ratioData.adjCloses, i);
-            indicators.ratios[2] = IndicatorCalculator.SMA(150, ratioData.adjCloses, i);
+            indicators.ratios[2] = IndicatorCalculator.SMA(150, ratioData.adjCloses, i);*/
             
             VXVMTSignal signal = VXVMTStrategy.CalculateFinalSignal(indicators);
 

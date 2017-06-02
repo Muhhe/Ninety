@@ -29,6 +29,7 @@ public class VXVMTChecker {
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     public static boolean CheckHeldPositions(VXVMTStatus statusData, IBroker broker) {
+                
         if (!broker.isConnected()) {
             logger.severe("Broker is not connected!");
             return false;
@@ -87,24 +88,46 @@ public class VXVMTChecker {
         return isOk;
     }
 
-    public static boolean CheckData(VXVMTData data) {
+    public static boolean CheckNumber(double num) {
+        if (num == 0 || Double.isNaN(num)) {
+            return false;
+        }
+        return true;
+    }
+
+    public static boolean CheckDataIndicators(VXVMTData data) {
 
         if (data == null) {
             logger.severe("Data is null!");
             return false;
         }
 
-        if ((data.actRatio == 0)
-                || (data.actRatioLagged == 0)
-                || (data.actVXXvalue == 0)
-                || (data.actXIVvalue == 0)) {
-            logger.severe("Some data is 0!");
+        if (!CheckNumber(data.indicators.actRatio)
+                || !CheckNumber(data.indicators.actRatioLagged)
+                || !CheckNumber(data.indicators.actVXXvalue)
+                || !CheckNumber(data.indicators.actXIVvalue)) {
+            logger.severe("Some data is not valid!");
             return false;
+
         }
 
-        if ((data.ratios == null)
-                || (data.ratiosLagged == null)) {
+        if ((data.indicators.ratios == null)
+                || (data.indicators.ratiosLagged == null)) {
             logger.severe("Some ratio is NULL!");
+            return false;
+        }
+        
+        if (!CheckNumber(data.indicators.ratios[0])
+                || !CheckNumber(data.indicators.ratios[1])
+                || !CheckNumber(data.indicators.ratios[2])) {
+            logger.severe("Some ratio data is not valid!");
+            return false;
+        }
+        
+        if (!CheckNumber(data.indicators.ratiosLagged[0])
+                || !CheckNumber(data.indicators.ratiosLagged[1])
+                || !CheckNumber(data.indicators.ratiosLagged[2])) {
+            logger.severe("Some ratiosLagged data is not valid!");
             return false;
         }
 
