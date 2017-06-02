@@ -53,10 +53,16 @@ public class DataGetterHistGoogle implements IDataGetterHist {
         int endDay = endDate.getDayOfMonth();
 
         StringBuilder urlBuilder = new StringBuilder();
+        
+        // Google needs this ...
+        String gogTicker = tickerSymbol;
+        if (tickerSymbol.equals("LMT")) {
+            gogTicker = "NYSE:LMT";
+        }
 
         //http://www.google.com/finance/historical?output=csv&q=AGN&startdate=2016-12-04&enddate=2017-05-19
         urlBuilder.append("http://www.google.com/finance/historical?output=csv&q=");
-        urlBuilder.append(tickerSymbol);
+        urlBuilder.append(gogTicker);
         urlBuilder.append("&startdate=");
         urlBuilder.append(startYear);
         urlBuilder.append("-");
