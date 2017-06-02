@@ -196,7 +196,7 @@ public class NinetyScheduler {
 
     public void PrepareData() {
         try {
-            CheckingThread checkThread = CheckingThread.StartNewCheckingThread(Duration.ofMinutes(2), "Failed to prepare data");
+            CheckingThread checkThread = CheckingThread.StartNewCheckingThread(Duration.ofMinutes(5), "Failed to prepare data");
 
             logger.finer("Acquiring lock for LoadingHistData run.");
             dataMutex.acquire();
@@ -237,7 +237,7 @@ public class NinetyScheduler {
             @Override
             public void run() {
                 try {
-                    CheckingThread checkThread = CheckingThread.StartNewCheckingThread(Duration.ofMinutes(2), "Trade run did not end properly.");
+                    CheckingThread checkThread = CheckingThread.StartNewCheckingThread(Duration.ofMinutes(5), "Trade run did not end properly.");
 
                     logger.finer("Acquiring lock for trading run.");
                     dataMutex.acquire();

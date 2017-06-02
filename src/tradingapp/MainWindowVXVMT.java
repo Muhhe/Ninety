@@ -9,6 +9,7 @@ import communication.BrokerIB;
 import communication.IBroker;
 import data.getters.DataGetterActIB;
 import data.getters.DataGetterHistCBOE;
+import data.getters.DataGetterHistGoogle;
 import data.getters.DataGetterHistQuandl;
 import data.getters.DataGetterHistYahoo;
 import java.io.IOException;
