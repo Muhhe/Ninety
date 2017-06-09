@@ -78,16 +78,27 @@ public class VXVMTRunner {
         return order;
     }
 
-    private int GetDesiredPosition(VXVMTSignal signal, VXVMTData data) {
+    private int GetMaxPosition(VXVMTSignal.Type signalType, VXVMTData data) {
+        return GetDesiredPosition(signalType, 1, data);
+    }
+
+    private int GetDesiredPosition(VXVMTSignal.Type signalType, double exposure, VXVMTData data) {
         double value = 0;
 
-        if (signal.type == VXVMTSignal.Type.VXX) {
+        if (signalType == VXVMTSignal.Type.VXX) {
             value = data.indicators.actVXXvalue;
         } else {
             value = data.indicators.actXIVvalue;
         }
+        
+        // Budget is lowered by 1% for safety reasons (slipage etc.)
+        double budget = status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue) * 0.99;
 
-        return (int) (status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue) / value * signal.exposure);
+        return (int) (budget / value * exposure);
+    }
+
+    private int GetDesiredPosition(VXVMTSignal signal, VXVMTData data) {
+        return GetDesiredPosition(signal.type, signal.exposure, data);
     }
 
     private List<TradeOrder> PrepareOrders(VXVMTSignal signal, VXVMTData data) {
@@ -109,11 +120,16 @@ public class VXVMTRunner {
         } else if (signal.type != VXVMTSignal.Type.None) {
             int desiredPosition = GetDesiredPosition(signal, data);
             int diffInPosition = desiredPosition - status.heldPosition;
-            if (abs(diffInPosition) > 100) {
+            double diffRel = (double) diffInPosition / GetMaxPosition(signal.type, data);
+            if ((abs(diffInPosition) > 100) || (abs(diffRel) > 0.1)) {
+                logger.info("Target position: " + signal.type + " - " + desiredPosition);
                 TradeOrder order = GetBuyOrder(signal.type, diffInPosition, data);
                 if (order != null) {
                     tradeOrders.add(order);
                 }
+            } else {
+                logger.info("Target position: " + signal.type + " - " + desiredPosition + ". Held: " + status.heldPosition
+                        + ". Difference only " + TradeFormatter.toString(diffRel * 100) + "%. Not worth issuing order");
             }
         }
 
@@ -131,21 +147,20 @@ public class VXVMTRunner {
             return null;
         }
 
-        logger.info("Subscribing data. (30 sec wait)");
+        logger.info("Subscribing data. (40 sec wait)");
         broker.SubscribeRealtimeData("XIV");
         broker.SubscribeRealtimeData("VXX");
         broker.SubscribeRealtimeData("VXV", IBroker.SecType.IND);
         broker.SubscribeRealtimeData("VXMT", IBroker.SecType.IND);
 
         try {
-            Thread.sleep(30000);
+            Thread.sleep(40000);
         } catch (InterruptedException ex) {
         }
 
         status.PrintStatus(data.indicators.actXIVvalue, data.indicators.actVXXvalue);
 
-        VXVMTDataPreparator.UpdateActData(broker, data);
-        VXVMTDataPreparator.ComputeIndicators(data);
+        VXVMTDataPreparator.UpdateIndicators(broker, data);
 
         if (!VXVMTChecker.CheckDataIndicators(data)) {
             logger.severe("Failed data chek!");
@@ -165,9 +180,11 @@ public class VXVMTRunner {
         List<TradeOrder> orders = PrepareOrders(signal, data);
         for (TradeOrder tradeOrder : orders) {
             broker.PlaceOrder(tradeOrder);
+            // wait until sold order is filled (if there is one)
+            broker.waitUntilOrdersClosed(10);
         }
 
-        if (!broker.waitUntilOrdersClosed(60)) {
+        if (!broker.waitUntilOrdersClosed(50)) {
             logger.warning("Some orders were not closed on time.");
         }
 

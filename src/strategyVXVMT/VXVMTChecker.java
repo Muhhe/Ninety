@@ -8,16 +8,13 @@ package strategyVXVMT;
 import communication.IBroker;
 import communication.Position;
 import data.CloseData;
+import static java.lang.Math.abs;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
-import strategy90.HeldStock;
-import static strategy90.NinetyChecker.CheckTickerAdjCloses;
-import static strategy90.NinetyChecker.CheckTickerData;
 import strategy90.StatusDataForNinety;
-import strategy90.StockDataForNinety;
-import strategy90.TickersToTrade;
+import tradingapp.Settings;
+import tradingapp.TradeFormatter;
 import tradingapp.TradeTimer;
 
 /**
@@ -29,7 +26,7 @@ public class VXVMTChecker {
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     public static boolean CheckHeldPositions(VXVMTStatus statusData, IBroker broker) {
-                
+
         if (!broker.isConnected()) {
             logger.severe("Broker is not connected!");
             return false;
@@ -102,6 +99,11 @@ public class VXVMTChecker {
             return false;
         }
 
+        if (data.indicators == null) {
+            logger.severe("Indicators are null!");
+            return false;
+        }
+
         if (!CheckNumber(data.indicators.actRatio)
                 || !CheckNumber(data.indicators.actRatioLagged)
                 || !CheckNumber(data.indicators.actVXXvalue)
@@ -116,20 +118,22 @@ public class VXVMTChecker {
             logger.severe("Some ratio is NULL!");
             return false;
         }
-        
+
         if (!CheckNumber(data.indicators.ratios[0])
                 || !CheckNumber(data.indicators.ratios[1])
                 || !CheckNumber(data.indicators.ratios[2])) {
             logger.severe("Some ratio data is not valid!");
             return false;
         }
-        
+
         if (!CheckNumber(data.indicators.ratiosLagged[0])
                 || !CheckNumber(data.indicators.ratiosLagged[1])
                 || !CheckNumber(data.indicators.ratiosLagged[2])) {
             logger.severe("Some ratiosLagged data is not valid!");
             return false;
         }
+
+        logger.fine("Indicators check - OK");
 
         return true;
     }
@@ -171,5 +175,34 @@ public class VXVMTChecker {
         }
 
         return isOk;
+    }
+
+    public static boolean CheckCash(VXVMTStatus statusData, IBroker broker) {
+
+        broker.RequestAccountSummary();
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException ex) {
+        }
+
+        if (statusData.freeCapital < 0.0) {
+            logger.warning("Saved cash is negative.");
+        }
+
+        logger.info("Saved free cash: " + TradeFormatter.toString(statusData.freeCapital) + ", cash on IB: " + TradeFormatter.toString(broker.GetAccountSummary().totalCashValue));
+
+        double cashDiff = broker.GetAccountSummary().totalCashValue - statusData.freeCapital;
+        double cashDiffPercent = (cashDiff / statusData.freeCapital * 100);
+
+        if (cashDiffPercent < 0.0) {
+            logger.warning("Free cash on IB is lower than saved cash. Difference: " + TradeFormatter.toString(cashDiff)
+                    + "$ = " + TradeFormatter.toString(cashDiffPercent) + "%");
+        } else {
+            logger.fine("Difference - " + TradeFormatter.toString(cashDiff) + "$ = " + TradeFormatter.toString(cashDiffPercent) + "%");
+        }
+
+        logger.fine("Cash check - OK");
+
+        return true;
     }
 }

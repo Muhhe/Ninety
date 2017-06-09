@@ -86,7 +86,6 @@ public class TextAreaLogHandler extends Handler {
 
         } catch (Exception e) { // Exception thrown out of here could cause an infinite loop
             msg.append("Exception in logging " + e.getMessage() + "\r\n");
-
         }
     }
 

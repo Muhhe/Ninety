@@ -49,7 +49,11 @@
                               <EmptySpace min="-2" pref="184" max="-2" attributes="0"/>
                               <Component id="backTestVIXButton" max="32767" attributes="0"/>
                           </Group>
-                          <Component id="reinvestCheckBox" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Group type="102" alignment="0" attributes="0">
+                              <Component id="reinvestCheckBox" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" pref="496" max="-2" attributes="0"/>
+                              <Component id="backTestContButton" max="32767" attributes="0"/>
+                          </Group>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" max="-2" attributes="0">
@@ -86,8 +90,9 @@
                   <Component id="logLvlComboBox" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="jLabel3" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="reinvestCheckBox" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="backTestContButton" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
-              <EmptySpace pref="9" max="32767" attributes="0"/>
+              <EmptySpace pref="8" max="32767" attributes="0"/>
               <Component id="jScrollPane1" min="-2" pref="478" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
@@ -133,7 +138,7 @@
     </Component>
     <Component class="javax.swing.JButton" name="backTest90Button">
       <Properties>
-        <Property name="text" type="java.lang.String" value="RunBacktest 90"/>
+        <Property name="text" type="java.lang.String" value="Run Ninety"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="backTest90ButtonActionPerformed"/>
@@ -186,10 +191,18 @@
     </Component>
     <Component class="javax.swing.JButton" name="backTestVIXButton">
       <Properties>
-        <Property name="text" type="java.lang.String" value="RunBacktest VIX"/>
+        <Property name="text" type="java.lang.String" value="Run VXVMT"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="backTestVIXButtonActionPerformed"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JButton" name="backTestContButton">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Run Contango"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="backTestContButtonActionPerformed"/>
       </Events>
     </Component>
   </SubComponents>

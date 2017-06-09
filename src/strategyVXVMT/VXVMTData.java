@@ -15,5 +15,5 @@ public class VXVMTData {
     public CloseData dataVXV = null;
     public CloseData dataVXMT = null;
     
-    public VXVMTIndicators indicators = null;
+    public VXVMTIndicators indicators = new VXVMTIndicators();
 }

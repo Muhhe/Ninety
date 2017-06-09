@@ -9,7 +9,6 @@ import communication.IBroker;
 import data.CloseData;
 import data.IndicatorCalculator;
 import data.getters.DataGetterActIB;
-import data.getters.DataGetterHistCBOE;
 import data.getters.IDataGetterAct;
 import data.getters.IDataGetterHist;
 import java.time.LocalDate;
@@ -26,21 +25,15 @@ public class VXVMTDataPreparator {
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     static public VXVMTData LoadData(IBroker broker) {
-        IDataGetterAct[] actGetters = GlobalConfig.GetDataGettersAct();
-        if (actGetters.length == 0) {
-            logger.severe("No Act data getter defined!");
-            return null;
-        }
         
-        VXVMTData data = new VXVMTData();
-
-        double actVXV = actGetters[0].readActualData("VXV");
-        double actVXMT = actGetters[0].readActualData("VXMT");
+        double actVXV = LoadActData("VXV");
+        double actVXMT = LoadActData("VXMT");
         
         if (actVXV == 0 || actVXMT == 0) {
-            logger.severe("Failed to load act index value!");
             return null;
         }
+
+        VXVMTData data = new VXVMTData();
 
         boolean failedHist = false;
         for (IDataGetterHist dataGetter : GlobalConfig.GetDataGettersHist()) {
@@ -51,13 +44,13 @@ public class VXVMTDataPreparator {
             data.dataVXMT = dataGetter.readAdjCloseData(TradeTimer.GetLocalDateNow(), "VXMT", 151, true);
 
             if (data.dataVXV == null || data.dataVXV.adjCloses == null || data.dataVXV.dates == null || data.dataVXV.adjCloses.length == 0 || data.dataVXV.dates.length == 0) {
-                logger.warning("Failed to load VXV");
+                logger.warning("Failed to load VXV from " + dataGetter.getName());
                 failedHist = true;
                 continue;
             }
 
             if (data.dataVXMT == null || data.dataVXMT.adjCloses == null || data.dataVXMT.dates == null || data.dataVXMT.adjCloses.length == 0 || data.dataVXMT.dates.length == 0) {
-                logger.warning("Failed to load VXMT");
+                logger.warning("Failed to load VXMT from " + dataGetter.getName());
                 failedHist = true;
                 continue;
             }
@@ -71,32 +64,41 @@ public class VXVMTDataPreparator {
             if (!VXVMTChecker.CheckTickerData(data.dataVXV, "VXV")
                     || !VXVMTChecker.CheckTickerData(data.dataVXMT, "VXMT")) {
                 failedHist = true;
+                logger.warning("Failed to load hist data from " + dataGetter.getName());
                 continue;
             }
-            failedHist = false;
+
+            if (failedHist) {
+                logger.warning("Loading data successful from " + dataGetter.getName());
+                failedHist = false;
+            }
+
             break;
         }
 
         if (failedHist) {
-            logger.severe("Failed to load data!");
+            logger.severe("Failed to load hist data!");
             return null;
         }
-        
+
         logger.info("Data loaded successfuly");
-        
+
         return data;
     }
     
+    static public void UpdateIndicators(IBroker broker, VXVMTData data) {
+        UpdateActData(broker, data);
+        ComputeIndicators(data);
+    }
+
     static public void ComputeIndicators(VXVMTData data) {
-        
-        logger.info("Calculating indicators.");
-        
-        IDataGetterAct[] actGetters = GlobalConfig.GetDataGettersAct();
-        if (actGetters.length == 0) {
-            logger.severe("No Act data getter defined!");
+
+        if (data == null) {
             return;
         }
         
+        logger.info("Calculating indicators.");
+
         double[] ratio = new double[151];
         LocalDate[] dates = new LocalDate[151];
         for (int i = 0; i < 151; i++) {
@@ -109,8 +111,6 @@ public class VXVMTDataPreparator {
         dataRatio.adjCloses = ratio;
         dataRatio.dates = dates;
 
-        data.indicators = new VXVMTIndicators();
-
         data.indicators.actRatioLagged = ratio[1];
         data.indicators.ratiosLagged[0] = IndicatorCalculator.SMA(60, ratio, 1);
         data.indicators.ratiosLagged[1] = IndicatorCalculator.SMA(125, ratio, 1);
@@ -120,29 +120,66 @@ public class VXVMTDataPreparator {
         data.indicators.ratios[0] = IndicatorCalculator.SMA(60, ratio, 0);
         data.indicators.ratios[1] = IndicatorCalculator.SMA(125, ratio, 0);
         data.indicators.ratios[2] = IndicatorCalculator.SMA(150, ratio, 0);
-
-        data.indicators.actVXXvalue = actGetters[0].readActualData("VXX");
-        data.indicators.actXIVvalue = actGetters[0].readActualData("XIV");
         
-        logger.fine("Indicators calculated successfuly");
+        //logger.severe("Delete this!");
+        //data.indicators.actRatio = 1.1;
+        //data.indicators.actRatioLagged = 1.1;
+        //data.indicators.ratiosLagged[1] = 0.1;
+        //data.indicators.ratiosLagged[2] = 0.1;
+
+        logger.fine("Indicators calculated");
     }
 
     static void UpdateActData(IBroker broker, VXVMTData data) {
-        IDataGetterAct[] actGetters = GlobalConfig.GetDataGettersAct();
-        if (actGetters.length == 0) {
-            logger.severe("No Act data getter defined!");
-            return;
-        }        
         
-        double actVXV = actGetters[0].readActualData("VXV");
-        double actVXMT = actGetters[0].readActualData("VXMT");
-        
+        double actVXV = LoadActData("VXV");
+        double actVXMT = LoadActData("VXMT");
+
         if (actVXV == 0 || actVXMT == 0) {
             logger.warning("Failed to update act index value!");
             return;
         }
-        
+
         data.dataVXMT.adjCloses[0] = actVXMT;
         data.dataVXV.adjCloses[0] = actVXV;
+        
+        IDataGetterAct actGetter = new DataGetterActIB(broker);
+        double actVXX = actGetter.readActualData("VXX");
+        double actXIV = actGetter.readActualData("XIV");
+
+        if (actVXX == 0 || actXIV == 0) {
+            logger.warning("Failed to update act XIV/VXX value!");
+            return;
+        }
+        data.indicators.actVXXvalue = actVXX;
+        data.indicators.actXIVvalue = actXIV;
+    }
+    
+    static double LoadActData(String ticker) {
+        boolean failedAct = false;
+        double dataValue = 0;
+        for (IDataGetterAct dataGetter : GlobalConfig.GetDataGettersAct()) {
+            dataValue = dataGetter.readActualData(ticker);
+
+            if (dataValue == 0) {
+                logger.warning("Failed to load act value of '" + ticker + "' from " + dataGetter.getName());
+                failedAct = true;
+                continue;
+            }
+            
+            if (failedAct) {
+                logger.warning("Loading act value of '" + ticker + "' successful from " + dataGetter.getName());
+                failedAct = false;
+            }
+
+            break;
+        }
+        
+        if (dataValue == 0) {
+            logger.severe("Failed to load act value of '" + ticker + "'!");
+            return 0;
+        }
+        
+        return dataValue;
     }
 }

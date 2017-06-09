@@ -77,19 +77,13 @@ public class DataGetterHistCBOE implements IDataGetterHist {
                 if (parsedDate.compareTo(startDate) < 0) {
                     continue;
                 }
-
-                /*if (totalCount == 0 && skipFirstIndex) {
-                    arrDates.add(LocalDate.MIN);
-                    arrCloseVals.add(0.0);
-                    totalCount++;
-                }*/
+                
+                if (parsedDate.compareTo(endDate) > 0) {
+                    break;
+                }
+                
                 arrDates.add(parsedDate);
                 arrCloseVals.add(adjClose);
-
-                //totalCount++;
-                //if (totalCount == daysToRead) {
-                //    break;
-                //}
             }
 
             /*if (daysToRead != -1 && daysToRead > totalCount) {

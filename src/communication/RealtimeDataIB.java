@@ -27,6 +27,7 @@ public class RealtimeDataIB {
         public double last = 0;
         public double ask = 0;
         public double bid = 0;
+        public double close = 0;
 
         private Data(String ticker, int orderID) {
             this.ticker = ticker;
@@ -58,14 +59,19 @@ public class RealtimeDataIB {
                 data.ask = price;
                 break;
             case 4:
-                if (data.last == 0) {
+                if (data.last <= 0) {
                     loggerComm.finer("Actual data updated. Ticker " + data.ticker + ", orderId " + orderID + ", price " + price);
                 }
                 data.last = price;
                 break;
             case 6://high
             case 7://low
+                break;
             case 9://close
+                /*if (data.close <= 0) {
+                    loggerComm.finer("Close data updated. Ticker " + data.ticker + ", orderId " + orderID + ", price " + price);
+                }*/
+                data.close = price;
                 break;
             default:
             // Sometimes 14
@@ -79,6 +85,11 @@ public class RealtimeDataIB {
         if (data == null) {
             logger.fine("Reatime data get: cannot find data for ticker " + ticker);
             return 0;
+        }
+        
+        if (data.last <= 0) {
+            loggerComm.warning("Reatime data get: Close data used for ticker " + data.ticker + ", value " + data.close);
+            return data.close;
         }
         
         return data.last;

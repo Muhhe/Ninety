@@ -49,6 +49,9 @@ public class VXVMTScheduler {
         logger.info("Starting run!");
         new VXVMTRunner(status, broker).Run(data);
         logger.info("Run finished!");
+        status.UpdateEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue, "?");
+        status.SaveTradingStatus();
+        logger.info(broker.GetAccountSummary().toString());
     }
 
     private void ScheduleForTomorrow() {
@@ -127,6 +130,13 @@ public class VXVMTScheduler {
             broker.disconnect();
             return;
         }
+        if (!VXVMTChecker.CheckCash(status, broker)) {
+            logger.severe("Cash position check failed! Scheduling check for next hour.");
+            TradeTimer.startTaskAt(TradeTimer.GetNYTimeNow().plusHours(1), this::ScheduleRun);
+            MailSender.SendErrors();
+            broker.disconnect();
+        }
+        
 
         ZonedDateTime now = TradeTimer.GetNYTimeNow();
         LocalTime closeTimeLocal = TradeTimer.GetTodayCloseTime();
@@ -158,7 +168,7 @@ public class VXVMTScheduler {
 
         status.PrintStatus(data.indicators.actXIVvalue, data.indicators.actVXXvalue);
 
-        broker.disconnect();
+        //broker.disconnect();
 
         logger.info("Starting VXVMT strategy is scheduled for " + runTime.format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
         logger.info("Starting in " + timeToStart.toString());
@@ -180,14 +190,17 @@ public class VXVMTScheduler {
                 VXVMTSignal signal = new VXVMTRunner(status, broker).Run(data);
                 logger.info("Run finished!");
 
-                broker.disconnect();
-
                 String signalInfo = new String();
                 if (signal == null) {
                     logger.severe("Run failed!");
                 } else {
                     signalInfo = signal.typeToString() + "-" + TradeFormatter.toString(signal.exposure);
                 }
+                
+                VXVMTChecker.CheckCash(status, broker);
+                VXVMTChecker.CheckHeldPositions(status, broker);
+
+                broker.disconnect();
 
                 AddSignalInfoToMail(signal);
 
@@ -200,17 +213,20 @@ public class VXVMTScheduler {
             }
         };
 
+        //logger.severe("Delete this!");
+        //TradeTimer.startTaskAt(TradeTimer.GetNYTimeNow().plusSeconds(2), taskWrapper);
         TradeTimer.startTaskAt(runTime, taskWrapper);
 
         double equity = status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue);
         double diff = (equity - status.closingEquity);
         double prc = diff / status.closingEquity * 100.0;
 
-        MailSender.AddLineToMail("Check ok");
+        MailSender.AddLineToMail("Check done");
         MailSender.AddLineToMail("Held '" + status.heldType + "', position: " + status.heldPosition);
-        MailSender.AddLineToMail("Equity - " + TradeFormatter.toString(status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue)));
-        MailSender.AddLineToMail("Current profit/loss - " + TradeFormatter.toString(diff) + " = " + TradeFormatter.toString(prc) + "%");
+        MailSender.AddLineToMail("Equity: " + TradeFormatter.toString(status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue)));
+        MailSender.AddLineToMail("Today's profit/loss: " + TradeFormatter.toString(diff) + "$ = " + TradeFormatter.toString(prc) + "%");
 
+        MailSender.SendErrors();
         MailSender.SendCheckResult();
     }
 
@@ -228,7 +244,11 @@ public class VXVMTScheduler {
         }
 
         data = VXVMTDataPreparator.LoadData(broker);
-        VXVMTDataPreparator.ComputeIndicators(data);
+        if (data == null) {
+            return false;
+        }
+
+        VXVMTDataPreparator.UpdateIndicators(broker, data);
 
         if (!VXVMTChecker.CheckDataIndicators(data)) {
             return false;
@@ -298,23 +318,23 @@ public class VXVMTScheduler {
         }
 
         String str3 = "Yesterday act ratio: " + TradeFormatter.toString(data.indicators.actRatioLagged)
-                + ", Ratio SMA60: " + TradeFormatter.toString(data.indicators.ratiosLagged[0])
-                + ", Ratio SMA125: " + TradeFormatter.toString(data.indicators.ratiosLagged[0])
-                + ", Ratio SMA150: " + TradeFormatter.toString(data.indicators.ratiosLagged[0]);
+                + ", SMA60: " + TradeFormatter.toString(data.indicators.ratiosLagged[0])
+                + ", SMA125: " + TradeFormatter.toString(data.indicators.ratiosLagged[1])
+                + ", SMA150: " + TradeFormatter.toString(data.indicators.ratiosLagged[2]);
 
         String str4 = "Today act ratio: " + TradeFormatter.toString(data.indicators.actRatio)
-                + ", Ratio SMA60: " + TradeFormatter.toString(data.indicators.ratios[0])
-                + ", Ratio SMA125: " + TradeFormatter.toString(data.indicators.ratios[0])
-                + ", Ratio SMA150: " + TradeFormatter.toString(data.indicators.ratios[0]);
+                + ", SMA60: " + TradeFormatter.toString(data.indicators.ratios[0])
+                + ", SMA125: " + TradeFormatter.toString(data.indicators.ratios[1])
+                + ", SMA150: " + TradeFormatter.toString(data.indicators.ratios[2]);
 
         double equity = status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue);
         double diff = (equity - status.closingEquity);
         double prc = diff / status.closingEquity * 100.0;
-        
-        String str5 = "Currently held '" + status.heldType + "', position: " + status.heldPosition;
-        String str6 = "Equity - " + TradeFormatter.toString(status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue))+ "$";
-        String str7 = "Today's profit/loss - " + TradeFormatter.toString(diff) + "$ = " + TradeFormatter.toString(prc) + "%";
 
+        String str5 = "Currently held '" + status.heldType + "', position: " + status.heldPosition;
+        String str6 = "Equity: " + TradeFormatter.toString(status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue)) + "$";
+        String str7 = "Free cash: " + TradeFormatter.toString(status.freeCapital) + "$";
+        String str8 = "Today's profit/loss: " + TradeFormatter.toString(diff) + "$ = " + TradeFormatter.toString(prc) + "%";
 
         MailSender.AddLineToMail(str1);
         MailSender.AddLineToMail(str2);
@@ -323,7 +343,8 @@ public class VXVMTScheduler {
         MailSender.AddLineToMail(str5);
         MailSender.AddLineToMail(str6);
         MailSender.AddLineToMail(str7);
-        
+        MailSender.AddLineToMail(str8);
+
         logger.info(str1);
         logger.info(str2);
         logger.info(str3);
@@ -331,5 +352,6 @@ public class VXVMTScheduler {
         logger.info(str5);
         logger.info(str6);
         logger.info(str7);
+        logger.info(str8);
     }
 }

@@ -5,8 +5,6 @@
  */
 package strategyVXVMT;
 
-import backtesting.BacktesterVXVMT;
-
 /**
  *
  * @author Muhe

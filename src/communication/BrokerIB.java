@@ -201,6 +201,10 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
             }
             return;
         }
+        
+        if (orderStatus.status == OrderStatus.Status.FILLED) {
+            return;
+        }
 
         orderStatus.status = OrderStatus.getOrderStatus(status);
 
