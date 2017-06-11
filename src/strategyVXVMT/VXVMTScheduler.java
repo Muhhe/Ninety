@@ -127,14 +127,12 @@ public class VXVMTScheduler {
             logger.severe("Held position check failed! Scheduling check for next hour.");
             TradeTimer.startTaskAt(TradeTimer.GetNYTimeNow().plusHours(1), this::ScheduleRun);
             MailSender.SendErrors();
-            broker.disconnect();
             return;
         }
         if (!VXVMTChecker.CheckCash(status, broker)) {
             logger.severe("Cash position check failed! Scheduling check for next hour.");
             TradeTimer.startTaskAt(TradeTimer.GetNYTimeNow().plusHours(1), this::ScheduleRun);
             MailSender.SendErrors();
-            broker.disconnect();
         }
         
 
@@ -167,8 +165,6 @@ public class VXVMTScheduler {
         }
 
         status.PrintStatus(data.indicators.actXIVvalue, data.indicators.actVXXvalue);
-
-        //broker.disconnect();
 
         logger.info("Starting VXVMT strategy is scheduled for " + runTime.format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
         logger.info("Starting in " + timeToStart.toString());
