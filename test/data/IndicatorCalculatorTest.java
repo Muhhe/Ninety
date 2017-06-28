@@ -330,5 +330,20 @@ public class IndicatorCalculatorTest {
         double result = IndicatorCalculator.RSI(values);
         assertEquals(expResult, result, 0.001);
     }
+    
+    /**
+     * Test of StandardDeviation method, of class IndicatorCalculator.
+     */
+    @Test
+    public void testStandardDeviation() {
+        System.out.println("StandardDeviation");
+        double[] values = {
+            10,15,8,1,4,7,2,6
+        };
+
+        double expResult = 2.280350850198276;
+        double result = IndicatorCalculator.StandardDeviation(5, values, 3);
+        assertEquals(expResult, result, 0.001);
+    }
 
 }

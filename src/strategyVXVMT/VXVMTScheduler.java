@@ -235,7 +235,13 @@ public class VXVMTScheduler {
         broker.SubscribeRealtimeData("VXMT", IBroker.SecType.IND);
 
         try {
-            Thread.sleep(60000);
+            Thread.sleep(30000);
+        } catch (InterruptedException ex) {
+        }
+        broker.SubscribeRealtimeData("VXV", IBroker.SecType.IND);
+        broker.SubscribeRealtimeData("VXMT", IBroker.SecType.IND);
+        try {
+            Thread.sleep(30000);
         } catch (InterruptedException ex) {
         }
 

@@ -91,6 +91,8 @@ public class DataGetterHistGoogle implements IDataGetterHist {
             while ((line = br.readLine()) != null) {
 
                 String[] dateLine = line.split(cvsSplitBy);
+                
+                //logger.warning(LocalDate.now().format(DateTimeFormatter.ofPattern("d-MMM-uu")));
 
                 double adjClose = Double.parseDouble(dateLine[4]);
                 LocalDate parsedDate = LocalDate.parse(dateLine[0], DateTimeFormatter.ofPattern("d-MMM-uu"));
@@ -116,7 +118,7 @@ public class DataGetterHistGoogle implements IDataGetterHist {
             }
 
         } catch (Exception ex) {
-            logger.log(Level.WARNING, "Failed to read data from Google - '" + tickerSymbol + "'" + ex);
+            logger.log(Level.WARNING, "Failed to read data from Google - '" + tickerSymbol + "' " + ex);
             return null;
         }
         CloseData retData = new CloseData(0);

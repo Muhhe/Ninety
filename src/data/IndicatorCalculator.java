@@ -107,4 +107,29 @@ public class IndicatorCalculator {
 
         return ret;
     }
+    
+    public static double StandardDeviation(int count, double[] data) {
+        return StandardDeviation(count, data, 0);
+    }
+    
+    public static double StandardDeviation(int count, double[] data, int offset) {
+        
+        if (data.length < count + offset) {
+            logger.severe("SMA - not enough data: " + (count + offset) + " vs " + data.length);
+            return 0;
+        }
+        
+        double sma = SMA(count, data, offset);
+
+        double sqDistSum = 0;
+        for (int i = 0; i < count; i++) {
+            double sqDists = data[i + offset] - sma;
+            
+            sqDistSum += sqDists * sqDists;
+        }
+        
+        sqDistSum /= count;
+        
+        return Math.sqrt(sqDistSum);
+    }
 }

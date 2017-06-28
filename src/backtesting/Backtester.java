@@ -5,6 +5,7 @@
  */
 package backtesting;
 
+import data.getters.DataGetterHistGoogle;
 import data.getters.DataGetterHistQuandl;
 import data.getters.DataGetterHistYahoo;
 import java.io.BufferedWriter;
@@ -49,8 +50,8 @@ public final class Backtester extends javax.swing.JFrame {
         TextAreaLogHandler textHandlerInfo = new TextAreaLogHandler(logArea, Level.INFO, Level.SEVERE, false);
         logger.addHandler(textHandlerInfo);
         
-        GlobalConfig.AddDataGetterHist(new DataGetterHistYahoo());
-        GlobalConfig.AddDataGetterHist(new DataGetterHistQuandl());
+        GlobalConfig.AddDataGetterHist(new DataGetterHistGoogle());
+        //GlobalConfig.AddDataGetterHist(new DataGetterHistQuandl());
         
         LoadBTSettingsFromFile();
     }
@@ -80,6 +81,9 @@ public final class Backtester extends javax.swing.JFrame {
         reinvestCheckBox = new javax.swing.JCheckBox();
         backTestVIXButton = new javax.swing.JButton();
         backTestContButton = new javax.swing.JButton();
+        backTestTrend = new javax.swing.JButton();
+        backTestMoment = new javax.swing.JButton();
+        backTestBear = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Trading app 90 - BACKTESTER");
@@ -133,6 +137,27 @@ public final class Backtester extends javax.swing.JFrame {
             }
         });
 
+        backTestTrend.setText("Run Trend");
+        backTestTrend.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                backTestTrendActionPerformed(evt);
+            }
+        });
+
+        backTestMoment.setText("Run Mementum");
+        backTestMoment.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                backTestMomentActionPerformed(evt);
+            }
+        });
+
+        backTestBear.setText("Run Bear");
+        backTestBear.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                backTestBearActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -159,11 +184,17 @@ public final class Backtester extends javax.swing.JFrame {
                                 .addComponent(jLabel5)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(leverageField, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(184, 184, 184)
+                                .addGap(75, 75, 75)
+                                .addComponent(backTestTrend, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(backTestVIXButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(reinvestCheckBox)
-                                .addGap(496, 496, 496)
+                                .addGap(272, 272, 272)
+                                .addComponent(backTestBear, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(backTestMoment, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addComponent(backTestContButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
@@ -187,13 +218,16 @@ public final class Backtester extends javax.swing.JFrame {
                     .addComponent(jLabel4)
                     .addComponent(jLabel5)
                     .addComponent(leverageField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(backTestVIXButton))
+                    .addComponent(backTestVIXButton)
+                    .addComponent(backTestTrend))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(logLvlComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel3)
                     .addComponent(reinvestCheckBox)
-                    .addComponent(backTestContButton))
+                    .addComponent(backTestContButton)
+                    .addComponent(backTestMoment)
+                    .addComponent(backTestBear))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 8, Short.MAX_VALUE)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 478, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
@@ -237,6 +271,30 @@ public final class Backtester extends javax.swing.JFrame {
         BacktesterContango.runBacktest(settings);
         SaveBTSettings(settings);
     }//GEN-LAST:event_backTestContButtonActionPerformed
+
+    private void backTestTrendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backTestTrendActionPerformed
+        UpdateLogLevel();
+
+        BTSettings settings = GetBTSettings();
+        BacktesterTrend.runBacktest(settings);
+        SaveBTSettings(settings);
+    }//GEN-LAST:event_backTestTrendActionPerformed
+
+    private void backTestMomentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backTestMomentActionPerformed
+        UpdateLogLevel();
+
+        BTSettings settings = GetBTSettings();
+        BacktesterMomentum.runBacktest(settings);
+        SaveBTSettings(settings);
+    }//GEN-LAST:event_backTestMomentActionPerformed
+
+    private void backTestBearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backTestBearActionPerformed
+        UpdateLogLevel();
+
+        BTSettings settings = GetBTSettings();
+        BacktesterBear.runBacktest(settings);
+        SaveBTSettings(settings);
+    }//GEN-LAST:event_backTestBearActionPerformed
 
     private BTSettings GetBTSettings() {
         
@@ -385,7 +443,10 @@ public final class Backtester extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton backTest90Button;
+    private javax.swing.JButton backTestBear;
     private javax.swing.JButton backTestContButton;
+    private javax.swing.JButton backTestMoment;
+    private javax.swing.JButton backTestTrend;
     private javax.swing.JButton backTestVIXButton;
     private javax.swing.JTextField capitalField;
     private javax.swing.JTextField fromBTField;

@@ -11,6 +11,8 @@ import data.getters.IDataGetterHist;
 import data.IndicatorCalculator;
 import data.getters.DataGetterHistCBOE;
 import data.getters.DataGetterHistFile;
+import data.getters.DataGetterHistGoogle;
+import data.getters.DataGetterHistYahoo;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -169,15 +171,15 @@ public class BacktesterVXVMT {
         data.dataVXMT.adjCloses = Arrays.copyOfRange(dataVXMT.adjCloses, dayInx, dayInx + 151);
         data.dataVXMT.dates = Arrays.copyOfRange(dataVXMT.dates, dayInx, dayInx + 151);
 
-        VXVMTChecker.CheckTickerData(data.dataVXV, "VXV");
-        VXVMTChecker.CheckTickerData(data.dataVXMT, "VXMT");
+        //VXVMTChecker.CheckTickerData(data.dataVXV, "VXV");
+        //VXVMTChecker.CheckTickerData(data.dataVXMT, "VXMT");
 
         return data;
     }
 
     static public void runBacktest(BTSettings settings) {
         IDataGetterHist getterFile = new DataGetterHistFile("backtest/VolData/");
-        //IDataGetterHist getter = new DataGetterHistYahoo();
+        //IDataGetterHist getterFile = new DataGetterHistGoogle();
         CloseData dataVXX = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "VXX");
         CloseData dataXIV = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "XIV");
 
@@ -215,7 +217,7 @@ public class BacktesterVXVMT {
 
         IBroker broker = new BrokerNoIB();
         VXVMTStatus status = new VXVMTStatus();
-        status.freeCapital = 100000;
+        status.freeCapital = settings.capital;
 
         VXVMTRunner runner = new VXVMTRunner(status, broker);
 
@@ -238,7 +240,7 @@ public class BacktesterVXVMT {
 
             double eq = status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue);
             stats.UpdateEquity(eq, date);
-            UpdateEquityFile(eq, "equity.csv", (status.heldType.toString() + " - " + TradeFormatter.toString(status.heldPosition)));
+            UpdateEquityFile(eq, "equity.csv", (status.heldType.toString() + " - " + TradeFormatter.toString(1 - (status.freeCapital / eq))));
             UpdateEquityFile(xivPos * dataXIV.adjCloses[i], "vix.csv", null);
             //UpdateEquityFile(spyPos * dataSPY.adjCloses[i], "spy.csv", null);*/
 
