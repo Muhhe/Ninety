@@ -247,6 +247,7 @@ public class VXVMTScheduler {
 
         data = VXVMTDataPreparator.LoadData(broker);
         if (data == null) {
+            checkThread.SetChecked();
             return false;
         }
 

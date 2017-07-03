@@ -315,6 +315,7 @@ public class NinetyScheduler {
                     + ": " + TradeFormatter.toString(profit) + "$ = " + TradeFormatter.toString(profitPercent)
                     + "%. Last buy value: " + TradeFormatter.toString(held.GetLastBuyValue())
                     + ", actual value: " + TradeFormatter.toString(actValue)
+                    + ", average price: " + TradeFormatter.toString(held.GetAvgPricePaid())
                     + ", SMA5: " + TradeFormatter.toString(indicators.sma5)
                     + ", portions: " + held.GetPortions();
 

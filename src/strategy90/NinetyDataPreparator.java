@@ -7,7 +7,6 @@ package strategy90;
 
 import communication.IBroker;
 import java.util.logging.Logger;
-import tradingapp.GlobalConfig;
 
 /**
  *
@@ -33,8 +32,9 @@ public class NinetyDataPreparator implements Runnable {
         }
         logger.fine("Subscribing real-time data");
         stockData.SubscribeRealtimeData(broker);
+        logger.fine("Waiting for real-time data - 20 sec");
         try {
-            Thread.sleep(5000);
+            Thread.sleep(20000);
         } catch (InterruptedException ex) {
         }
 

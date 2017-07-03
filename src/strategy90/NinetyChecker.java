@@ -90,9 +90,9 @@ public class NinetyChecker {
         logger.info("Saved current cash: " + TradeFormatter.toString(statusData.currentCash) + ", cash on IB: " + TradeFormatter.toString(broker.GetAccountSummary().totalCashValue));
 
         double cashDiff = broker.GetAccountSummary().totalCashValue - statusData.currentCash;
-        double cashDiffPercent = abs(cashDiff / statusData.currentCash * 100);
+        double cashDiffPercent = cashDiff / statusData.currentCash * 100;
 
-        if (cashDiffPercent > 5.0) {
+        if (cashDiffPercent < -5.0) {
             logger.warning("Difference between saved cash and cash on IB is " + TradeFormatter.toString(cashDiff)
                     + "$ = " + TradeFormatter.toString(cashDiffPercent) + "%");
         } else {

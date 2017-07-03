@@ -27,6 +27,7 @@ import tradingapp.Settings;
 import tradingapp.TradeFormatter;
 import tradingapp.TradeLogger;
 import communication.TradeOrder;
+import data.getters.DataGetterHistGoogle;
 import tradingapp.TradeTimer;
 
 /**
@@ -403,7 +404,7 @@ public class TestPlatform extends javax.swing.JFrame {
 
     private void testRSIButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_testRSIButtonActionPerformed
         String ticker = "SPY";
-        DataGetterHistYahoo getter = new DataGetterHistYahoo();
+        DataGetterHistGoogle getter = new DataGetterHistGoogle();
 
         TradeTimer.SetToday(LocalDate.of(2014, 8, 1));
 
@@ -426,7 +427,7 @@ public class TestPlatform extends javax.swing.JFrame {
 
     private void compareButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_compareButtonActionPerformed
         String ticker = tickerField.getText();
-        IDataGetterHist getterY = new DataGetterHistYahoo();
+        IDataGetterHist getterY = new DataGetterHistGoogle();
         IDataGetterHist getterQ = new DataGetterHistQuandl();
 
         TradeTimer.SetToday(LocalDate.now());
