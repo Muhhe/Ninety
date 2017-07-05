@@ -49,10 +49,10 @@ public final class Backtester extends javax.swing.JFrame {
         });
         TextAreaLogHandler textHandlerInfo = new TextAreaLogHandler(logArea, Level.INFO, Level.SEVERE, false);
         logger.addHandler(textHandlerInfo);
-        
+
         GlobalConfig.AddDataGetterHist(new DataGetterHistGoogle());
         //GlobalConfig.AddDataGetterHist(new DataGetterHistQuandl());
-        
+
         LoadBTSettingsFromFile();
     }
 
@@ -84,6 +84,7 @@ public final class Backtester extends javax.swing.JFrame {
         backTestTrend = new javax.swing.JButton();
         backTestMoment = new javax.swing.JButton();
         backTestBear = new javax.swing.JButton();
+        backTestDDN = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Trading app 90 - BACKTESTER");
@@ -158,6 +159,13 @@ public final class Backtester extends javax.swing.JFrame {
             }
         });
 
+        backTestDDN.setText("Run DDN");
+        backTestDDN.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                backTestDDNActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -190,7 +198,9 @@ public final class Backtester extends javax.swing.JFrame {
                                 .addComponent(backTestVIXButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(reinvestCheckBox)
-                                .addGap(272, 272, 272)
+                                .addGap(189, 189, 189)
+                                .addComponent(backTestDDN, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(backTestBear, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(backTestMoment, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -227,7 +237,8 @@ public final class Backtester extends javax.swing.JFrame {
                     .addComponent(reinvestCheckBox)
                     .addComponent(backTestContButton)
                     .addComponent(backTestMoment)
-                    .addComponent(backTestBear))
+                    .addComponent(backTestBear)
+                    .addComponent(backTestDDN))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 8, Short.MAX_VALUE)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 478, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
@@ -238,17 +249,17 @@ public final class Backtester extends javax.swing.JFrame {
 
     private void backTest90ButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backTest90ButtonActionPerformed
         UpdateLogLevel();
-        
+
         FilePaths.tradingStatusPathFileInput = "backtest/TradingStatus.xml";
         FilePaths.tradingStatusPathFileInput = "backtest/TradingStatus.xml";
-        
+
         FilePaths.tradeLogDetailedPathFile = "backtest/TradeLogDetailed.txt";
         FilePaths.tradeLogPathFile = "backtest/TradeLog.csv";
-        
+
         FilePaths.equityPathFile = "backtest/Equity.csv";
         FilePaths.tickerListPathFile = "backtest/tickerList.txt";
 
-        new Thread(() -> {         
+        new Thread(() -> {
             BTSettings settings = GetBTSettings();
             BackTesterNinety.RunTest(settings);
             SaveBTSettings(settings);
@@ -261,7 +272,7 @@ public final class Backtester extends javax.swing.JFrame {
         BTSettings settings = GetBTSettings();
         BacktesterVXVMT.runBacktest(settings);
         SaveBTSettings(settings);
-        
+
     }//GEN-LAST:event_backTestVIXButtonActionPerformed
 
     private void backTestContButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backTestContButtonActionPerformed
@@ -296,19 +307,27 @@ public final class Backtester extends javax.swing.JFrame {
         SaveBTSettings(settings);
     }//GEN-LAST:event_backTestBearActionPerformed
 
+    private void backTestDDNActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backTestDDNActionPerformed
+        UpdateLogLevel();
+
+        BTSettings settings = GetBTSettings();
+        BacktesterDDN.runBacktest(settings);
+        SaveBTSettings(settings);
+    }//GEN-LAST:event_backTestDDNActionPerformed
+
     private BTSettings GetBTSettings() {
-        
+
         LocalDate start = LocalDate.parse(fromBTField.getText());
         LocalDate end = LocalDate.parse(toBTField.getText());
-        
+
         double capital = Double.parseDouble(capitalField.getText());
         double leverage = Double.parseDouble(leverageField.getText());
-        
+
         BTSettings sett = new BTSettings(start, end, capital, leverage, reinvestCheckBox.isSelected());
-        
+
         return sett;
     }
-    
+
     private void UpdateLogLevel() {
         Level logLvl;
         int logIndex = logLvlComboBox.getSelectedIndex();
@@ -329,15 +348,15 @@ public final class Backtester extends javax.swing.JFrame {
 
         logger.setLevel(logLvl);
     }
-    
+
     public void LoadBTSettingsFromFile() {
         try {
             File inputFile = new File(FilePaths.backtestSettings);
-            
+
             if (!inputFile.exists()) {
                 return;
             }
-            
+
             SAXBuilder saxBuilder = new SAXBuilder();
             Document document = saxBuilder.build(inputFile);
 
@@ -345,15 +364,15 @@ public final class Backtester extends javax.swing.JFrame {
             Attribute attStart = rootElement.getAttribute("start");
             String start = attStart.getValue();
             fromBTField.setText(start);
-            
+
             Attribute attEnd = rootElement.getAttribute("end");
             String end = attEnd.getValue();
             toBTField.setText(end);
-            
+
             Attribute attCapital = rootElement.getAttribute("capital");
             String capital = attCapital.getValue();
             capitalField.setText(capital);
-            
+
             Attribute attLeverage = rootElement.getAttribute("leverage");
             String leverage = attLeverage.getValue();
             leverageField.setText(leverage);
@@ -370,18 +389,18 @@ public final class Backtester extends javax.swing.JFrame {
             logger.severe("Error in loading from XML: IOException.\r\n" + ioe);
         }
     }
-    
+
     private static void SaveBTSettings(BTSettings settings) {
         BufferedWriter output = null;
-        try {            
+        try {
             Element rootElement = new Element("Settings");
             Document doc = new Document(rootElement);
             rootElement.setAttribute("start", settings.startDate.toString());
             rootElement.setAttribute("end", settings.endDate.toString());
-            
+
             rootElement.setAttribute("capital", Double.toString(settings.capital));
             rootElement.setAttribute("leverage", Double.toString(settings.leverage));
-            
+
             rootElement.setAttribute("reinvest", Boolean.toString(settings.reinvest));
 
             XMLOutputter xmlOutput = new XMLOutputter();
@@ -405,7 +424,7 @@ public final class Backtester extends javax.swing.JFrame {
             }
         }
     }
-    
+
     /**
      * @param args the command line arguments
      */
@@ -445,6 +464,7 @@ public final class Backtester extends javax.swing.JFrame {
     private javax.swing.JButton backTest90Button;
     private javax.swing.JButton backTestBear;
     private javax.swing.JButton backTestContButton;
+    private javax.swing.JButton backTestDDN;
     private javax.swing.JButton backTestMoment;
     private javax.swing.JButton backTestTrend;
     private javax.swing.JButton backTestVIXButton;

@@ -12,48 +12,51 @@ import java.util.logging.Logger;
  * @author Muhe
  */
 public class IndicatorCalculator {
-    private final static Logger logger = Logger.getLogger( Logger.GLOBAL_LOGGER_NAME );
-    
+
+    private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+
+    private static double sqrtTradeDays = Math.sqrt(252);
+
     public static double SMA(int count, double[] data) {
         return SMA(count, data, 0);
     }
-    
+
     public static double SMA(int count, double[] data, int offset) {
-        
+
         if (data.length < count + offset) {
             logger.severe("SMA - not enough data: " + (count + offset) + " vs " + data.length);
             return 0;
         }
-        
+
         double total = 0;
         for (int i = 0; i < count; i++) {
             total += data[i + offset];
         }
-        
+
         return total / count;
     }
-    
+
     public static double EMA(int count, double[] data) {
         return EMA(count, data, 0);
     }
-    
+
     public static double EMA(int count, double[] data, int offset) {
-        
-        if (data.length < 2*count + offset - 1) {
-            logger.severe("EMA - not enough data: " + (2*count + offset - 1) + " vs " + data.length);
+
+        if (data.length < 2 * count + offset - 1) {
+            logger.severe("EMA - not enough data: " + (2 * count + offset - 1) + " vs " + data.length);
             return 0;
         }
-        
-        double k = 2.0 /(double)(count + 1);
+
+        double k = 2.0 / (double) (count + 1);
         double lastEMA = SMA(count, data, offset + count - 1);
-        
+
         for (int i = count + offset - 2; i >= offset; i--) {
             lastEMA = (data[i] * k) + lastEMA * (1 - k);
         }
-        
+
         return lastEMA;
     }
-    
+
     public static double RSI(double[] values) {
         if (values == null) {
             logger.severe("RSI - null values");
@@ -63,7 +66,7 @@ public class IndicatorCalculator {
             logger.severe("RSI - not enough data: " + values.length + "/14");
             return Double.MAX_VALUE;
         }
-        
+
         double[] ups = new double[14];
         double[] downs = new double[14];
         double[] avgUps = new double[14];
@@ -102,34 +105,56 @@ public class IndicatorCalculator {
         if (avgDowns[14 - 1] == 0) {
             return 100.0;
         }
-        
+
         double ret = 100.f - (100.0f / (1.0f + (avgUps[14 - 1] / avgDowns[14 - 1])));
 
         return ret;
     }
-    
+
     public static double StandardDeviation(int count, double[] data) {
         return StandardDeviation(count, data, 0);
     }
-    
+
     public static double StandardDeviation(int count, double[] data, int offset) {
-        
+
         if (data.length < count + offset) {
             logger.severe("SMA - not enough data: " + (count + offset) + " vs " + data.length);
             return 0;
         }
-        
+
         double sma = SMA(count, data, offset);
 
         double sqDistSum = 0;
         for (int i = 0; i < count; i++) {
             double sqDists = data[i + offset] - sma;
-            
+
             sqDistSum += sqDists * sqDists;
         }
-        
+
         sqDistSum /= count;
-        
+
         return Math.sqrt(sqDistSum);
+    }
+    
+    public static double Volatility(int count, double[] data) {
+        return Volatility(count, data, 0);
+    }
+
+    public static double Volatility(int count, double[] data, int offset) {
+
+        if (data.length < count + offset + 1) {
+            logger.severe("Volatility - not enough data: " + (count + offset + 1) + " vs " + data.length);
+            return 0;
+        }
+        double[] returns = new double[count];
+
+        for (int i = 0; i < count; i++) {
+            returns[i] = Math.log(Math.abs(data[i + offset] / data[i + offset + 1]));
+            //returns[i] = (data[i + offset] / data[i + offset + 1]) - 1;
+        }
+
+        double std = StandardDeviation(count, returns);
+
+        return std * sqrtTradeDays;
     }
 }

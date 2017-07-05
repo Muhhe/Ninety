@@ -330,7 +330,7 @@ public class IndicatorCalculatorTest {
         double result = IndicatorCalculator.RSI(values);
         assertEquals(expResult, result, 0.001);
     }
-    
+
     /**
      * Test of StandardDeviation method, of class IndicatorCalculator.
      */
@@ -338,11 +338,46 @@ public class IndicatorCalculatorTest {
     public void testStandardDeviation() {
         System.out.println("StandardDeviation");
         double[] values = {
-            10,15,8,1,4,7,2,6
+            10, 15, 8, 1, 4, 7, 2, 6
         };
 
         double expResult = 2.280350850198276;
         double result = IndicatorCalculator.StandardDeviation(5, values, 3);
+        assertEquals(expResult, result, 0.001);
+    }
+
+    /**
+     * Test of Volatility method, of class IndicatorCalculator.
+     */
+    @Test
+    public void testVolatility() {
+        System.out.println("Volatility");
+        double[] values = {
+            1052.25,
+            1026.75,
+            1023.75,
+            1007.5,
+            1002.25,
+            999.5,
+            993.5,
+            1022,
+            999,
+            1021,
+            1027,
+            1037.5,
+            1051.25,
+            1038.5,
+            1050,
+            1051.5,
+            1042.5,
+            1050.25,
+            1048.25,
+            1029.25,
+            1032
+        };
+
+        double expResult = 2.280350850198276;
+        double result = IndicatorCalculator.Volatility(20, values, 0);
         assertEquals(expResult, result, 0.001);
     }
 

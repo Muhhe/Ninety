@@ -233,16 +233,26 @@ public class BacktesterVXVMT {
             data.indicators.actVXXvalue = dataVXX.adjCloses[i];
             data.indicators.actXIVvalue = dataXIV.adjCloses[i];
             VXVMTChecker.CheckDataIndicators(data);
+            
+            double eq = status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue);
+            
+            if (status.heldType == VXVMTSignal.Type.XIV) {
+                profitXIV += (eq - lastCapital) / lastCapital * 100;
+            }
+            if (status.heldType == VXVMTSignal.Type.VXX) {
+                profitVXX += (eq - lastCapital) / lastCapital * 100;
+            }
 
             runner.RunStrategy(data);
 
             stats.StartDay(date);
 
-            double eq = status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue);
             stats.UpdateEquity(eq, date);
             UpdateEquityFile(eq, "equity.csv", (status.heldType.toString() + " - " + TradeFormatter.toString(1 - (status.freeCapital / eq))));
             UpdateEquityFile(xivPos * dataXIV.adjCloses[i], "vix.csv", null);
             //UpdateEquityFile(spyPos * dataSPY.adjCloses[i], "spy.csv", null);*/
+            
+            lastCapital = eq;
 
             stats.EndDay();
 

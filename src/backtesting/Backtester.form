@@ -53,7 +53,9 @@
                           </Group>
                           <Group type="102" alignment="0" attributes="0">
                               <Component id="reinvestCheckBox" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace min="-2" pref="272" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" pref="189" max="-2" attributes="0"/>
+                              <Component id="backTestDDN" max="32767" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
                               <Component id="backTestBear" max="32767" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="backTestMoment" max="32767" attributes="0"/>
@@ -100,6 +102,7 @@
                   <Component id="backTestContButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="backTestMoment" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="backTestBear" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="backTestDDN" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace pref="8" max="32767" attributes="0"/>
               <Component id="jScrollPane1" min="-2" pref="478" max="-2" attributes="0"/>
@@ -236,6 +239,14 @@
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="backTestBearActionPerformed"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JButton" name="backTestDDN">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Run DDN"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="backTestDDNActionPerformed"/>
       </Events>
     </Component>
   </SubComponents>
