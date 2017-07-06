@@ -99,7 +99,7 @@ public class NinetyChecker {
             logger.info("Difference - " + TradeFormatter.toString(cashDiff) + "$ = " + TradeFormatter.toString(cashDiffPercent) + "%");
         }
 
-        int freePortions = 20 - statusData.GetBoughtPortions();
+        int freePortions = StatusDataForNinety.PORTIONS_NUM - statusData.GetBoughtPortions();
         double availableCash = freePortions * statusData.GetOnePortionValue() / Settings.leverage;
 
         logger.info("Saved current available cash: " + TradeFormatter.toString(availableCash)

@@ -364,7 +364,7 @@ public class BackTesterNinety {
 
             broker.clearOrderMaps();
 
-            int remainingPortions = 20 - statusData.GetBoughtPortions();
+            int remainingPortions = StatusDataForNinety.PORTIONS_NUM - statusData.GetBoughtPortions();
             TradeOrder toBuy = Ninety.ComputeStocksToBuy(indicatorsMap, statusData, toSell);
             if (toBuy != null) {
                 broker.PlaceOrder(toBuy);

@@ -40,6 +40,8 @@ import tradingapp.TradeTimer;
 public class StatusDataForNinety {
 
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+    
+    static public final int PORTIONS_NUM = 20;
 
     public Map<String, HeldStock> heldStocks = new HashMap<>();
     public double moneyToInvest = 40000.0;
@@ -211,7 +213,7 @@ public class StatusDataForNinety {
             boughtPortions += heldStock.GetPortions();
         }
 
-        if (boughtPortions > 20) {
+        if (boughtPortions > StatusDataForNinety.PORTIONS_NUM) {
             logger.severe("Bought portions more than 20!!!");
         }
 
@@ -219,7 +221,7 @@ public class StatusDataForNinety {
     }
 
     public double GetOnePortionValue() {
-        return moneyToInvest / 20.0;
+        return moneyToInvest / StatusDataForNinety.PORTIONS_NUM;
     }
 
     public void PrintStatus() {

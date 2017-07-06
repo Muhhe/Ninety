@@ -178,7 +178,7 @@ public class Ninety {
                 //TODO: pruser
             }
 
-            if (statusDataFor90.GetBoughtPortions() < 20) {
+            if (statusDataFor90.GetBoughtPortions() < StatusDataForNinety.PORTIONS_NUM) {
                 logger.fine("Buying new stock '" + stockToBuy + "'!");
                 order = new TradeOrder();
                 order.orderType = TradeOrder.OrderType.BUY;
@@ -235,7 +235,7 @@ public class Ninety {
 
                 if (remainingPortions - newPortions < 0) {
                     logger.info("Cannot buy " + newPortions + " more portions of '" + heldStock.tickerSymbol + 
-                            "' because we currently hold " + (20 - remainingPortions) + "/20 portions.");
+                            "' because we currently hold " + (StatusDataForNinety.PORTIONS_NUM - remainingPortions) + "/20 portions.");
                     continue;
                 }
 

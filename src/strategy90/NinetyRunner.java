@@ -131,7 +131,7 @@ public class NinetyRunner implements Runnable {
 
     private void RunNinetyBuys(List<TradeOrder> sellOrders) {
         logger.info("Starting computing stocks to buy");
-        int remainingPortions = 20 - statusData.GetBoughtPortions();
+        int remainingPortions = StatusDataForNinety.PORTIONS_NUM - statusData.GetBoughtPortions();
 
         // Buying new stock
         TradeOrder buyOrder = Ninety.ComputeStocksToBuy(stockData.indicatorsMap, statusData, sellOrders);
