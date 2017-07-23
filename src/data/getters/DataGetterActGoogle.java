@@ -41,12 +41,19 @@ public class DataGetterActGoogle implements IDataGetterAct {
 
     @Override
     public double readActualData(String tickerSymbol) {
+        
+        // Google needs this ...
+        String gogTicker = tickerSymbol;
+        if (tickerSymbol.equals("LMT")) {
+            gogTicker = "NYSE:LMT";
+        }
+        
         try {
             StringBuilder urlBuilder = new StringBuilder();
 
             urlBuilder.append("http://finance.google.com/finance/info?client=ig&q=");
 
-            urlBuilder.append(tickerSymbol);
+            urlBuilder.append(gogTicker);
 
             URL urlGoogle = new URL(urlBuilder.toString());
             DataGSON[] entryArray;
@@ -75,7 +82,14 @@ public class DataGetterActGoogle implements IDataGetterAct {
             urlBuilder.append("http://finance.google.com/finance/info?client=ig&q=");
 
             for (String tickerSymbol : tickerSymbols) {
-                urlBuilder.append(tickerSymbol);
+                
+            // Google needs this ...
+            String gogTicker = tickerSymbol;
+            if (tickerSymbol.equals("LMT")) {
+                gogTicker = "NYSE:LMT";
+            }
+
+                urlBuilder.append(gogTicker);
                 urlBuilder.append(",");
             }
             urlBuilder.deleteCharAt(urlBuilder.length() - 1); //remove last ,
