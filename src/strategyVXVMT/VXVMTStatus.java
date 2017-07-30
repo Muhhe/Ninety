@@ -21,6 +21,7 @@ import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
 import tradingapp.FilePaths;
+import tradingapp.Settings;
 import tradingapp.TradeFormatter;
 import tradingapp.TradeTimer;
 
@@ -29,18 +30,15 @@ import tradingapp.TradeTimer;
  * @author Muhe
  */
 public class VXVMTStatus {
-    
+
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
-    
-    //VXVMTSignal yesterdaySignal = new VXVMTSignal();
-    
+
     public VXVMTSignal.Type heldType = VXVMTSignal.Type.None;
     public int heldPosition = 0;
     public double freeCapital = 0;
     public double closingEquity = 0;
     public double fees = 0;
-    
-    
+
     public double GetEquity(double valueXIV, double valueVXX) {
         double value = 0;
         if (heldType == VXVMTSignal.Type.VXX) {
@@ -48,7 +46,7 @@ public class VXVMTStatus {
         } else {
             value = valueXIV;
         }
-        
+
         return freeCapital + heldPosition * value;
     }
 
@@ -60,44 +58,44 @@ public class VXVMTStatus {
             Document document = saxBuilder.build(inputFile);
 
             Element rootElement = document.getRootElement();
-            
+
             Element moneyElement = rootElement.getChild("money");
-            
+
             Attribute attribute = moneyElement.getAttribute("freeCapital");
             freeCapital = attribute.getDoubleValue();
-            
+
             attribute = moneyElement.getAttribute("closingEquity");
             closingEquity = attribute.getDoubleValue();
-            
+
             attribute = moneyElement.getAttribute("fees");
-            fees = attribute.getDoubleValue();            
-            
+            fees = attribute.getDoubleValue();
+
             Element heldElement = rootElement.getChild("held");
             attribute = heldElement.getAttribute("type");
             String type = attribute.getValue();
             heldType = VXVMTSignal.typeFromString(type);
-            
+
             attribute = heldElement.getAttribute("position");
             heldPosition = attribute.getIntValue();
-            
+
         } catch (JDOMException e) {
             logger.severe("Error in loading from XML: JDOMException.\r\n" + e);
         } catch (IOException ioe) {
             logger.severe("Error in loading from XML: IOException.\r\n" + ioe);
         }
     }
-    
+
     public void SaveTradingStatus() {
         try {
             Element rootElement = new Element("status");
             Document doc = new Document(rootElement);
-            
+
             Element moneyElement = new Element("money");
             moneyElement.setAttribute("freeCapital", TradeFormatter.toString(freeCapital));
             moneyElement.setAttribute("closingEquity", TradeFormatter.toString(closingEquity));
             moneyElement.setAttribute("fees", TradeFormatter.toString(fees));
             rootElement.addContent(moneyElement);
-            
+
             Element heldElement = new Element("held");
             heldElement.setAttribute("type", heldType.toString());
             heldElement.setAttribute("position", Integer.toString(heldPosition));
@@ -116,19 +114,24 @@ public class VXVMTStatus {
             logger.severe("Failed to save held positions to XML file - " + e.toString());
         }
     }
-    
+
     public void UpdateEquity(double valueXIV, double valueVXX, String signal) {
-        
+
         closingEquity = GetEquity(valueXIV, valueVXX);
-        
+
         Writer writer = null;
         try {
             File equityFile = new File(FilePaths.equityPathFile);
             equityFile.createNewFile();
             writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(equityFile, true), "UTF-8"));
-            String line = TradeTimer.GetLocalDateNow().toString() + "," + GetEquity(valueXIV, valueVXX) + "," + signal + "\r\n";
+            String line = TradeTimer.GetLocalDateNow().toString()
+                    + "," + closingEquity
+                    + "," + Settings.investCash
+                    + "," + (closingEquity - Settings.investCash)
+                    + "," + signal
+                    + "\r\n";
             writer.append(line);
-            
+
             logger.fine("Updated equity file with value " + GetEquity(valueXIV, valueVXX));
         } catch (FileNotFoundException ex) {
             logger.severe("Cannot find equity file: " + ex);
@@ -144,11 +147,12 @@ public class VXVMTStatus {
             }
         }
     }
+
     public void PrintStatus() {
         logger.fine("Free cash: " + freeCapital);
         logger.fine("Held " + heldType + ", position: " + heldPosition);
     }
-    
+
     public void PrintStatus(double XIV, double VXX) {
         logger.fine("Status report - currentEquity: " + GetEquity(XIV, VXX));
         PrintStatus();

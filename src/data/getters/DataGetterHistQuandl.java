@@ -27,8 +27,8 @@ public class DataGetterHistQuandl implements IDataGetterHist {
         return "Quandl";
     }
     
-    public CloseData readAdjCloseData(LocalDate startDate, LocalDate endDate, String tickerSymbol) {
-        return readAdjCloseData(startDate, endDate, tickerSymbol, -1, false);
+    public CloseData readAdjCloseData(LocalDate startDate, LocalDate endDate, String tickerSymbol, boolean skipFirstIndex) {
+        return readAdjCloseData(startDate, endDate, tickerSymbol, -1, skipFirstIndex);
     }
     
     @Override

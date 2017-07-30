@@ -103,6 +103,7 @@ public class MainWindowVXVMT extends javax.swing.JFrame {
         commArea = new javax.swing.JTextArea();
         startNowButton = new javax.swing.JButton();
         checkPositionsButton = new javax.swing.JButton();
+        reportButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Trading app VXMT");
@@ -158,6 +159,13 @@ public class MainWindowVXVMT extends javax.swing.JFrame {
             }
         });
 
+        reportButton.setText("Report");
+        reportButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                reportButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -170,7 +178,9 @@ public class MainWindowVXVMT extends javax.swing.JFrame {
                         .addComponent(startButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(isOnCheckbox)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 416, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 345, Short.MAX_VALUE)
+                        .addComponent(reportButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(checkPositionsButton)
                         .addGap(5, 5, 5)
                         .addComponent(startNowButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
@@ -184,7 +194,8 @@ public class MainWindowVXVMT extends javax.swing.JFrame {
                     .addComponent(startButton)
                     .addComponent(startNowButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(isOnCheckbox)
-                    .addComponent(checkPositionsButton))
+                    .addComponent(checkPositionsButton)
+                    .addComponent(reportButton))
                 .addGap(18, 18, 18)
                 .addComponent(logTabbedPane, javax.swing.GroupLayout.DEFAULT_SIZE, 584, Short.MAX_VALUE)
                 .addContainerGap())
@@ -234,6 +245,10 @@ public class MainWindowVXVMT extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_startNowButtonActionPerformed
 
+    private void reportButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reportButtonActionPerformed
+        Report.Generate("XIV", true);
+    }//GEN-LAST:event_reportButtonActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -279,6 +294,7 @@ public class MainWindowVXVMT extends javax.swing.JFrame {
     private javax.swing.JTextArea logArea;
     private javax.swing.JScrollPane logScrollPane;
     private javax.swing.JTabbedPane logTabbedPane;
+    private javax.swing.JButton reportButton;
     private javax.swing.JButton startButton;
     private javax.swing.JButton startNowButton;
     // End of variables declaration//GEN-END:variables

@@ -304,8 +304,8 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
 
         int orderId = getNextOrderId();
 
-        ibClientSocket.reqMktData(orderId, contract, null, false, new Vector<TagValue>());
         realtimeData.CreateNew(ticker, orderId);
+        ibClientSocket.reqMktData(orderId, contract, null, false, new Vector<TagValue>());
 
         try {
             Thread.sleep(20);   //max number of commands to IB is 50/s

@@ -37,8 +37,8 @@ public class BacktesterTrend {
     static public void runBacktest(BTSettings settings) {
         IDataGetterHist getterFile = new DataGetterHistFile("backtest/VolData/");
         //IDataGetterHist getterFile = new DataGetterHistGoogle();
-        CloseData dataVXX = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "VXX");
-        CloseData dataXIV = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "XIV");
+        CloseData dataVXX = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "VXX", false);
+        CloseData dataXIV = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "XIV", false);
 
         TradeTimer.LoadSpecialTradingDays();
 

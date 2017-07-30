@@ -58,24 +58,28 @@ public class IndicatorCalculator {
     }
 
     public static double RSI(double[] values) {
+        return RSI(values, 14, 0);
+    }
+    
+    public static double RSI(double[] values, int num, int offset) {
         if (values == null) {
             logger.severe("RSI - null values");
             return Double.MAX_VALUE;
         }
-        if (values.length < 14) {
+        if (values.length < num + offset) {
             logger.severe("RSI - not enough data: " + values.length + "/14");
             return Double.MAX_VALUE;
         }
 
-        double[] ups = new double[14];
-        double[] downs = new double[14];
-        double[] avgUps = new double[14];
-        double[] avgDowns = new double[14];
+        double[] ups = new double[num];
+        double[] downs = new double[num];
+        double[] avgUps = new double[num];
+        double[] avgDowns = new double[num];
 
         int k = 1;
-        for (int i = 12; i >= 0; i--) {
-            if (values[i] > values[i + 1]) {
-                ups[k] = values[i] - values[i + 1];
+        for (int i = num-2; i >= 0; i--) {
+            if (values[i + offset] > values[i + 1 + offset]) {
+                ups[k] = values[i + offset] - values[i + 1 + offset];
             } else {
                 ups[k] = 0;
             }
@@ -83,14 +87,14 @@ public class IndicatorCalculator {
         }
 
         avgUps[1] = ups[1];
-        for (int i = 2; i < 14; i++) {
+        for (int i = 2; i < num; i++) {
             avgUps[i] = (avgUps[i - 1] + ups[i]) / 2.0f;
         }
 
         k = 1;
-        for (int i = 12; i >= 0; i--) {
-            if (values[i] < values[i + 1]) {
-                downs[k] = values[i + 1] - values[i];
+        for (int i = num-2; i >= 0; i--) {
+            if (values[i + offset] < values[i + 1 + offset]) {
+                downs[k] = values[i + 1 + offset] - values[i + offset];
             } else {
                 downs[k] = 0;
             }
@@ -98,15 +102,15 @@ public class IndicatorCalculator {
         }
 
         avgDowns[1] = downs[1];
-        for (int i = 2; i < 14; i++) {
+        for (int i = 2; i < num; i++) {
             avgDowns[i] = (avgDowns[i - 1] + downs[i]) / 2.0f;
         }
 
-        if (avgDowns[14 - 1] == 0) {
+        if (avgDowns[num - 1] == 0) {
             return 100.0;
         }
 
-        double ret = 100.f - (100.0f / (1.0f + (avgUps[14 - 1] / avgDowns[14 - 1])));
+        double ret = 100.f - (100.0f / (1.0f + (avgUps[num - 1] / avgDowns[num - 1])));
 
         return ret;
     }

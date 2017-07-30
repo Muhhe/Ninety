@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 import tradingapp.CheckingThread;
 import tradingapp.FilePaths;
 import tradingapp.MailSender;
+import tradingapp.Report;
 import tradingapp.Settings;
 import tradingapp.TradeFormatter;
 import tradingapp.TradeLogger;
@@ -134,7 +135,6 @@ public class VXVMTScheduler {
             TradeTimer.startTaskAt(TradeTimer.GetNYTimeNow().plusHours(1), this::ScheduleRun);
             MailSender.SendErrors();
         }
-        
 
         ZonedDateTime now = TradeTimer.GetNYTimeNow();
         LocalTime closeTimeLocal = TradeTimer.GetTodayCloseTime();
@@ -192,7 +192,7 @@ public class VXVMTScheduler {
                 } else {
                     signalInfo = signal.typeToString() + "-" + TradeFormatter.toString(signal.exposure);
                 }
-                
+
                 VXVMTChecker.CheckCash(status, broker);
                 VXVMTChecker.CheckHeldPositions(status, broker);
 
@@ -221,6 +221,8 @@ public class VXVMTScheduler {
         MailSender.AddLineToMail("Held '" + status.heldType + "', position: " + status.heldPosition);
         MailSender.AddLineToMail("Equity: " + TradeFormatter.toString(status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue)));
         MailSender.AddLineToMail("Today's profit/loss: " + TradeFormatter.toString(diff) + "$ = " + TradeFormatter.toString(prc) + "%");
+
+        Report.Generate("XIV", true);
 
         MailSender.SendErrors();
         MailSender.SendCheckResult();

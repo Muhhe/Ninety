@@ -54,9 +54,9 @@ public class BacktesterVXVMT {
         //LocalDate startDate = LocalDate.of(2010, Month.NOVEMBER, 30);
         //LocalDate endDate = LocalDate.of(2017, Month.APRIL, 28);
         logger.info("Loading VXV");
-        CloseData dataVXV = getter.readAdjCloseData(settings.startDate, settings.endDate, "VXV");
+        CloseData dataVXV = getter.readAdjCloseData(settings.startDate, settings.endDate, "VXV", false);
         logger.info("Loading VXMT");
-        CloseData dataVXMT = getter.readAdjCloseData(settings.startDate, settings.endDate, "VXMT");
+        CloseData dataVXMT = getter.readAdjCloseData(settings.startDate, settings.endDate, "VXMT", false);
 
         if (dataVXV.adjCloses.length != dataVXMT.adjCloses.length) {
             logger.warning("data not equal");
@@ -173,32 +173,52 @@ public class BacktesterVXVMT {
 
         //VXVMTChecker.CheckTickerData(data.dataVXV, "VXV");
         //VXVMTChecker.CheckTickerData(data.dataVXMT, "VXMT");
-
         return data;
+    }
+
+    static private int GetMaxPosition(VXVMTSignal.Type signalType, VXVMTData data, VXVMTStatus status) {
+        return GetDesiredPosition(signalType, 1, data, status);
+    }
+
+    static private int GetDesiredPosition(VXVMTSignal.Type signalType, double exposure, VXVMTData data, VXVMTStatus status) {
+        double value = 0;
+
+        if (signalType == VXVMTSignal.Type.VXX) {
+            value = data.indicators.actVXXvalue;
+        } else {
+            value = data.indicators.actXIVvalue;
+        }
+
+        // Budget is lowered by 1% for safety reasons (slipage etc.)
+        double budget = status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue) * 0.99;
+
+        return (int) (budget / value * exposure);
     }
 
     static public void runBacktest(BTSettings settings) {
         IDataGetterHist getterFile = new DataGetterHistFile("backtest/VolData/");
         //IDataGetterHist getterFile = new DataGetterHistGoogle();
-        CloseData dataVXX = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "VXX");
-        CloseData dataXIV = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "XIV");
+        CloseData dataVXX = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "VXX", false);
+        CloseData dataXIV = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "XIV", false);
 
         IDataGetterHist getterCBOE = new DataGetterHistCBOE();
         logger.info("Loading VXV");
-        CloseData dataVXV = getterCBOE.readAdjCloseData(settings.startDate, settings.endDate, "VXV");
+        CloseData dataVXV = getterCBOE.readAdjCloseData(settings.startDate, settings.endDate, "VXV", false);
         logger.info("Loading VXMT");
-        CloseData dataVXMT = getterCBOE.readAdjCloseData(settings.startDate, settings.endDate, "VXMT");
+        CloseData dataVXMT = getterCBOE.readAdjCloseData(settings.startDate, settings.endDate, "VXMT", false);
 
         if (dataVXV.adjCloses.length != dataVXMT.adjCloses.length) {
             logger.warning("data not equal");
         }
 
         TradeTimer.LoadSpecialTradingDays();
-        
+
         BTStatistics stats = new BTStatistics(settings.capital, settings.reinvest);
 
         File equityFile = new File("equity.csv");
         equityFile.delete();
+        File xivFile = new File("xiv.csv");
+        xivFile.delete();
 
         int startInx = dataVXV.dates.length - 152;
         int xivPos = (int) (settings.capital / dataXIV.adjCloses[startInx]);
@@ -221,11 +241,13 @@ public class BacktesterVXVMT {
 
         VXVMTRunner runner = new VXVMTRunner(status, broker);
 
+        double dokup = 0;
+        double lastKup = 0;
         for (int i = startInx; i >= 1; i--) {
 
             LocalDate date = dataXIV.dates[i];
             TradeTimer.SetToday(date);
-            
+
             logger.info("Day - " + date.toString());
 
             VXVMTData data = GetDataForDay(i, dataVXV, dataVXMT);
@@ -233,9 +255,18 @@ public class BacktesterVXVMT {
             data.indicators.actVXXvalue = dataVXX.adjCloses[i];
             data.indicators.actXIVvalue = dataXIV.adjCloses[i];
             VXVMTChecker.CheckDataIndicators(data);
-            
+
+            if (status.heldType == VXVMTSignal.Type.XIV) {
+                status.freeCapital += data.indicators.actXIVvalue * status.heldPosition;
+                status.heldPosition = 0;
+            }
+            if (status.heldType == VXVMTSignal.Type.VXX) {
+                status.freeCapital += data.indicators.actVXXvalue * status.heldPosition;
+                status.heldPosition = 0;
+            }
+
             double eq = status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue);
-            
+
             if (status.heldType == VXVMTSignal.Type.XIV) {
                 profitXIV += (eq - lastCapital) / lastCapital * 100;
             }
@@ -243,15 +274,62 @@ public class BacktesterVXVMT {
                 profitVXX += (eq - lastCapital) / lastCapital * 100;
             }
 
-            runner.RunStrategy(data);
+            // runner.RunStrategy(data);
+            VXVMTSignal signal = VXVMTStrategy.CalculateFinalSignal(data);
+
+            boolean nope = false;
+            for (int j = 0; j < 3; j++) {
+                if (signal.VXXSignals[j]) {
+                    nope = true;
+                }
+            }
+            
+            if (signal.exposure < 0.0 && !nope) {
+                double rsi = IndicatorCalculator.RSI(dataXIV.adjCloses, 3, i);
+                if (dokup != 0) {
+                    if ((lastKup - data.indicators.actXIVvalue) / lastKup > 0.05) {
+                        dokup += 2* dokup;
+                        dokup = Double.min(1, dokup);
+                        logger.log(BTLogLvl.BACKTEST, "Dokup: " + dokup);
+                    }
+                } else if (rsi < 20.0) {
+                    dokup = 0.2;
+                    lastKup = data.indicators.actXIVvalue;
+                    logger.log(BTLogLvl.BACKTEST, "New dokup: " + dokup);
+                }
+                double sma = IndicatorCalculator.SMA(5, dataXIV.adjCloses, i);
+                if (sma < data.indicators.actXIVvalue) {
+                    dokup = 0;
+                    logger.log(BTLogLvl.BACKTEST, "Prodej: " + dokup);
+                }
+            }
+            else {
+                dokup = 0;
+                lastKup = 0;
+            }
+            
+            if (dokup > 0) {
+                signal.exposure = dokup;
+                signal.type = VXVMTSignal.Type.XIV;
+            }
+
+            if (signal.type == VXVMTSignal.Type.XIV) {
+                status.heldPosition = GetDesiredPosition(VXVMTSignal.Type.XIV, signal.exposure, data, status);
+                status.freeCapital -= data.indicators.actXIVvalue * status.heldPosition;
+            } else if (signal.type == VXVMTSignal.Type.VXX) {
+                status.heldPosition = GetDesiredPosition(VXVMTSignal.Type.VXX, signal.exposure, data, status);
+                status.freeCapital -= data.indicators.actVXXvalue * status.heldPosition;
+            }
+            status.heldType = signal.type;
 
             stats.StartDay(date);
 
             stats.UpdateEquity(eq, date);
-            UpdateEquityFile(eq, "equity.csv", (status.heldType.toString() + " - " + TradeFormatter.toString(1 - (status.freeCapital / eq))));
-            UpdateEquityFile(xivPos * dataXIV.adjCloses[i], "vix.csv", null);
+            //UpdateEquityFile(eq, "equity.csv", (status.heldType.toString() + " - " + TradeFormatter.toString(1 - (status.freeCapital / eq))));
+            UpdateEquityFile(eq, "equity.csv", (status.heldType.toString() + " - " + TradeFormatter.toString(signal.exposure) + " - " + TradeFormatter.toString(dokup)));
+            UpdateEquityFile(xivPos * dataXIV.adjCloses[i], "xiv.csv", null);
             //UpdateEquityFile(spyPos * dataSPY.adjCloses[i], "spy.csv", null);*/
-            
+
             lastCapital = eq;
 
             stats.EndDay();
@@ -288,10 +366,10 @@ public class BacktesterVXVMT {
     static public void runBacktest2(BTSettings settings) {
 
         IDataGetterHist getter = new DataGetterHistFile("backtest/VolData/");
-        CloseData dataVXX = getter.readAdjCloseData(settings.startDate, settings.endDate, "VXX");
-        CloseData dataXIV = getter.readAdjCloseData(settings.startDate, settings.endDate, "XIV");
+        CloseData dataVXX = getter.readAdjCloseData(settings.startDate, settings.endDate, "VXX", false);
+        CloseData dataXIV = getter.readAdjCloseData(settings.startDate, settings.endDate, "XIV", false);
 
-        CloseData dataSPY = getter.readAdjCloseData(settings.startDate, settings.endDate, "SPY");
+        CloseData dataSPY = getter.readAdjCloseData(settings.startDate, settings.endDate, "SPY", false);
 
         CloseData ratioData = getRatioData(settings);
 

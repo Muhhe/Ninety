@@ -39,11 +39,11 @@ public class BacktesterContango {
 
     static public void runBacktest(BTSettings settings) {
         IDataGetterHist getterFile = new DataGetterHistFile("backtest/VolData/");
-        CloseData dataVIXM1 = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "VIX M1");
-        CloseData dataVIXM2 = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "VIX M2");
+        CloseData dataVIXM1 = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "VIX M1", false);
+        CloseData dataVIXM2 = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "VIX M2", false);
 
-        CloseData dataVXX = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "VXX");
-        CloseData dataXIV = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "XIV");
+        CloseData dataVXX = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "VXX", false);
+        CloseData dataXIV = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "XIV", false);
 
         TradeTimer.LoadSpecialTradingDays();
 

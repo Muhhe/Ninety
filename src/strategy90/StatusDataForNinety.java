@@ -249,7 +249,11 @@ public class StatusDataForNinety {
             File equityFile = new File(FilePaths.equityPathFile);
             equityFile.createNewFile();
             writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(equityFile, true), "UTF-8"));
-            String line = TradeTimer.GetLocalDateNow().toString() + "," + currentCash + "\r\n";
+            String line = TradeTimer.GetLocalDateNow().toString() 
+                    + "," + currentCash 
+                    + "," + Settings.investCash
+                    + "," + (currentCash - Settings.investCash)
+                    + "\r\n";
             writer.append(line);
             
             logger.fine("Updated equity file with value " + currentCash);

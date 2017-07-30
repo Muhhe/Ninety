@@ -194,7 +194,7 @@ public class BackTesterNinety {
         for (IDataGetterHist getter : GlobalConfig.GetDataGettersHist()) {
             logger.info("Loading " + getter.getName() + " data for: " + ticker);
 
-            CloseData closeData = getter.readAdjCloseData(startDate, endDate, ticker);
+            CloseData closeData = getter.readAdjCloseData(startDate, endDate, ticker, false);
             CloseData first199 = getter.readAdjCloseData(startDate.minusDays(300), startDate.minusDays(1), ticker, 199, false);
 
             if ((closeData == null) || (first199 == null) || (first199.adjCloses.length != 199)) {

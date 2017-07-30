@@ -17,6 +17,7 @@ import tradingapp.CheckingThread;
 import tradingapp.FilePaths;
 import tradingapp.TradeFormatter;
 import tradingapp.MailSender;
+import tradingapp.Report;
 import tradingapp.Settings;
 import tradingapp.TradeLogger;
 import tradingapp.TradeTimer;
@@ -64,7 +65,8 @@ public class NinetyScheduler {
             FilePaths.dataLogDirectory + todayString + FilePaths.logCommPathFile,
             FilePaths.dataLogDirectory + todayString + FilePaths.logDetailedPathFile,
             FilePaths.equityPathFile,
-            FilePaths.tradingStatusPathFileInput};
+            FilePaths.tradingStatusPathFileInput,
+            FilePaths.reportPathFile};
 
         MailSender.SetTradeLogAttachments(attachmentsTradeLog);
         MailSender.SetErrorAttachments(attachmentsError);
@@ -178,6 +180,8 @@ public class NinetyScheduler {
             if (isCheckOk) {
                 ScheduleTradingRun(closeTimeZoned.minus(DURATION_BEFORECLOSE_RUNSTRATEGY));
             }
+            
+            Report.Generate("SPY", false);
 
         } finally {
             if (!isCheckOk) {

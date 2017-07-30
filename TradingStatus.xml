@@ -1,5 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <status>
-  <money freeCapital="97.215" closingEquity="10134.715" fees="62.445" />
-  <held type="XIV" position="125" />
+  <money currentCash="70636.145" currentFees="328.25" />
+  <heldPositions heldStocks="4">
+    <heldStock ticker="UNP">
+      <purchase priceForOne="106.20" position="61" portions="1" date="2017-07-20" />
+      <purchase priceForOne="104.852" position="124" portions="2" date="2017-07-21" />
+      <purchase priceForOne="103.75" position="188" portions="3" date="2017-07-24" />
+      <purchase priceForOne="101.354" position="256" portions="4" date="2017-07-27" />
+    </heldStock>
+    <heldStock ticker="ABBV">
+      <purchase priceForOne="70.42" position="92" portions="1" date="2017-07-28" />
+    </heldStock>
+    <heldStock ticker="MMM">
+      <purchase priceForOne="199.27" position="32" portions="1" date="2017-07-25" />
+      <purchase priceForOne="199.12" position="65" portions="2" date="2017-07-26" />
+    </heldStock>
+    <heldStock ticker="AMGN">
+      <purchase priceForOne="171.959" position="37" portions="1" date="2017-07-27" />
+    </heldStock>
+  </heldPositions>
 </status>

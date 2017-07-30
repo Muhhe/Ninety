@@ -47,13 +47,13 @@ public class BacktesterDDN {
     static public void runBacktest(BTSettings settings) {
         IDataGetterHist getterFile = new DataGetterHistFile("backtest/VolData/");
         IDataGetterHist getterG = new DataGetterHistGoogle();
-        CloseData dataVXX = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "VXX");
-        CloseData dataXIV = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "XIV");
-        CloseData dataVIX = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "VIX");
+        CloseData dataVXX = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "VXX", false);
+        CloseData dataXIV = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "XIV", false);
+        CloseData dataVIX = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "VIX", false);
 
         IDataGetterHist getterCBOE = new DataGetterHistCBOE();
-        CloseData dataVXMT = getterCBOE.readAdjCloseData(settings.startDate, settings.endDate, "VXMT");
-        CloseData dataSPY = getterG.readAdjCloseData(settings.startDate, settings.endDate, "SPY");
+        CloseData dataVXMT = getterCBOE.readAdjCloseData(settings.startDate, settings.endDate, "VXMT", false);
+        CloseData dataSPY = getterG.readAdjCloseData(settings.startDate, settings.endDate, "SPY", false);
 
         TradeTimer.LoadSpecialTradingDays();
 

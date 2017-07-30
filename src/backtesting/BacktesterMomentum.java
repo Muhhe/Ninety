@@ -51,10 +51,10 @@ public class BacktesterMomentum {
     static public void runBacktest(BTSettings settings) {
         IDataGetterHist getterFile = new DataGetterHistFile("backtest/VolData/");
         IDataGetterHist getterG = new DataGetterHistGoogle();
-        CloseData dataVXX = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "VXX");
-        CloseData dataXIV = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "XIV");
-        CloseData dataVXZ = getterG.readAdjCloseData(settings.startDate, settings.endDate, "VXZ");
-        CloseData dataZIV = getterG.readAdjCloseData(settings.startDate, settings.endDate, "ZIV");
+        CloseData dataVXX = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "VXX", false);
+        CloseData dataXIV = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "XIV", false);
+        CloseData dataVXZ = getterG.readAdjCloseData(settings.startDate, settings.endDate, "VXZ", false);
+        CloseData dataZIV = getterG.readAdjCloseData(settings.startDate, settings.endDate, "ZIV", false);
 
         TradeTimer.LoadSpecialTradingDays();
 
