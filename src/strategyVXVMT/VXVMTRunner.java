@@ -90,7 +90,7 @@ public class VXVMTRunner {
         } else {
             value = data.indicators.actXIVvalue;
         }
-        
+
         // Budget is lowered by 1% for safety reasons (slipage etc.)
         double budget = status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue) * 0.99;
 
@@ -209,6 +209,9 @@ public class VXVMTRunner {
                 continue;
             }
 
+            logger.info("Order closed - " + order.toString());
+            MailSender.AddLineToMail("Filled " + order.order.toString() + ", price: " + order.fillPrice + "$");
+
             if (order.order.orderType == TradeOrder.OrderType.SELL) {
                 status.freeCapital += order.filled * order.fillPrice;
                 double fee = GetOrderFee(order.filled);
@@ -219,9 +222,18 @@ public class VXVMTRunner {
 
                 if (status.heldPosition == 0) {
                     status.heldType = VXVMTSignal.Type.None;
+                    status.avgPrice = 0;
                 } else {
                     status.heldType = VXVMTSignal.typeFromString(order.order.tickerSymbol);
                 }
+
+                double realized = (order.fillPrice - status.avgPrice) * order.filled;
+                double realizedPrc = realized / status.closingEquity * 100.0;
+                
+                String msg = "Profit/loss: " + TradeFormatter.toString(realized) + "$ = " + TradeFormatter.toString(realizedPrc) + "%";
+                
+                logger.info(msg);
+                MailSender.AddLineToMail(msg);
             }
 
             if (order.order.orderType == TradeOrder.OrderType.BUY) {
@@ -230,12 +242,11 @@ public class VXVMTRunner {
                 status.freeCapital -= fee;
                 status.fees += fee;
 
+                status.avgPrice = ((status.avgPrice * status.heldPosition) + (order.fillPrice * order.filled)) / (status.heldPosition + order.filled);
+
                 status.heldPosition += order.filled;
                 status.heldType = VXVMTSignal.typeFromString(order.order.tickerSymbol);
             }
-
-            logger.info("Order closed - " + order.toString());
-            MailSender.AddLineToMail("Filled order - " + order.toString());
 
             it.remove();
         }

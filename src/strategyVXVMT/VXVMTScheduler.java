@@ -74,7 +74,8 @@ public class VXVMTScheduler {
             FilePaths.dataLogDirectory + todayString + FilePaths.logCommPathFile,
             FilePaths.dataLogDirectory + todayString + FilePaths.logDetailedPathFile,
             FilePaths.equityPathFile,
-            FilePaths.tradingStatusPathFileInput
+            FilePaths.tradingStatusPathFileInput,
+            FilePaths.reportPathFile
         };
 
         String[] attachmentsError = {FilePaths.dataLogDirectory + todayString + FilePaths.logPathFile,
@@ -86,9 +87,9 @@ public class VXVMTScheduler {
         MailSender.SetTradeLogAttachments(attachmentsTradeLog);
         MailSender.SetErrorAttachments(attachmentsError);
 
-        MailSender.SetTradeLogSubject("AOS Trade log VXVMT");
-        MailSender.SetCheckSubject("AOS Check VXVMT");
-        MailSender.SetErrorSubject("AOS Errors VXVMT");
+        MailSender.SetTradeLogSubject("AOS Trade log POMER");
+        MailSender.SetCheckSubject("AOS Check POMER");
+        MailSender.SetErrorSubject("AOS Errors POMER");
 
         TradeLogger.getInstance().clearLogs();
         TradeLogger.getInstance().initializeFiles(LocalDate.now());
@@ -203,6 +204,8 @@ public class VXVMTScheduler {
                 status.UpdateEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue, signalInfo);
                 status.SaveTradingStatus();
 
+                Report.Generate("XIV", true);
+
                 ScheduleForTomorrow();
                 MailSender.SendTradingLog();
                 checkThread.SetChecked();
@@ -213,16 +216,22 @@ public class VXVMTScheduler {
         //TradeTimer.startTaskAt(TradeTimer.GetNYTimeNow().plusSeconds(2), taskWrapper);
         TradeTimer.startTaskAt(runTime, taskWrapper);
 
-        double equity = status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue);
-        double diff = (equity - status.closingEquity);
-        double prc = diff / status.closingEquity * 100.0;
-
         MailSender.AddLineToMail("Check done");
         MailSender.AddLineToMail("Held '" + status.heldType + "', position: " + status.heldPosition);
         MailSender.AddLineToMail("Equity: " + TradeFormatter.toString(status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue)));
-        MailSender.AddLineToMail("Today's profit/loss: " + TradeFormatter.toString(diff) + "$ = " + TradeFormatter.toString(prc) + "%");
 
-        Report.Generate("XIV", true);
+        if (status.heldType != VXVMTSignal.Type.None) {
+            double equity = status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue);
+            double diff = (equity - status.closingEquity);
+            double prc = diff / status.closingEquity * 100.0;
+
+            MailSender.AddLineToMail("Today's profit/loss: " + TradeFormatter.toString(diff) + "$ = " + TradeFormatter.toString(prc) + "%");
+
+            double unrDiff = GetUnrealizedProfit();
+            double unrPrc = unrDiff / status.closingEquity * 100.0;
+
+            MailSender.AddLineToMail("Total unrealized profit/loss: " + TradeFormatter.toString(unrDiff) + "$ = " + TradeFormatter.toString(unrPrc) + "%");
+        }
 
         MailSender.SendErrors();
         MailSender.SendCheckResult();
@@ -297,6 +306,17 @@ public class VXVMTScheduler {
         isStartScheduled = false;
     }
 
+    public double GetUnrealizedProfit() {
+        double value = 0;
+        if (status.heldType == VXVMTSignal.Type.VXX) {
+            value = data.indicators.actVXXvalue;
+        } else {
+            value = data.indicators.actXIVvalue;
+        }
+
+        return (value - status.avgPrice) * status.heldPosition;
+    }
+
     public void AddSignalInfoToMail(VXVMTSignal signal) {
 
         String str1 = "Today's signal - type: " + signal.type + ", exposure: " + TradeFormatter.toString(signal.exposure);
@@ -332,14 +352,9 @@ public class VXVMTScheduler {
                 + ", SMA125: " + TradeFormatter.toString(data.indicators.ratios[1])
                 + ", SMA150: " + TradeFormatter.toString(data.indicators.ratios[2]);
 
-        double equity = status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue);
-        double diff = (equity - status.closingEquity);
-        double prc = diff / status.closingEquity * 100.0;
-
-        String str5 = "Currently held '" + status.heldType + "', position: " + status.heldPosition;
+        String str5 = "Currently held '" + status.heldType + "', position: " + status.heldPosition + ", avgPrice: " + status.avgPrice + "$";
         String str6 = "Equity: " + TradeFormatter.toString(status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue)) + "$";
         String str7 = "Free cash: " + TradeFormatter.toString(status.freeCapital) + "$";
-        String str8 = "Today's profit/loss: " + TradeFormatter.toString(diff) + "$ = " + TradeFormatter.toString(prc) + "%";
 
         MailSender.AddLineToMail(str1);
         MailSender.AddLineToMail(str2);
@@ -348,7 +363,6 @@ public class VXVMTScheduler {
         MailSender.AddLineToMail(str5);
         MailSender.AddLineToMail(str6);
         MailSender.AddLineToMail(str7);
-        MailSender.AddLineToMail(str8);
 
         logger.info(str1);
         logger.info(str2);
@@ -357,6 +371,25 @@ public class VXVMTScheduler {
         logger.info(str5);
         logger.info(str6);
         logger.info(str7);
+
+        if (status.heldType == VXVMTSignal.Type.None) {
+            return;
+        }
+
+        double equity = status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue);
+        double diff = (equity - status.closingEquity);
+        double prc = diff / status.closingEquity * 100.0;
+
+        String str8 = "Today's profit/loss: " + TradeFormatter.toString(diff) + "$ = " + TradeFormatter.toString(prc) + "%";
+
+        double unrDiff = GetUnrealizedProfit();
+        double unrPrc = unrDiff / status.closingEquity * 100.0;
+
+        String str9 = "Unrealized profit/loss: " + TradeFormatter.toString(unrDiff) + "$ = " + TradeFormatter.toString(unrPrc) + "%";
+
+        MailSender.AddLineToMail(str8);
+        MailSender.AddLineToMail(str9);
         logger.info(str8);
+        logger.info(str9);
     }
 }

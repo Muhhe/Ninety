@@ -28,6 +28,8 @@ public class Settings {
     public static double investCash = 0;
     public static double leverage = 0;
     
+    public static String accountName;
+    
     public static String mailAddressTradeLog = null;
     public static String mailAddressCheck = null;
     public static String mailAddressError = null;
@@ -55,6 +57,12 @@ public class Settings {
             
             attribute = connectionElement.getAttribute("clientId");
             clientId = attribute.getIntValue();
+            
+             // Account
+            Element accountElement = rootElement.getChild("account");
+            
+            attribute = accountElement.getAttribute("name");
+            accountName = attribute.getValue();
             
             // money
             Element moneyElement = rootElement.getChild("money");

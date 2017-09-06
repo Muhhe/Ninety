@@ -14,18 +14,13 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.Writer;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -131,28 +126,28 @@ public class Report {
             LocalDate firstDate = LocalDate.parse(line.split(cvsSplitBy)[0], DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
             IDataGetterHist hGetter = new DataGetterHistGoogle();
-            CloseData spyData = hGetter.readAdjCloseData(firstDate, TradeTimer.GetLocalDateNow(), refTicker, true);
+            CloseData refData = hGetter.readAdjCloseData(firstDate, TradeTimer.GetLocalDateNow(), refTicker, true);
             IDataGetterAct aGetter = new DataGetterActGoogle();
-            spyData.adjCloses[0] = aGetter.readActualData(refTicker);
-            spyData.dates[0] = TradeTimer.GetLocalDateNow();
+            refData.adjCloses[0] = aGetter.readActualData(refTicker);
+            refData.dates[0] = TradeTimer.GetLocalDateNow();
 
-            double investCashSpy = spyData.adjCloses[0];
+            double investCashSpy = refData.adjCloses[0];
 
-            int indexSpy = spyData.dates.length - 1;
+            int indexRef = refData.dates.length - 1;
 
-            if (!spyData.dates[indexSpy].equals(firstDate)) {
-                logger.warning("Dates not matching - " + spyData.dates[indexSpy].toString() + " vs " + firstDate.toString());
+            if (!refData.dates[indexRef].equals(firstDate)) {
+                logger.warning("Dates not matching - " + refData.dates[indexRef].toString() + " vs " + firstDate.toString());
             }
 
-            Stats monthStatsSPY = new Stats();
-            Stats yearStatsSPY = new Stats();
-            Stats totalStatsSPY = new Stats();
+            Stats monthStatsRef = new Stats();
+            Stats yearStatsRef = new Stats();
+            Stats totalStatsRef = new Stats();
 
             double reinvestCash = 0;
 
             while ((line = br.readLine()) != null) {
 
-                indexSpy--;
+                indexRef--;
 
                 String[] dateLine = line.split(cvsSplitBy);
 
@@ -164,8 +159,8 @@ public class Report {
                     reinvestCash = investCash;
                 }
 
-                if (!spyData.dates[indexSpy].equals(parsedDate)) {
-                    logger.warning("Dates not matching - " + spyData.dates[indexSpy].toString() + " vs " + firstDate.toString());
+                if (!refData.dates[indexRef].equals(parsedDate)) {
+                    logger.warning("Dates not matching - " + refData.dates[indexRef].toString() + " vs " + firstDate.toString());
                 }
 
                 if (parsedDate.getMonthValue() != month) {
@@ -175,7 +170,7 @@ public class Report {
                                 + " | Days " + monthStats.GetDays()
                                 + " | Profit " + monthStats.GetProfitStr()
                                 + "$ = " + monthStats.GetProfitProcStr()
-                                + "% (" + refTicker + " " + monthStatsSPY.GetProfitProcStr() + "%)";
+                                + "% (" + refTicker + " " + monthStatsRef.GetProfitProcStr() + "%)";
 
                         logger.info(msg);
 
@@ -184,7 +179,7 @@ public class Report {
                     }
 
                     monthStats = new Stats();
-                    monthStatsSPY = new Stats();
+                    monthStatsRef = new Stats();
 
                     month = parsedDate.getMonthValue();
                 }
@@ -194,7 +189,7 @@ public class Report {
                     if (year > 0) {
                         String msg = "Year: " + year + " | Days " + yearStats.GetDays()
                                 + " | Profit " + yearStats.GetProfitStr()
-                                + "$ = " + yearStats.GetProfitProcStr() + "% (" + refTicker + " " + yearStatsSPY.GetProfitProcStr() + "%)"
+                                + "$ = " + yearStats.GetProfitProcStr() + "% (" + refTicker + " " + yearStatsRef.GetProfitProcStr() + "%)"
                                 + " | Projected profit " + TradeFormatter.toString(yearStats.GetProfitProc() * (252.0 / yearStats.GetDays())) + "%";
                         logger.info(msg);
 
@@ -203,7 +198,7 @@ public class Report {
                     }
 
                     yearStats = new Stats();
-                    yearStatsSPY = new Stats();
+                    yearStatsRef = new Stats();
 
                     year = parsedDate.getYear();
                 }
@@ -219,26 +214,26 @@ public class Report {
 
                 lastDayProfit = profit;
 
-                double profitSpy = spyData.adjCloses[indexSpy] - spyData.adjCloses[indexSpy + 1];
+                double profitRef = refData.adjCloses[indexRef] - refData.adjCloses[indexRef + 1];
 
-                monthStatsSPY.AddDay(profitSpy, investCashSpy);
-                yearStatsSPY.AddDay(profitSpy, investCashSpy);
-                totalStatsSPY.AddDay(profitSpy, investCashSpy);
+                monthStatsRef.AddDay(profitRef, investCashSpy);
+                yearStatsRef.AddDay(profitRef, investCashSpy);
+                totalStatsRef.AddDay(profitRef, investCashSpy);
             }
 
             String msgMonth = "Last month: " + month
                     + " | Days " + monthStats.GetDays()
                     + " | Profit " + monthStats.GetProfitStr()
-                    + "$ = " + monthStats.GetProfitProcStr() + "% (" + refTicker + " " + monthStatsSPY.GetProfitProcStr() + "%)";
+                    + "$ = " + monthStats.GetProfitProcStr() + "% (" + refTicker + " " + monthStatsRef.GetProfitProcStr() + "%)";
 
             String msgYTD = "YTD: " + year + " | Days " + yearStats.GetDays()
                     + " | Profit " + yearStats.GetProfitStr()
-                    + "$ = " + yearStats.GetProfitProcStr() + "% (" + refTicker + " " + yearStatsSPY.GetProfitProcStr() + "%)"
+                    + "$ = " + yearStats.GetProfitProcStr() + "% (" + refTicker + " " + yearStatsRef.GetProfitProcStr() + "%)"
                     + " | Projected profit " + TradeFormatter.toString(yearStats.GetProfitProc() * (252.0 / yearStats.GetDays())) + "%";
 
             String msgYear = "Total | Days " + totalStats.GetDays()
                     + " | Profit " + totalStats.GetProfitStr()
-                    + "$ = " + totalStats.GetProfitProcStr() + "% (" + refTicker + " " + totalStatsSPY.GetProfitProcStr() + "%)"
+                    + "$ = " + totalStats.GetProfitProcStr() + "% (" + refTicker + " " + totalStatsRef.GetProfitProcStr() + "%)"
                     + " | Avg. yearly profit " + TradeFormatter.toString((totalStats.GetProfitProc() * (252.0 / totalStats.GetDays()))) + "%";
 
             logger.info(msgMonth);
@@ -253,15 +248,15 @@ public class Report {
             writer.write("\r\n");
 
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(Report.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severe("Cannot find report file: " + ex);
         } catch (IOException ex) {
-            Logger.getLogger(Report.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severe("Error in generation of report: " + ex);
         } finally {
             try {
                 br.close();
                 writer.close();
             } catch (IOException ex) {
-                Logger.getLogger(Report.class.getName()).log(Level.SEVERE, null, ex);
+            logger.severe("Error in generation of report: " + ex);
             }
         }
     }

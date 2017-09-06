@@ -58,15 +58,16 @@ public class NinetyScheduler {
             FilePaths.tradingStatusPathFileInput,
             FilePaths.tradeLogPathFile,
             FilePaths.tradeLogDetailedPathFile,
-            FilePaths.dataLogDirectory + todayString + FilePaths.indicatorsPathFile
+            FilePaths.dataLogDirectory + todayString + FilePaths.indicatorsPathFile,
+            FilePaths.reportPathFile
         };
         
         String[] attachmentsError = {FilePaths.dataLogDirectory + todayString + FilePaths.logPathFile,
             FilePaths.dataLogDirectory + todayString + FilePaths.logCommPathFile,
             FilePaths.dataLogDirectory + todayString + FilePaths.logDetailedPathFile,
             FilePaths.equityPathFile,
-            FilePaths.tradingStatusPathFileInput,
-            FilePaths.reportPathFile};
+            FilePaths.tradingStatusPathFileInput
+        };
 
         MailSender.SetTradeLogAttachments(attachmentsTradeLog);
         MailSender.SetErrorAttachments(attachmentsError);
@@ -180,8 +181,6 @@ public class NinetyScheduler {
             if (isCheckOk) {
                 ScheduleTradingRun(closeTimeZoned.minus(DURATION_BEFORECLOSE_RUNSTRATEGY));
             }
-            
-            Report.Generate("SPY", false);
 
         } finally {
             if (!isCheckOk) {
@@ -256,6 +255,8 @@ public class NinetyScheduler {
                     stockData.SaveStockIndicatorsToFiles();
 
                     AddProfitLossToMail();
+            
+                    Report.Generate("SPY", false);
 
                     MailSender.AddLineToMail(broker.GetAccountSummary().toString());
                     MailSender.AddLineToMail("Saved current cash: " + TradeFormatter.toString(statusData.currentCash));

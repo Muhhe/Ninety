@@ -23,6 +23,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import tradingapp.TradeTimer;
 import static tradingapp.MainWindow90.LOGGER_COMM_NAME;
+import tradingapp.Settings;
 
 /**
  *
@@ -157,6 +158,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
         }
 
         ibOrder.m_orderId = getNextOrderId();
+        ibOrder.m_account = Settings.accountName;
 
         if (orderStatusMap.containsKey(ibOrder.m_orderId)) {
             logger.severe("Trying to use duplicate ID for order: " + tradeOrder.tickerSymbol + ", " + ibOrder.m_action);
@@ -389,6 +391,11 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
 
     @Override
     public void accountSummary(int reqId, String account, String tag, String value, String currency) {
+        if (!account.equals(Settings.accountName)) {
+            loggerComm.finest("NOT ACTIVE accountSummary - reqId: " + reqId + ", account: " + account + ", tag: " + tag + ", value: " + value + ", currency: " + currency);
+            return;
+        }
+        
         loggerComm.fine("accountSummary - reqId: " + reqId + ", account: " + account + ", tag: " + tag + ", value: " + value + ", currency: " + currency);
 
         if (tag.compareTo("AvailableFunds") == 0) {

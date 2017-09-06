@@ -5,7 +5,6 @@
  */
 package strategy90;
 
-import communication.BrokerIB;
 import communication.IBroker;
 import communication.Position;
 import data.CloseData;
@@ -118,8 +117,8 @@ public class NinetyChecker {
         double buyingPowerLocal = freePortions * statusData.GetOnePortionValue();
         
         if (buyingPowerLocal > broker.GetAccountSummary().buyingPower) {
-            logger.severe("Not enough buying power on IB. Local buying power: " + buyingPowerLocal + ", on IB: " + broker.GetAccountSummary().buyingPower);
-            return false;
+            logger.warning("Not enough buying power on IB. Local buying power: " + buyingPowerLocal + ", on IB: " + broker.GetAccountSummary().buyingPower);
+            //return false;
         }
         
         return true;

@@ -38,6 +38,7 @@ public class VXVMTStatus {
     public double freeCapital = 0;
     public double closingEquity = 0;
     public double fees = 0;
+    public double avgPrice = 0;
 
     public double GetEquity(double valueXIV, double valueVXX) {
         double value = 0;
@@ -77,6 +78,8 @@ public class VXVMTStatus {
 
             attribute = heldElement.getAttribute("position");
             heldPosition = attribute.getIntValue();
+            attribute = heldElement.getAttribute("avgPrice");
+            avgPrice = attribute.getDoubleValue();
 
         } catch (JDOMException e) {
             logger.severe("Error in loading from XML: JDOMException.\r\n" + e);
@@ -99,6 +102,7 @@ public class VXVMTStatus {
             Element heldElement = new Element("held");
             heldElement.setAttribute("type", heldType.toString());
             heldElement.setAttribute("position", Integer.toString(heldPosition));
+            heldElement.setAttribute("avgPrice", TradeFormatter.toString(avgPrice));
             rootElement.addContent(heldElement);
 
             XMLOutputter xmlOutput = new XMLOutputter();
