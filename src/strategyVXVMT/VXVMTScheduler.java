@@ -204,7 +204,7 @@ public class VXVMTScheduler {
                 status.UpdateEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue, signalInfo);
                 status.SaveTradingStatus();
 
-                Report.Generate("XIV", true, broker);
+                Report.Generate("XIV", true);
 
                 ScheduleForTomorrow();
                 MailSender.SendTradingLog();

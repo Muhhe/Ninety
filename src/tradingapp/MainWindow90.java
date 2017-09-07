@@ -259,7 +259,7 @@ public class MainWindow90 extends javax.swing.JFrame {
     }//GEN-LAST:event_startNowButtonActionPerformed
 
     private void ReportButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ReportButtonActionPerformed
-        Report.Generate("SPY", false, new BrokerIBReadOnly(Settings.port, Settings.clientId, IBroker.SecType.STK));
+        Report.Generate("SPY", false);
     }//GEN-LAST:event_ReportButtonActionPerformed
 
     /**

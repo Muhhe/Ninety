@@ -12,7 +12,10 @@ import java.net.URL;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.JsonReader;
+import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -57,15 +60,20 @@ public class DataGetterActGoogle implements IDataGetterAct {
             try (BufferedReader in = new BufferedReader(
                     new InputStreamReader(urlGoogle.openStream()))) {
                 in.skip(3);
+                String str = new String();
+                for (String line; (line = in.readLine()) != null; str += line);
+                
+                str = str.replace("\\", "");
+                
                 Gson gson = new GsonBuilder().create();
-                JsonReader reader = new JsonReader(in);
+                JsonReader reader = new JsonReader(new StringReader(str));
                 reader.setLenient(true);
                 entryArray = gson.fromJson(reader, DataGSON[].class);
             }
 
             return Double.parseDouble(entryArray[0].l.replaceAll(",", ""));
 
-        } catch (IOException | NumberFormatException ex) {
+        } catch (JsonIOException | JsonSyntaxException | IOException | NumberFormatException ex) {
             logger.warning("Failed to load actual data from google. Exception: " + ex.getMessage());
             return 0;
         }

@@ -7,6 +7,7 @@ package tradingapp;
 
 import communication.IBroker;
 import data.CloseData;
+import data.getters.DataGetterActGoogle;
 import data.getters.DataGetterActIB;
 import data.getters.DataGetterHistGoogle;
 import data.getters.IDataGetterAct;
@@ -99,7 +100,7 @@ public class Report {
         }
     }
 
-    static public void Generate(String refTicker, boolean reinvest, IBroker broker) {
+    static public void Generate(String refTicker, boolean reinvest) {
         BufferedReader br = null;
         BufferedWriter writer = null;
         try {
@@ -128,7 +129,7 @@ public class Report {
 
             IDataGetterHist hGetter = new DataGetterHistGoogle();
             CloseData refData = hGetter.readAdjCloseData(firstDate, TradeTimer.GetLocalDateNow(), refTicker, true);
-            IDataGetterAct aGetter = new DataGetterActIB(broker);
+            IDataGetterAct aGetter = new DataGetterActGoogle();
             refData.adjCloses[0] = aGetter.readActualData(refTicker);
             refData.dates[0] = TradeTimer.GetLocalDateNow();
 
