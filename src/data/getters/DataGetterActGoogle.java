@@ -13,10 +13,7 @@ import java.net.URL;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
-import communication.IBroker;
-import java.time.LocalDate;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -33,7 +30,7 @@ public class DataGetterActGoogle implements IDataGetterAct {
         private String t;
         private String l;
     }
-    
+
     @Override
     public String getName() {
         return "Google";
@@ -41,17 +38,17 @@ public class DataGetterActGoogle implements IDataGetterAct {
 
     @Override
     public double readActualData(String tickerSymbol) {
-        
+
         // Google needs this ...
         String gogTicker = tickerSymbol;
         if (tickerSymbol.equals("LMT")) {
             gogTicker = "NYSE:LMT";
         }
-        
+
         try {
             StringBuilder urlBuilder = new StringBuilder();
 
-            urlBuilder.append("http://finance.google.com/finance/info?client=ig&q=");
+            urlBuilder.append("https://finance.google.com/finance?output=json&q=");
 
             urlBuilder.append(gogTicker);
 
@@ -69,7 +66,7 @@ public class DataGetterActGoogle implements IDataGetterAct {
             return Double.parseDouble(entryArray[0].l.replaceAll(",", ""));
 
         } catch (IOException | NumberFormatException ex) {
-            logger.warning("Failed to load actual data from google at once. Exception: " + ex.getMessage());
+            logger.warning("Failed to load actual data from google. Exception: " + ex.getMessage());
             return 0;
         }
     }
@@ -79,15 +76,14 @@ public class DataGetterActGoogle implements IDataGetterAct {
         try {
             StringBuilder urlBuilder = new StringBuilder();
 
-            urlBuilder.append("http://finance.google.com/finance/info?client=ig&q=");
+            urlBuilder.append("https://finance.google.com/finance?output=json&q=");
 
             for (String tickerSymbol : tickerSymbols) {
-                
-            // Google needs this ...
-            String gogTicker = tickerSymbol;
-            if (tickerSymbol.equals("LMT")) {
-                gogTicker = "NYSE:LMT";
-            }
+                // Google needs this ...
+                String gogTicker = tickerSymbol;
+                if (tickerSymbol.equals("LMT")) {
+                    gogTicker = "NYSE:LMT";
+                }
 
                 urlBuilder.append(gogTicker);
                 urlBuilder.append(",");
