@@ -19,6 +19,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import strategy90.NinetyChecker;
 import strategy90.NinetyScheduler;
+import test.BrokerIBReadOnly;
 
 /**
  *
@@ -258,7 +259,7 @@ public class MainWindow90 extends javax.swing.JFrame {
     }//GEN-LAST:event_startNowButtonActionPerformed
 
     private void ReportButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ReportButtonActionPerformed
-        Report.Generate("SPY", false);
+        Report.Generate("SPY", false, new BrokerIBReadOnly(Settings.port, Settings.clientId, IBroker.SecType.STK));
     }//GEN-LAST:event_ReportButtonActionPerformed
 
     /**

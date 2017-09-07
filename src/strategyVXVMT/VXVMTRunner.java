@@ -213,6 +213,11 @@ public class VXVMTRunner {
             MailSender.AddLineToMail("Filled " + order.order.toString() + ", price: " + order.fillPrice + "$");
 
             if (order.order.orderType == TradeOrder.OrderType.SELL) {
+                double realized = (order.fillPrice - status.avgPrice) * order.filled;
+                double realizedPrc = realized / status.closingEquity * 100.0;
+                
+                String msg = "Profit/loss: " + TradeFormatter.toString(realized) + "$ = " + TradeFormatter.toString(realizedPrc) + "%";
+                
                 status.freeCapital += order.filled * order.fillPrice;
                 double fee = GetOrderFee(order.filled);
                 status.freeCapital -= fee;
@@ -226,11 +231,6 @@ public class VXVMTRunner {
                 } else {
                     status.heldType = VXVMTSignal.typeFromString(order.order.tickerSymbol);
                 }
-
-                double realized = (order.fillPrice - status.avgPrice) * order.filled;
-                double realizedPrc = realized / status.closingEquity * 100.0;
-                
-                String msg = "Profit/loss: " + TradeFormatter.toString(realized) + "$ = " + TradeFormatter.toString(realizedPrc) + "%";
                 
                 logger.info(msg);
                 MailSender.AddLineToMail(msg);

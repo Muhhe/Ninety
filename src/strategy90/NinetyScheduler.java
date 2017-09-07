@@ -256,7 +256,7 @@ public class NinetyScheduler {
 
                     AddProfitLossToMail();
             
-                    Report.Generate("SPY", false);
+                    Report.Generate("SPY", false, broker);
 
                     MailSender.AddLineToMail(broker.GetAccountSummary().toString());
                     MailSender.AddLineToMail("Saved current cash: " + TradeFormatter.toString(statusData.currentCash));
