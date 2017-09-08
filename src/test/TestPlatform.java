@@ -27,6 +27,7 @@ import tradingapp.Settings;
 import tradingapp.TradeFormatter;
 import tradingapp.TradeLogger;
 import communication.TradeOrder;
+import data.getters.DataGetterHistAlpha;
 import data.getters.DataGetterHistGoogle;
 import tradingapp.TradeTimer;
 
@@ -162,7 +163,7 @@ public class TestPlatform extends javax.swing.JFrame {
             }
         });
 
-        compareButton.setText("Compare Yahoo vs Quandl");
+        compareButton.setText("Compare Alpha vs Quandl");
         compareButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 compareButtonActionPerformed(evt);
@@ -197,7 +198,7 @@ public class TestPlatform extends javax.swing.JFrame {
                                 .addComponent(testRSIButton)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(compareButton)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 106, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 108, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(checkPositionsButton)
@@ -367,7 +368,7 @@ public class TestPlatform extends javax.swing.JFrame {
         }*/
 
         GlobalConfig.AddDataGetterAct(new DataGetterActIB(broker));
-        GlobalConfig.AddDataGetterHist(new DataGetterHistYahoo());
+        GlobalConfig.AddDataGetterHist(new DataGetterHistAlpha());
 
         StockDataForNinety stockDataForNinety = new StockDataForNinety();
         stockDataForNinety.SubscribeRealtimeData(broker);
@@ -427,22 +428,22 @@ public class TestPlatform extends javax.swing.JFrame {
 
     private void compareButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_compareButtonActionPerformed
         String ticker = tickerField.getText();
-        IDataGetterHist getterY = new DataGetterHistGoogle();
+        IDataGetterHist getterY = new DataGetterHistAlpha();
         IDataGetterHist getterQ = new DataGetterHistQuandl();
 
         TradeTimer.SetToday(LocalDate.now());
 
         int count = 200;
-        CloseData dataY = getterY.readAdjCloseData(TradeTimer.GetLocalDateNow(), ticker, count, false);
-        CloseData dataQ = getterQ.readAdjCloseData(TradeTimer.GetLocalDateNow(), ticker, count, false);
+        CloseData dataY = getterY.readAdjCloseData(TradeTimer.GetLocalDateNow().minusDays(1), ticker, count, false);
+        CloseData dataQ = getterQ.readAdjCloseData(TradeTimer.GetLocalDateNow().minusDays(1), ticker, count, false);
 
         TradeTimer.LoadSpecialTradingDays();
 
         if (!NinetyChecker.CheckTickerData(dataQ, ticker)) {
-            logger.warning("Check on Yahoo data failed.");
+            logger.warning("Check on Quandl data failed.");
         }
         if (!NinetyChecker.CheckTickerData(dataY, ticker)) {
-            logger.warning("Check on Quandl data failed.");
+            logger.warning("Check on Alpha data failed.");
         }
 
         double highestDiff = 0;

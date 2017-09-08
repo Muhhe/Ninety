@@ -118,7 +118,7 @@ public class DataGetterHistGoogle implements IDataGetterHist {
             }
 
         } catch (Exception ex) {
-            logger.log(Level.WARNING, "Failed to read data from Google - '" + tickerSymbol + "' " + ex);
+            logger.log(Level.WARNING, "Failed to read data from " + getName() + " - '" + tickerSymbol + "' " + ex);
             return null;
         }
         CloseData retData = new CloseData(0);

@@ -44,7 +44,7 @@
                               <Component id="compareButton" min="-2" max="-2" attributes="0"/>
                           </Group>
                       </Group>
-                      <EmptySpace pref="106" max="32767" attributes="0"/>
+                      <EmptySpace pref="108" max="32767" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" attributes="0">
                               <Component id="checkPositionsButton" min="-2" max="-2" attributes="0"/>
@@ -247,7 +247,7 @@
     </Component>
     <Component class="javax.swing.JButton" name="compareButton">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Compare Yahoo vs Quandl"/>
+        <Property name="text" type="java.lang.String" value="Compare Alpha vs Quandl"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="compareButtonActionPerformed"/>

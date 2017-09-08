@@ -74,7 +74,7 @@ public class DataGetterActGoogle implements IDataGetterAct {
             return Double.parseDouble(entryArray[0].l.replaceAll(",", ""));
 
         } catch (JsonIOException | JsonSyntaxException | IOException | NumberFormatException ex) {
-            logger.warning("Failed to load actual data from google. Exception: " + ex.getMessage());
+            logger.warning("Failed to load actual data from google. Ticker: " + tickerSymbol + ". Exception: " + ex.getMessage());
             return 0;
         }
     }
@@ -82,7 +82,17 @@ public class DataGetterActGoogle implements IDataGetterAct {
     @Override
     public Map<String, Double> readActualData(String[] tickerSymbols) {
         try {
-            StringBuilder urlBuilder = new StringBuilder();
+            Map<String, Double> valuesMap = new HashMap<>(tickerSymbols.length);
+            
+            for (String tickerSymbol : tickerSymbols) {
+                double actData = readActualData(tickerSymbol);
+                if (actData > 0) {
+                    valuesMap.put(tickerSymbol, actData);
+                }
+            }
+            
+            return valuesMap;
+            /*StringBuilder urlBuilder = new StringBuilder();
 
             urlBuilder.append("https://finance.google.com/finance?output=json&q=");
 
@@ -116,9 +126,9 @@ public class DataGetterActGoogle implements IDataGetterAct {
                 valuesMap.put(tickerSymbol, Double.parseDouble(strValue));
             }
 
-            return valuesMap;
+            return valuesMap;*/
 
-        } catch (IOException | NumberFormatException ex) {
+        } catch (JsonIOException | JsonSyntaxException | NumberFormatException ex) {
             logger.warning("Failed to load actual data from google at once. Exception: " + ex.getMessage());
             return null;
         }

@@ -9,6 +9,7 @@ import communication.BrokerIB;
 import communication.IBroker;
 import data.getters.DataGetterActGoogle;
 import data.getters.DataGetterActIB;
+import data.getters.DataGetterHistAlpha;
 import data.getters.DataGetterHistCBOE;
 import data.getters.DataGetterHistGoogle;
 import data.getters.DataGetterHistQuandl;
@@ -59,6 +60,7 @@ public class MainWindowVXVMT extends javax.swing.JFrame {
 
         GlobalConfig.AddDataGetterHist(new DataGetterHistCBOE());
         GlobalConfig.AddDataGetterHist(new DataGetterHistGoogle());
+        GlobalConfig.AddDataGetterHist(new DataGetterHistAlpha());
         GlobalConfig.AddDataGetterHist(new DataGetterHistQuandl());
 
         vxvmtScheduler = new VXVMTScheduler(broker);

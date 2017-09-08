@@ -9,9 +9,9 @@ import communication.BrokerIB;
 import communication.IBroker;
 import data.getters.DataGetterActGoogle;
 import data.getters.DataGetterActIB;
+import data.getters.DataGetterHistAlpha;
 import data.getters.DataGetterHistGoogle;
 import data.getters.DataGetterHistQuandl;
-import data.getters.DataGetterHistYahoo;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -57,7 +57,7 @@ public class MainWindow90 extends javax.swing.JFrame {
         
         GlobalConfig.AddDataGetterHist(new DataGetterHistGoogle());
         GlobalConfig.AddDataGetterHist(new DataGetterHistQuandl());
-        GlobalConfig.AddDataGetterHist(new DataGetterHistYahoo());
+        GlobalConfig.AddDataGetterHist(new DataGetterHistAlpha());
 
         ninetyScheduler = new NinetyScheduler( broker );
         
