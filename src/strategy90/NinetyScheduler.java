@@ -260,6 +260,8 @@ public class NinetyScheduler {
 
                     MailSender.AddLineToMail(broker.GetAccountSummary().toString());
                     MailSender.AddLineToMail("Saved current cash: " + TradeFormatter.toString(statusData.currentCash));
+                    
+                    broker.disconnect();
 
                     MailSender.SendTradingLog();
                     MailSender.SendErrors();

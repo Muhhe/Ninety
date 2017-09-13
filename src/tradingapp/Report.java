@@ -9,6 +9,7 @@ import communication.IBroker;
 import data.CloseData;
 import data.getters.DataGetterActGoogle;
 import data.getters.DataGetterActIB;
+import data.getters.DataGetterHistAlpha;
 import data.getters.DataGetterHistGoogle;
 import data.getters.IDataGetterAct;
 import data.getters.IDataGetterHist;
@@ -106,7 +107,7 @@ public class Report {
         try {
             File file = new File(FilePaths.reportPathFile);
             file.createNewFile();
-            
+
             writer = new BufferedWriter(new FileWriter(file));
 
             br = new BufferedReader(new FileReader(FilePaths.equityPathFile));
@@ -127,19 +128,62 @@ public class Report {
             line = br.readLine();
             LocalDate firstDate = LocalDate.parse(line.split(cvsSplitBy)[0], DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
-            IDataGetterHist hGetter = new DataGetterHistGoogle();
+            /*CloseData refData = null;
+            boolean faildData = false;
+            for (IDataGetterHist hGetter : GlobalConfig.GetDataGettersHist()) {
+                refData = hGetter.readAdjCloseData(firstDate, TradeTimer.GetLocalDateNow(), refTicker, true);
+                
+                if (refData == null) {
+                    logger.warning("Report: failed loading hist data - " + refTicker + " from " + hGetter.getName());
+                    faildData = true;
+                    continue;
+                }
+
+                for (IDataGetterAct aGetter : GlobalConfig.GetDataGettersAct()) {
+                    refData.adjCloses[0] = aGetter.readActualData(refTicker);
+                    refData.dates[0] = TradeTimer.GetLocalDateNow();
+
+                    if (refData.adjCloses[0] == 0) {
+                        logger.warning("Report: failed loading act data - " + refTicker + " from " + aGetter.getName());
+                        faildData = true;
+                        continue;
+                    }
+                    break;
+                }
+
+                if (!refData.dates[refData.dates.length - 1].equals(firstDate)) {
+                    logger.warning("Report: Dates not matching - " + refData.dates[refData.dates.length - 1].toString() + " vs " + firstDate.toString());
+                    faildData = true;
+                    continue;
+                }
+                faildData = false;
+                break;
+            }*/
+            IDataGetterHist hGetter = new DataGetterHistAlpha();
+
             CloseData refData = hGetter.readAdjCloseData(firstDate, TradeTimer.GetLocalDateNow(), refTicker, true);
+            if (refData == null) {
+                logger.warning("Report failed: cannot load hist data for - " + refTicker);
+                return;
+            }
+
             IDataGetterAct aGetter = new DataGetterActGoogle();
             refData.adjCloses[0] = aGetter.readActualData(refTicker);
             refData.dates[0] = TradeTimer.GetLocalDateNow();
 
-            double investCashSpy = refData.adjCloses[0];
+            if (refData.adjCloses[0] == 0) {
+                logger.warning("Report failed: cannot load act data for - " + refTicker);
+                return;
+            }
+
+            if (!refData.dates[refData.dates.length - 1].equals(firstDate)) {
+                logger.warning("Report failed: Dates not matching - " + refData.dates[refData.dates.length - 1].toString() + " vs " + firstDate.toString());
+                return;
+            }
+
+            double investCashRef = refData.adjCloses[0];
 
             int indexRef = refData.dates.length - 1;
-
-            if (!refData.dates[indexRef].equals(firstDate)) {
-                logger.warning("Dates not matching - " + refData.dates[indexRef].toString() + " vs " + firstDate.toString());
-            }
 
             Stats monthStatsRef = new Stats();
             Stats yearStatsRef = new Stats();
@@ -162,7 +206,8 @@ public class Report {
                 }
 
                 if (!refData.dates[indexRef].equals(parsedDate)) {
-                    logger.warning("Dates not matching - " + refData.dates[indexRef].toString() + " vs " + firstDate.toString());
+                    logger.warning("Report failed: Dates not matching - " + refData.dates[indexRef].toString() + " vs " + parsedDate.toString());
+                    return;
                 }
 
                 if (parsedDate.getMonthValue() != month) {
@@ -218,9 +263,9 @@ public class Report {
 
                 double profitRef = refData.adjCloses[indexRef] - refData.adjCloses[indexRef + 1];
 
-                monthStatsRef.AddDay(profitRef, investCashSpy);
-                yearStatsRef.AddDay(profitRef, investCashSpy);
-                totalStatsRef.AddDay(profitRef, investCashSpy);
+                monthStatsRef.AddDay(profitRef, investCashRef);
+                yearStatsRef.AddDay(profitRef, investCashRef);
+                totalStatsRef.AddDay(profitRef, investCashRef);
             }
 
             String msgMonth = "Last month: " + month
@@ -258,7 +303,7 @@ public class Report {
                 br.close();
                 writer.close();
             } catch (IOException ex) {
-            logger.severe("Error in generation of report: " + ex);
+                logger.severe("Error in generation of report: " + ex);
             }
         }
     }

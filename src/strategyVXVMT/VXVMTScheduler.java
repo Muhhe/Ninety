@@ -197,14 +197,14 @@ public class VXVMTScheduler {
                 VXVMTChecker.CheckCash(status, broker);
                 VXVMTChecker.CheckHeldPositions(status, broker);
 
-                broker.disconnect();
-
                 AddSignalInfoToMail(signal);
 
                 status.UpdateEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue, signalInfo);
                 status.SaveTradingStatus();
 
                 Report.Generate("XIV", true);
+
+                broker.disconnect();
 
                 ScheduleForTomorrow();
                 MailSender.SendTradingLog();

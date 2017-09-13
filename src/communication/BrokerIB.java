@@ -250,6 +250,10 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
 
     @Override
     public void position(String account, Contract contract, int pos, double avgCost) {
+        if (!account.equals(Settings.accountName)) {
+            loggerComm.finest("NOT ACTIVE: Position - Account: " + account + " Contract: " + contract.m_symbol + " size: " + pos + " avgCost: " + avgCost);
+            return;
+        }
         positionsList.add(new Position(contract.m_symbol, avgCost, pos));
         loggerComm.fine("Position - Account: " + account + " Contract: " + contract.m_symbol + " size: " + pos + " avgCost: " + avgCost);
     }
