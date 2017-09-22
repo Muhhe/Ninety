@@ -49,8 +49,14 @@ public class DataGetterHistCBOE implements IDataGetterHist {
 
         StringBuilder urlBuilder = new StringBuilder();
 
+        // CBOE needs this ...
+        String cboeTicker = tickerSymbol;
+        if (tickerSymbol.equals("VXV")) {
+            cboeTicker = "VIX3M";
+        }
+        
         urlBuilder.append("https://www.cboe.com/publish/scheduledtask/mktdata/datahouse/");
-        urlBuilder.append(tickerSymbol);
+        urlBuilder.append(cboeTicker);
         urlBuilder.append("dailyprices.csv");
 
         String line;
@@ -91,7 +97,7 @@ public class DataGetterHistCBOE implements IDataGetterHist {
                 return null;
             }*/
         } catch (Exception ex) {
-            logger.log(Level.SEVERE, "Failed to read data from CBOE - '" + tickerSymbol + "'", ex);
+            logger.log(Level.SEVERE, "Failed to read data from CBOE - '" + cboeTicker + "'", ex);
             return null;
         }
 
@@ -104,7 +110,7 @@ public class DataGetterHistCBOE implements IDataGetterHist {
         Collections.reverse(arrDates);
 
         if (daysToRead != -1 && daysToRead > arrCloseVals.size()) {
-            logger.warning("Loading " + tickerSymbol + " from " + getName() + " failed. Read only " + arrCloseVals.size() + " out of " + daysToRead);
+            logger.warning("Loading " + cboeTicker + " from " + getName() + " failed. Read only " + arrCloseVals.size() + " out of " + daysToRead);
             return null;
         }
         
