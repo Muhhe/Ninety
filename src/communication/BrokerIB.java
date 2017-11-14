@@ -203,7 +203,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
             }
             return;
         }
-        
+
         if (orderStatus.status == OrderStatus.Status.FILLED) {
             return;
         }
@@ -254,7 +254,9 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
             loggerComm.finest("NOT ACTIVE: Position - Account: " + account + " Contract: " + contract.m_symbol + " size: " + pos + " avgCost: " + avgCost);
             return;
         }
-        positionsList.add(new Position(contract.m_symbol, avgCost, pos));
+        if (pos != 0) {
+            positionsList.add(new Position(contract.m_symbol, avgCost, pos));
+        }
         loggerComm.fine("Position - Account: " + account + " Contract: " + contract.m_symbol + " size: " + pos + " avgCost: " + avgCost);
     }
 
@@ -353,6 +355,10 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
         contract.m_exchange = "SMART";
         contract.m_secType = secType.toString();
         contract.m_currency = "USD";
+        
+        if (ticker.equals("GLD")) {
+            contract.m_exchange = "BATS";
+        }
 
         return contract;
     }
@@ -370,10 +376,14 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
                 || ticker.equals("INTC")) {
             contract.m_exchange = "BATS";
         }
-        
-        if (ticker.equals("VXV")
+
+        if (ticker.equals("VIX3M")
                 || ticker.equals("VXMT")) {
             contract.m_exchange = "CBOE";
+        }
+        
+        if (ticker.equals("GLD")) {
+            contract.m_exchange = "BATS";
         }
 
         return contract;
@@ -399,7 +409,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
             loggerComm.finest("NOT ACTIVE accountSummary - reqId: " + reqId + ", account: " + account + ", tag: " + tag + ", value: " + value + ", currency: " + currency);
             return;
         }
-        
+
         loggerComm.fine("accountSummary - reqId: " + reqId + ", account: " + account + ", tag: " + tag + ", value: " + value + ", currency: " + currency);
 
         if (tag.compareTo("AvailableFunds") == 0) {

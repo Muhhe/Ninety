@@ -8,12 +8,9 @@ package strategyVXVMT;
 import communication.IBroker;
 import communication.Position;
 import data.CloseData;
-import static java.lang.Math.abs;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.logging.Logger;
-import strategy90.StatusDataForNinety;
-import tradingapp.Settings;
 import tradingapp.TradeFormatter;
 import tradingapp.TradeTimer;
 
@@ -107,7 +104,8 @@ public class VXVMTChecker {
         if (!CheckNumber(data.indicators.actRatio)
                 || !CheckNumber(data.indicators.actRatioLagged)
                 || !CheckNumber(data.indicators.actVXXvalue)
-                || !CheckNumber(data.indicators.actXIVvalue)) {
+                || !CheckNumber(data.indicators.actXIVvalue)
+                || !CheckNumber(data.indicators.actGLDvalue)) {
             logger.severe("Some data is not valid!");
             return false;
 

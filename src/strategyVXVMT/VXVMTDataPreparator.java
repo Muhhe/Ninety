@@ -25,8 +25,11 @@ public class VXVMTDataPreparator {
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     static public VXVMTData LoadData(IBroker broker) {
-        
-        double actVXV = LoadActData("VXV");
+        //logger.warning("REMOVE!");
+        //logger.warning("REMOVE!");
+        //double actVXV = 10;//LoadActData("VIX3M");
+        //double actVXMT = 11;//LoadActData("VXMT");
+        double actVXV = LoadActData("VIX3M");
         double actVXMT = LoadActData("VXMT");
         
         if (actVXV == 0 || actVXMT == 0) {
@@ -39,7 +42,7 @@ public class VXVMTDataPreparator {
         for (IDataGetterHist dataGetter : GlobalConfig.GetDataGettersHist()) {
 
             logger.info("Loading VXV");
-            data.dataVXV = dataGetter.readAdjCloseData(TradeTimer.GetLocalDateNow(), "VXV", 151, true);
+            data.dataVXV = dataGetter.readAdjCloseData(TradeTimer.GetLocalDateNow(), "VIX3M", 151, true);
             logger.info("Loading VXMT");
             data.dataVXMT = dataGetter.readAdjCloseData(TradeTimer.GetLocalDateNow(), "VXMT", 151, true);
 
@@ -61,7 +64,7 @@ public class VXVMTDataPreparator {
             data.dataVXMT.adjCloses[0] = actVXMT;
             data.dataVXMT.dates[0] = TradeTimer.GetLocalDateNow();
 
-            if (!VXVMTChecker.CheckTickerData(data.dataVXV, "VXV")
+            if (!VXVMTChecker.CheckTickerData(data.dataVXV, "VIX3M")
                     || !VXVMTChecker.CheckTickerData(data.dataVXMT, "VXMT")) {
                 failedHist = true;
                 logger.warning("Failed to load hist data from " + dataGetter.getName());
@@ -121,18 +124,22 @@ public class VXVMTDataPreparator {
         data.indicators.ratios[1] = IndicatorCalculator.SMA(125, ratio, 0);
         data.indicators.ratios[2] = IndicatorCalculator.SMA(150, ratio, 0);
         
-        //logger.severe("Delete this!");
-        //data.indicators.actRatio = 1.1;
-        //data.indicators.actRatioLagged = 1.1;
-        //data.indicators.ratiosLagged[1] = 0.1;
-        //data.indicators.ratiosLagged[2] = 0.1;
+        /*logger.severe("Delete this!");
+        data.indicators.actRatio = 0.6;
+        data.indicators.actRatioLagged = 0.9;
+        data.indicators.ratiosLagged[0] = 0.7;
+        data.indicators.ratiosLagged[1] = 0.7;
+        data.indicators.ratiosLagged[2] = 0.7;*/
 
         logger.fine("Indicators calculated");
     }
 
     static void UpdateActData(IBroker broker, VXVMTData data) {
         
-        double actVXV = LoadActData("VXV");
+        //logger.warning("REMOVE!");
+        //double actVXV = data.dataVXV.adjCloses[0];//LoadActData("VIX3M");
+        //double actVXMT = data.dataVXMT.adjCloses[0];//LoadActData("VXMT");
+        double actVXV = LoadActData("VIX3M");
         double actVXMT = LoadActData("VXMT");
 
         if (actVXV == 0 || actVXMT == 0) {
@@ -146,13 +153,15 @@ public class VXVMTDataPreparator {
         IDataGetterAct actGetter = new DataGetterActIB(broker);
         double actVXX = actGetter.readActualData("VXX");
         double actXIV = actGetter.readActualData("XIV");
+        double actGLD = actGetter.readActualData("GLD");
 
-        if (actVXX == 0 || actXIV == 0) {
-            logger.warning("Failed to update act XIV/VXX value!");
+        if (actVXX == 0 || actXIV == 0|| actGLD == 0) {
+            logger.warning("Failed to update act XIV/VXX/GLD value!");
             return;
         }
         data.indicators.actVXXvalue = actVXX;
         data.indicators.actXIVvalue = actXIV;
+        data.indicators.actGLDvalue = actGLD;
     }
     
     static double LoadActData(String ticker) {

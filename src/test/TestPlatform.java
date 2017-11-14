@@ -496,7 +496,7 @@ public class TestPlatform extends javax.swing.JFrame {
         //String ticker = tickerField.getText();
         IDataGetterHist getter = new DataGetterHistCBOE();
 
-        CloseData dataVXV = getter.readAdjCloseData(TradeTimer.GetLocalDateNow(), "VXV", 150, false);
+        CloseData dataVXV = getter.readAdjCloseData(TradeTimer.GetLocalDateNow(), "VIX3M", 150, false);
         CloseData dataVXMT = getter.readAdjCloseData(TradeTimer.GetLocalDateNow(), "VXMT", 150, false);
 
         if ((dataVXV.adjCloses.length != 150) || (dataVXMT.adjCloses.length != 150)) {

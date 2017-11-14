@@ -11,7 +11,7 @@ package strategyVXVMT;
  */
 public class VXVMTSignal {
     public enum Type {
-        VXX, XIV, None
+        VXX, XIV, GLD, None
     }
     
     public double exposure = 0;
@@ -19,6 +19,14 @@ public class VXVMTSignal {
     
     public boolean[] XIVSignals = {false, false, false};
     public boolean[] VXXSignals = {false, false, false};
+
+    public VXVMTSignal() {
+    }
+    
+    public VXVMTSignal(double exposure, Type type) {
+        this.exposure = exposure;
+        this.type = type;
+    }
     
     static VXVMTSignal.Type typeFromString(String str) {
         switch (str) {
@@ -26,6 +34,8 @@ public class VXVMTSignal {
                 return Type.VXX;
             case "XIV":
                 return Type.XIV;
+            case "GLD":
+                return Type.GLD;
             default:
                 return Type.None;
         }
@@ -37,6 +47,8 @@ public class VXVMTSignal {
                 return "VXX";
             case XIV:
                 return "XIV";
+            case GLD:
+                return "GLD";
             default:
                 return "None";
         }

@@ -40,12 +40,25 @@ public class VXVMTStatus {
     public double fees = 0;
     public double avgPrice = 0;
 
-    public double GetEquity(double valueXIV, double valueVXX) {
+    public double GetEquity(double valueXIV, double valueVXX, double valueGLD) {
         double value = 0;
-        if (heldType == VXVMTSignal.Type.VXX) {
-            value = valueVXX;
-        } else {
-            value = valueXIV;
+                
+        switch (heldType) {
+            case VXX:
+                value = valueVXX;
+                break;
+            case XIV:
+                value = valueXIV;
+                break;
+            case GLD:
+                value = valueGLD;
+                break;
+            case None:
+                value = 0;
+                break;
+            default:
+                logger.warning("Invalid signal type used: " + heldType);
+                break;
         }
 
         return freeCapital + heldPosition * value;
@@ -119,9 +132,9 @@ public class VXVMTStatus {
         }
     }
 
-    public void UpdateEquity(double valueXIV, double valueVXX, String signal) {
+    public void UpdateEquity(double valueXIV, double valueVXX, double valueGLD, String signal) {
 
-        closingEquity = GetEquity(valueXIV, valueVXX);
+        closingEquity = GetEquity(valueXIV, valueVXX, valueGLD);
 
         Writer writer = null;
         try {
@@ -136,7 +149,7 @@ public class VXVMTStatus {
                     + "\r\n";
             writer.append(line);
 
-            logger.fine("Updated equity file with value " + GetEquity(valueXIV, valueVXX));
+            logger.fine("Updated equity file with value " + GetEquity(valueXIV, valueVXX, valueGLD));
         } catch (FileNotFoundException ex) {
             logger.severe("Cannot find equity file: " + ex);
         } catch (IOException ex) {
@@ -157,8 +170,8 @@ public class VXVMTStatus {
         logger.fine("Held " + heldType + ", position: " + heldPosition);
     }
 
-    public void PrintStatus(double XIV, double VXX) {
-        logger.fine("Status report - currentEquity: " + GetEquity(XIV, VXX));
+    public void PrintStatus(double XIV, double VXX, double GLD) {
+        logger.fine("Status report - currentEquity: " + GetEquity(XIV, VXX, GLD));
         PrintStatus();
     }
 }

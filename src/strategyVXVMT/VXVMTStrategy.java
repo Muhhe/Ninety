@@ -13,7 +13,7 @@ public class VXVMTStrategy {
 
     static final double[] weights = {0.45, 0.35, 0.20};
 
-    static private VXVMTSignal CalculateSignalForDay(double[] ratioSMAs, double actRatio) {
+    static public VXVMTSignal CalculateSignalForDay(double[] ratioSMAs, double actRatio) {
         
         VXVMTSignal signal = new VXVMTSignal();
         double voteForXIV = 0;
@@ -53,13 +53,15 @@ public class VXVMTStrategy {
 
         VXVMTSignal laggedSignal = CalculateSignalForDay(data.indicators.ratiosLagged, data.indicators.actRatioLagged);
         
-        if (laggedSignal.type != VXVMTSignal.Type.VXX) {
+        if (laggedSignal.type == VXVMTSignal.Type.XIV) {
             return laggedSignal;
         }
         
         VXVMTSignal todaysSignal = CalculateSignalForDay(data.indicators.ratios, data.indicators.actRatio);
 
-        if (todaysSignal.type == VXVMTSignal.Type.VXX) {
+        if (todaysSignal.type == VXVMTSignal.Type.None) {
+            return new VXVMTSignal(1.0, VXVMTSignal.Type.GLD);
+        } else if ((laggedSignal.type == VXVMTSignal.Type.VXX) && (todaysSignal.type == VXVMTSignal.Type.VXX)) {
             return todaysSignal;
         }
         return new VXVMTSignal();

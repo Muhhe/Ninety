@@ -17,4 +17,5 @@ public class VXVMTIndicators {
     
     public double actXIVvalue = 0;
     public double actVXXvalue = 0;
+    public double actGLDvalue = 0;
 }

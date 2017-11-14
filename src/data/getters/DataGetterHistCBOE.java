@@ -49,11 +49,7 @@ public class DataGetterHistCBOE implements IDataGetterHist {
 
         StringBuilder urlBuilder = new StringBuilder();
 
-        // CBOE needs this ...
         String cboeTicker = tickerSymbol;
-        if (tickerSymbol.equals("VXV")) {
-            cboeTicker = "VIX3M";
-        }
         
         urlBuilder.append("https://www.cboe.com/publish/scheduledtask/mktdata/datahouse/");
         urlBuilder.append(cboeTicker);

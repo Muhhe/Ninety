@@ -29,7 +29,7 @@ import tradingapp.TradeTimer;
  *
  * @author Muhe
  */
-public class BacktesterTrend {
+public class BacktesterDiscrete {
 
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
@@ -38,6 +38,9 @@ public class BacktesterTrend {
         //IDataGetterHist getterFile = new DataGetterHistGoogle();
         CloseData dataVXX = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "VXX", false);
         CloseData dataXIV = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "XIV", false);
+        CloseData dataVIX = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "XIV", false);
+        CloseData dataVX1 = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "VX1", false);
+        CloseData dataVX2 = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "VX2", false);
 
         TradeTimer.LoadSpecialTradingDays();
 
@@ -52,6 +55,11 @@ public class BacktesterTrend {
         VXVMTStatus status = new VXVMTStatus();
         status.freeCapital = settings.capital;
 
+        double lastBuyPrice = 0;
+        double lastVixPrice = 0;
+        int freeParts = 3;
+        int backwardCounter = 0;
+
         for (int i = dataXIV.adjCloses.length - 106; i >= 1; i--) {
 
             LocalDate date = dataXIV.dates[i];
@@ -59,10 +67,59 @@ public class BacktesterTrend {
 
             logger.info("Day - " + date.toString());
 
-            double sma10 = IndicatorCalculator.SMA(10, dataXIV.adjCloses, i);
-            double sma100 = IndicatorCalculator.SMA(100, dataXIV.adjCloses, i);
+            if (dataXIV.adjCloses[i] - lastBuyPrice > lastBuyPrice / 10.0
+                    && status.heldType != VXVMTSignal.Type.None) {
+                status.freeCapital += dataXIV.adjCloses[i] * status.heldPosition;
+                status.heldPosition = 0;
+                status.heldType = VXVMTSignal.Type.None;
+                logger.log(BTLogLvl.BACKTEST, "Prodej" + ", " + date.toString());
+                freeParts = 3;
+                lastVixPrice = 0;
+            }
 
-            double[] smasRatio = new double[6];
+            if (dataVX1.adjCloses[i] > dataVX2.adjCloses[i]) {
+                backwardCounter++;
+            } else {
+                backwardCounter = 0;
+            }
+
+            if (backwardCounter >= 3 && status.heldType != VXVMTSignal.Type.None) {
+                status.freeCapital += dataXIV.adjCloses[i] * status.heldPosition;
+                status.heldPosition = 0;
+                status.heldType = VXVMTSignal.Type.None;
+                logger.log(BTLogLvl.BACKTEST, "Prodej SL" + ", " + date.toString());
+                freeParts = 3;
+                lastVixPrice = 0;
+            }
+
+            double sma10 = IndicatorCalculator.SMA(10, dataVIX.adjCloses, i);
+
+            double targetPrice = sma10 + sma10 * 0.1;
+            if (freeParts != 3) {
+                targetPrice = lastVixPrice + lastVixPrice * 0.05;
+            }
+            if (freeParts == 0) {
+                targetPrice = Double.MAX_VALUE;
+            }
+
+            double vixPrice = dataVIX.adjCloses[i];
+
+            if (vixPrice > targetPrice
+                    && dataVX1.adjCloses[i] < dataVX2.adjCloses[i]) {
+
+                freeParts--;
+                lastVixPrice = vixPrice;
+                lastBuyPrice = dataXIV.adjCloses[i];
+                status.heldType = VXVMTSignal.Type.VXX;
+                int posToBuy = (int) (status.freeCapital / dataXIV.adjCloses[i]) / 3;
+                status.heldPosition += posToBuy;
+                status.freeCapital -= dataXIV.adjCloses[i] * posToBuy;
+                logger.log(BTLogLvl.BACKTEST, "Nakup: " + (3 - freeParts) + ", " + date.toString());
+            }
+
+            double eq = status.freeCapital + dataXIV.adjCloses[i] * status.heldPosition;
+
+            /*double[] smasRatio = new double[6];
             smasRatio[0] = IndicatorCalculator.SMA(10, dataXIV.adjCloses, i) / IndicatorCalculator.SMA(100, dataXIV.adjCloses, i);
             smasRatio[1] = IndicatorCalculator.SMA(10, dataXIV.adjCloses, i+1) / IndicatorCalculator.SMA(100, dataXIV.adjCloses, i+1);
             smasRatio[2] = IndicatorCalculator.SMA(10, dataXIV.adjCloses, i+2) / IndicatorCalculator.SMA(100, dataXIV.adjCloses, i+2);
@@ -100,7 +157,7 @@ public class BacktesterTrend {
                 status.heldPosition = posToBuy;
                 status.heldType = VXVMTSignal.Type.VXX;
             }
-
+             */
             stats.StartDay(date);
 
             stats.UpdateEquity(eq, date);

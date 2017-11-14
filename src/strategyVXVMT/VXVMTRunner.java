@@ -47,9 +47,12 @@ public class VXVMTRunner {
         if (status.heldType == VXVMTSignal.Type.VXX) {
             order.expectedPrice = data.indicators.actVXXvalue;
             order.tickerSymbol = "VXX";
-        } else {
+        } else if (status.heldType == VXVMTSignal.Type.XIV) {
             order.expectedPrice = data.indicators.actXIVvalue;
             order.tickerSymbol = "XIV";
+        } else if (status.heldType == VXVMTSignal.Type.GLD) {
+            order.expectedPrice = data.indicators.actGLDvalue;
+            order.tickerSymbol = "GLD";
         }
 
         order.position = status.heldPosition;
@@ -68,9 +71,12 @@ public class VXVMTRunner {
         if (ticker == VXVMTSignal.Type.VXX) {
             order.expectedPrice = data.indicators.actVXXvalue;
             order.tickerSymbol = "VXX";
-        } else {
+        } else if (ticker == VXVMTSignal.Type.XIV) {
             order.expectedPrice = data.indicators.actXIVvalue;
             order.tickerSymbol = "XIV";
+        } else if (ticker == VXVMTSignal.Type.GLD) {
+            order.expectedPrice = data.indicators.actGLDvalue;
+            order.tickerSymbol = "GLD";
         }
 
         order.position = abs(position);
@@ -87,12 +93,14 @@ public class VXVMTRunner {
 
         if (signalType == VXVMTSignal.Type.VXX) {
             value = data.indicators.actVXXvalue;
-        } else {
+        } else if (signalType == VXVMTSignal.Type.XIV) {
             value = data.indicators.actXIVvalue;
+        } else if (signalType == VXVMTSignal.Type.GLD) {
+            value = data.indicators.actGLDvalue;
         }
 
         // Budget is lowered by 1% for safety reasons (slipage etc.)
-        double budget = status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue) * 0.99;
+        double budget = status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue, data.indicators.actGLDvalue) * 0.99;
 
         return (int) (budget / value * exposure);
     }
@@ -148,9 +156,11 @@ public class VXVMTRunner {
         }
 
         logger.info("Subscribing data. (40 sec wait)");
+        
+        //logger.warning("REMOVE!");
         broker.SubscribeRealtimeData("XIV");
         broker.SubscribeRealtimeData("VXX");
-        broker.SubscribeRealtimeData("VXV", IBroker.SecType.IND);
+        broker.SubscribeRealtimeData("VIX3M", IBroker.SecType.IND);
         broker.SubscribeRealtimeData("VXMT", IBroker.SecType.IND);
 
         try {
@@ -158,7 +168,7 @@ public class VXVMTRunner {
         } catch (InterruptedException ex) {
         }
 
-        status.PrintStatus(data.indicators.actXIVvalue, data.indicators.actVXXvalue);
+        status.PrintStatus(data.indicators.actXIVvalue, data.indicators.actVXXvalue, data.indicators.actGLDvalue);
 
         VXVMTDataPreparator.UpdateIndicators(broker, data);
 
@@ -169,7 +179,7 @@ public class VXVMTRunner {
 
         VXVMTSignal signal = RunStrategy(data);
 
-        status.PrintStatus(data.indicators.actXIVvalue, data.indicators.actVXXvalue);
+        status.PrintStatus(data.indicators.actXIVvalue, data.indicators.actVXXvalue, data.indicators.actGLDvalue);
 
         return signal;
     }

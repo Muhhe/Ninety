@@ -102,7 +102,7 @@ public class BacktesterContango {
             stats.StartDay(date);
 
             stats.UpdateEquity(freeCash, date);
-            UpdateEquityFile(freeCash, "equity.csv", heldType.toString());
+            UpdateEquityFile(freeCash, freeCash, "equity.csv", heldType.toString());
 
             Signal signal = Signal.None;
             if (dataVIXM1.adjCloses[i + 1] < dataVIXM2.adjCloses[i + 1]) {

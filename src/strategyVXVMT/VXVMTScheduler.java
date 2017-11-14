@@ -50,7 +50,7 @@ public class VXVMTScheduler {
         logger.info("Starting run!");
         new VXVMTRunner(status, broker).Run(data);
         logger.info("Run finished!");
-        status.UpdateEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue, "?");
+        status.UpdateEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue, data.indicators.actGLDvalue, "?");
         status.SaveTradingStatus();
         logger.info(broker.GetAccountSummary().toString());
     }
@@ -165,7 +165,7 @@ public class VXVMTScheduler {
             return;
         }
 
-        status.PrintStatus(data.indicators.actXIVvalue, data.indicators.actVXXvalue);
+        status.PrintStatus(data.indicators.actXIVvalue, data.indicators.actVXXvalue, data.indicators.actGLDvalue);
 
         logger.info("Starting VXVMT strategy is scheduled for " + runTime.format(DateTimeFormatter.ISO_ZONED_DATE_TIME));
         logger.info("Starting in " + timeToStart.toString());
@@ -199,7 +199,7 @@ public class VXVMTScheduler {
 
                 AddSignalInfoToMail(signal);
 
-                status.UpdateEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue, signalInfo);
+                status.UpdateEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue, data.indicators.actGLDvalue, signalInfo);
                 status.SaveTradingStatus();
 
                 Report.Generate("XIV", true);
@@ -218,10 +218,10 @@ public class VXVMTScheduler {
 
         MailSender.AddLineToMail("Check done");
         MailSender.AddLineToMail("Held '" + status.heldType + "', position: " + status.heldPosition);
-        MailSender.AddLineToMail("Equity: " + TradeFormatter.toString(status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue)));
+        MailSender.AddLineToMail("Equity: " + TradeFormatter.toString(status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue, data.indicators.actGLDvalue)));
 
         if (status.heldType != VXVMTSignal.Type.None) {
-            double equity = status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue);
+            double equity = status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue, data.indicators.actGLDvalue);
             double diff = (equity - status.closingEquity);
             double prc = diff / status.closingEquity * 100.0;
 
@@ -242,14 +242,16 @@ public class VXVMTScheduler {
         logger.info("Subscribing data (1 min wait).");
         broker.SubscribeRealtimeData("XIV");
         broker.SubscribeRealtimeData("VXX");
-        broker.SubscribeRealtimeData("VXV", IBroker.SecType.IND);
+        broker.SubscribeRealtimeData("GLD");
+        broker.SubscribeRealtimeData("VIX3M", IBroker.SecType.IND);
         broker.SubscribeRealtimeData("VXMT", IBroker.SecType.IND);
 
+        //logger.warning("REMOVE!");
         try {
             Thread.sleep(30000);
         } catch (InterruptedException ex) {
         }
-        broker.SubscribeRealtimeData("VXV", IBroker.SecType.IND);
+        broker.SubscribeRealtimeData("VIX3M", IBroker.SecType.IND);
         broker.SubscribeRealtimeData("VXMT", IBroker.SecType.IND);
         try {
             Thread.sleep(30000);
@@ -280,6 +282,7 @@ public class VXVMTScheduler {
 
         broker.SubscribeRealtimeData("VXX");
         broker.SubscribeRealtimeData("XIV");
+        broker.SubscribeRealtimeData("GLD");
 
         try {
             Thread.sleep(1000);
@@ -289,8 +292,9 @@ public class VXVMTScheduler {
         IDataGetterAct actGetter = new DataGetterActIB(broker);
         double vxx = actGetter.readActualData("VXX");
         double xiv = actGetter.readActualData("XIV");
+        double gld = actGetter.readActualData("GLD");
 
-        status.PrintStatus(xiv, vxx);
+        status.PrintStatus(xiv, vxx, gld);
 
         VXVMTChecker.CheckHeldPositions(status, broker);
 
@@ -310,8 +314,10 @@ public class VXVMTScheduler {
         double value = 0;
         if (status.heldType == VXVMTSignal.Type.VXX) {
             value = data.indicators.actVXXvalue;
-        } else {
+        } else if (status.heldType == VXVMTSignal.Type.XIV) {
             value = data.indicators.actXIVvalue;
+        } else if (status.heldType == VXVMTSignal.Type.GLD) {
+            value = data.indicators.actGLDvalue;
         }
 
         return (value - status.avgPrice) * status.heldPosition;
@@ -353,7 +359,7 @@ public class VXVMTScheduler {
                 + ", SMA150: " + TradeFormatter.toString(data.indicators.ratios[2]);
 
         String str5 = "Currently held '" + status.heldType + "', position: " + status.heldPosition + ", avgPrice: " + status.avgPrice + "$";
-        String str6 = "Equity: " + TradeFormatter.toString(status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue)) + "$";
+        String str6 = "Equity: " + TradeFormatter.toString(status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue, data.indicators.actGLDvalue)) + "$";
         String str7 = "Free cash: " + TradeFormatter.toString(status.freeCapital) + "$";
 
         MailSender.AddLineToMail(str1);
@@ -376,7 +382,7 @@ public class VXVMTScheduler {
             return;
         }
 
-        double equity = status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue);
+        double equity = status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue, data.indicators.actGLDvalue);
         double diff = (equity - status.closingEquity);
         double prc = diff / status.closingEquity * 100.0;
 

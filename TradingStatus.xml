@@ -1,16 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <status>
-  <money currentCash="147333.198" currentFees="427.46" />
-  <heldPositions heldStocks="3">
-    <heldStock ticker="ALL">
-      <purchase priceForOne="86.58" position="167" portions="1" date="2017-09-05" />
-      <purchase priceForOne="86.55" position="335" portions="2" date="2017-09-07" />
-    </heldStock>
-    <heldStock ticker="AXP">
-      <purchase priceForOne="84.38" position="171" portions="1" date="2017-09-07" />
-    </heldStock>
-    <heldStock ticker="NEE">
-      <purchase priceForOne="148.35" position="97" portions="1" date="2017-09-06" />
-    </heldStock>
-  </heldPositions>
+  <money freeCapital="49877.86" closingEquity="49877.86" fees="4.07" />
+  <held type="None" position="0" avgPrice="0.00" />
 </status>

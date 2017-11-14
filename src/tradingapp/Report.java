@@ -128,37 +128,6 @@ public class Report {
             line = br.readLine();
             LocalDate firstDate = LocalDate.parse(line.split(cvsSplitBy)[0], DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
-            /*CloseData refData = null;
-            boolean faildData = false;
-            for (IDataGetterHist hGetter : GlobalConfig.GetDataGettersHist()) {
-                refData = hGetter.readAdjCloseData(firstDate, TradeTimer.GetLocalDateNow(), refTicker, true);
-                
-                if (refData == null) {
-                    logger.warning("Report: failed loading hist data - " + refTicker + " from " + hGetter.getName());
-                    faildData = true;
-                    continue;
-                }
-
-                for (IDataGetterAct aGetter : GlobalConfig.GetDataGettersAct()) {
-                    refData.adjCloses[0] = aGetter.readActualData(refTicker);
-                    refData.dates[0] = TradeTimer.GetLocalDateNow();
-
-                    if (refData.adjCloses[0] == 0) {
-                        logger.warning("Report: failed loading act data - " + refTicker + " from " + aGetter.getName());
-                        faildData = true;
-                        continue;
-                    }
-                    break;
-                }
-
-                if (!refData.dates[refData.dates.length - 1].equals(firstDate)) {
-                    logger.warning("Report: Dates not matching - " + refData.dates[refData.dates.length - 1].toString() + " vs " + firstDate.toString());
-                    faildData = true;
-                    continue;
-                }
-                faildData = false;
-                break;
-            }*/
             IDataGetterHist hGetter = new DataGetterHistAlpha();
 
             CloseData refData = hGetter.readAdjCloseData(firstDate, TradeTimer.GetLocalDateNow(), refTicker, true);
@@ -268,7 +237,7 @@ public class Report {
                 totalStatsRef.AddDay(profitRef, investCashRef);
             }
 
-            String msgMonth = "Last month: " + month
+            String msgMonth = "Month: " + month
                     + " | Days " + monthStats.GetDays()
                     + " | Profit " + monthStats.GetProfitStr()
                     + "$ = " + monthStats.GetProfitProcStr() + "% (" + refTicker + " " + monthStatsRef.GetProfitProcStr() + "%)";

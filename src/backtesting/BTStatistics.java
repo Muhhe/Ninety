@@ -21,6 +21,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import strategy90.StatusDataForNinety;
 import tradingapp.TradeFormatter;
+import tradingapp.TradeTimer;
 
 /**
  *
@@ -155,6 +156,10 @@ public class BTStatistics {
     }
 
     public void LogStats(BTSettings settings) {
+        LogStats(settings, "");
+    }
+
+    public void LogStats(BTSettings settings, String eqFile) {
 
         logger.log(BTLogLvl.BT_STATS, "Backtest completed with settings | " + settings.toString());
 
@@ -166,18 +171,18 @@ public class BTStatistics {
         LocalDate dateOfHighestDD = LocalDate.MIN;
         int totalSells = 0;
         int profitSells = 0;
-        
+
         CreateYearlyStatsFile();
 
         for (TradeYearlyStats thisYearStat : yearlyStats) {
 
             double profit = thisYearStat.profit;
             double profitPercent = thisYearStat.profit / thisYearStat.startCapital * 100;
-            
+
             String row = thisYearStat.year + "," + thisYearStat.days
                     + "," + TradeFormatter.toString(profitPercent)
                     + "," + TradeFormatter.toString(thisYearStat.highestDDproc) + "," + thisYearStat.dateOfHighestDD;
-            
+
             UpdateYearlyStats(row);
 
             logger.log(BTLogLvl.BT_STATS, thisYearStat.year + " days: " + thisYearStat.days
@@ -215,6 +220,32 @@ public class BTStatistics {
         //double avgProfitPercent = profitPercent / ((double) totalDays / 252.0);
         double avgProfitPercent = totalProfitProc / yearlyStats.size();
         logger.log(BTLogLvl.BT_STATS, "Average yearly profit: " + TradeFormatter.toString(avgProfitPercent) + "%");
+
+        if (!eqFile.isEmpty()) {
+            Writer writer = null;
+            try {
+                File equityFile = new File(eqFile);
+                equityFile.createNewFile();
+                writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(equityFile, true), "UTF-8"));
+                String line = " Avg.profit = " + TradeFormatter.toString(avgProfitPercent)
+                + "%, max DD = " + TradeFormatter.toString(highestDDproc) + "% (" + dateOfHighestDD + ")";
+                line += "\r\n";
+                writer.append(line);
+
+            } catch (FileNotFoundException ex) {
+                logger.severe("Cannot find equity file: " + ex);
+            } catch (IOException ex) {
+                logger.severe("Error updating equity file: " + ex);
+            } finally {
+                try {
+                    if (writer != null) {
+                        writer.close();
+                    }
+                } catch (IOException ex) {
+                    logger.severe("Error updating equity file: " + ex);
+                }
+            }
+        }
     }
 
     public void SaveEquityToCsv() {
@@ -252,7 +283,7 @@ public class BTStatistics {
             }
         }
     }
-    
+
     static public void CreateYearlyStatsFile() {
         File file = new File("yearlyStats.csv");
         file.delete();
