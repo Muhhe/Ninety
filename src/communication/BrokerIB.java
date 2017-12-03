@@ -9,6 +9,8 @@ import com.ib.client.Contract;
 import com.ib.client.EClientSocket;
 import com.ib.client.Order;
 import com.ib.client.TagValue;
+import data.CloseData;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,6 +44,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
     protected final Map<Integer, OrderStatus> activeOrdersMap = new HashMap<>();
 
     protected final RealtimeDataIB realtimeData = new RealtimeDataIB();
+    protected final HistoricalDataIB historicalData = new HistoricalDataIB();
 
     protected EClientSocket ibClientSocket = new EClientSocket(this);
     protected boolean connected = false;
@@ -104,6 +107,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
         accountSummarySubscribed = false;
         clearOrderMaps();
         realtimeData.ClearMaps();
+        historicalData.ClearMaps();
         connectionLatch.countDown();    // if connection fails
     }
 
@@ -349,13 +353,46 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
         return realtimeData.GetLastPrice(ticker);
     }
 
+    @Override
+    public void RequestHistoricalData(String ticker) {
+        if (!connected) {
+            logger.severe("IB not connected. Cannot RequestRealtimeData.");
+            return;
+        }
+
+        Contract contract = CreateDataContract(ticker, secType);
+
+        int orderId = getNextOrderId();
+
+        historicalData.CreateNew(ticker, orderId);
+
+        ibClientSocket.reqHistoricalData(orderId, contract, "", "199 D", "1 day", "ADJUSTED_LAST", 1, 1, new Vector<TagValue>());
+
+        try {
+            Thread.sleep(20);   //max number of commands to IB is 50/s
+        } catch (InterruptedException ex) {
+        }
+    }
+
+    @Override
+    public void historicalData(int reqId, String date, double open,
+            double high, double low, double close, int volume, int count,
+            double WAP, boolean hasGaps) {
+        historicalData.UpdateValue(reqId, date, close);
+    }
+
+    @Override
+    public CloseData GetCloseData(String ticker) {
+        return historicalData.GetCloseData(ticker);
+    }
+
     protected Contract CreateOrderContract(String ticker) {
         Contract contract = new Contract();
         contract.m_symbol = ticker;
         contract.m_exchange = "SMART";
         contract.m_secType = secType.toString();
         contract.m_currency = "USD";
-        
+
         if (ticker.equals("GLD")) {
             contract.m_exchange = "BATS";
         }
@@ -381,7 +418,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
                 || ticker.equals("VXMT")) {
             contract.m_exchange = "CBOE";
         }
-        
+
         if (ticker.equals("GLD")) {
             contract.m_exchange = "BATS";
         }

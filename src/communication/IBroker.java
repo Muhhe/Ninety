@@ -5,6 +5,7 @@
  */
 package communication;
 
+import data.CloseData;
 import java.util.List;
 import java.util.Map;
 
@@ -42,6 +43,10 @@ public interface IBroker {
     public void CancelAllRealtimeData();
     
     public double GetLastPrice(String ticker);
+    
+    public void RequestHistoricalData(String ticker);
+    
+    public CloseData GetCloseData(String ticker);
 
     public void RequestAccountSummary();
     

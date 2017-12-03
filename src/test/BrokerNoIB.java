@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import communication.TradeOrder;
-import tradingapp.TradeTimer;
+import data.CloseData;
 
 /**
  *
@@ -105,6 +105,15 @@ public class BrokerNoIB implements IBroker {
     @Override
     public AccountSummary GetAccountSummary() {
         return new AccountSummary();
+    }
+
+    @Override
+    public void RequestHistoricalData(String ticker) {
+    }
+
+    @Override
+    public CloseData GetCloseData(String ticker) {
+        return null;
     }
     
 }

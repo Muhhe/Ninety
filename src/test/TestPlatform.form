@@ -231,7 +231,7 @@
     </Component>
     <Component class="javax.swing.JButton" name="testDataYahooButton">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Test Load Data Yahoo"/>
+        <Property name="text" type="java.lang.String" value="Test Load Data IB"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="testDataYahooButtonActionPerformed"/>

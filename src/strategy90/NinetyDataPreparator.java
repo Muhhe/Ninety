@@ -31,7 +31,7 @@ public class NinetyDataPreparator implements Runnable {
             return;
         }
         logger.fine("Subscribing real-time data");
-        stockData.SubscribeRealtimeData(broker);
+        stockData.SubscribeData(broker);
         logger.fine("Waiting for real-time data - 20 sec");
         try {
             Thread.sleep(20000);

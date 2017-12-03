@@ -29,6 +29,7 @@ import tradingapp.TradeLogger;
 import communication.TradeOrder;
 import data.getters.DataGetterHistAlpha;
 import data.getters.DataGetterHistGoogle;
+import strategy90.TickersToTrade;
 import tradingapp.TradeTimer;
 
 /**
@@ -149,7 +150,7 @@ public class TestPlatform extends javax.swing.JFrame {
             }
         });
 
-        testDataYahooButton.setText("Test Load Data Yahoo");
+        testDataYahooButton.setText("Test Load Data IB");
         testDataYahooButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 testDataYahooButtonActionPerformed(evt);
@@ -361,13 +362,34 @@ public class TestPlatform extends javax.swing.JFrame {
         //GlobalConfig.AddDataGetterHist(new DataGetterHistFile(pathToSourceData));
         //GlobalConfig.AddDataGetterHist(new DataGetterHistYahoo());
         //GlobalConfig.AddDataGetterHist(new DataGetterHistQuandl());
-        IBroker broker = new BrokerIBReadOnly(4001, 1, IBroker.SecType.CFD);
+        IBroker broker = new BrokerIBReadOnly(4001, 1, IBroker.SecType.STK);
         broker.connect();
         /*for (String ticker : TickersToTrade.GetTickers()) {
             broker.RequestRealtimeData(ticker);
         }*/
 
-        GlobalConfig.AddDataGetterAct(new DataGetterActIB(broker));
+        String[] tickers = TickersToTrade.GetTickers();
+        
+        for (String ticker : tickers) {
+            broker.RequestHistoricalData(ticker);
+        }
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(TestPlatform.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        CloseData data = broker.GetCloseData("AAPL");
+
+        for (String ticker : tickers) {
+            for (int i = 0; i < 200; i++) {
+                logger.info(ticker + ": " + data.dates[i] + ", " + data.adjCloses[i]);
+            }
+        }
+
+
+        /*GlobalConfig.AddDataGetterAct(new DataGetterActIB(broker));
         GlobalConfig.AddDataGetterHist(new DataGetterHistAlpha());
 
         StockDataForNinety stockDataForNinety = new StockDataForNinety();
@@ -400,7 +422,7 @@ public class TestPlatform extends javax.swing.JFrame {
             } else {
                 logger.info("Test FAILED.");
             }
-        }).start();
+        }).start();*/
     }//GEN-LAST:event_testDataYahooButtonActionPerformed
 
     private void testRSIButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_testRSIButtonActionPerformed
@@ -491,7 +513,7 @@ public class TestPlatform extends javax.swing.JFrame {
     private enum Signal {
         VXX, XIV, None
     }
-    
+
     private void LoadCBOEButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_LoadCBOEButtonActionPerformed
         //String ticker = tickerField.getText();
         IDataGetterHist getter = new DataGetterHistCBOE();
@@ -523,10 +545,10 @@ public class TestPlatform extends javax.swing.JFrame {
         Signal signal60 = Signal.None;
         Signal signal125 = Signal.None;
         Signal signal150 = Signal.None;
-        
+
         int voteForXIV = 0;
         int voteForVXX = 0;
-        
+
         if (actRatio < 1 && sma60 < 1) {
             signal60 = Signal.XIV;
             voteForXIV++;
@@ -534,7 +556,7 @@ public class TestPlatform extends javax.swing.JFrame {
             signal60 = Signal.VXX;
             voteForVXX++;
         }
-        
+
         if (actRatio < 1 && sma125 < 1) {
             signal125 = Signal.XIV;
             voteForXIV++;
@@ -542,7 +564,7 @@ public class TestPlatform extends javax.swing.JFrame {
             signal125 = Signal.VXX;
             voteForVXX++;
         }
-        
+
         if (actRatio < 1 && sma150 < 1) {
             signal150 = Signal.XIV;
             voteForXIV++;
@@ -550,18 +572,18 @@ public class TestPlatform extends javax.swing.JFrame {
             signal150 = Signal.VXX;
             voteForVXX++;
         }
-        
+
         logger.info("Signal 60: " + signal60);
         logger.info("Signal 125: " + signal125);
         logger.info("Signal 150: " + signal150);
-        
+
         String selectedSignal = "None";
         if (voteForXIV >= 2) {
             selectedSignal = "XIV";
         } else if (voteForVXX >= 2) {
             selectedSignal = "VXX";
         }
-        
+
         logger.info("Final signal 150: " + selectedSignal);
     }//GEN-LAST:event_LoadCBOEButtonActionPerformed
 
