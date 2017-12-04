@@ -40,11 +40,13 @@ public class HistoricalDataIB {
             loggerComm.warning("Historical data put: cannot find data for order ID " + orderID);
             return;
         }
-        counter--;
         
         if (counter == 0) {
+            loggerComm.finer("Historical data updated for id: " + orderID);
             return;
         }
+        
+        counter--;
         
         counterMapById.put(orderID, counter);
         

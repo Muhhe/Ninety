@@ -68,7 +68,7 @@ public class StockDataForNinety {
                 logger.warning("Preparing data: Today " + TradeTimer.GetLocalDateNow().toString() + " is not the same as last trading day " + lastTradingDay.toString());
             }
             
-            IDataGetterHist dataGetterFile = new DataGetterHistFile(FilePaths.dataLogDirectory + TradeTimer.GetLocalDateNow().toString() + "/Historic/");
+            //IDataGetterHist dataGetterFile = new DataGetterHistFile(FilePaths.dataLogDirectory + TradeTimer.GetLocalDateNow().toString() + "/Historic/");
 
             logger.info("Starting to load historic data.");
             for (String ticker : tickers) {
@@ -80,25 +80,25 @@ public class StockDataForNinety {
                 }
 
                 boolean failedHist = false;
-                boolean filesRead = false;
+               // boolean filesRead = false;
                 for (IDataGetterHist dataGetter : GlobalConfig.GetDataGettersHist()) {
 
-                    if (!filesRead) {
-                        dataGetter = dataGetterFile;
-                    }
+                    //if (!filesRead) {
+                    //    dataGetter = dataGetterFile;
+                    //}
 
                     logger.finest("Loading hist data for " + ticker + " from " + dataGetter.getName());
                     if (failedHist) {
                         logger.warning("Trying to load it from " + dataGetter.getName());
                     }
 
-                    LocalDate date = lastTradingDay;
-                    if (filesRead) {
-                        date = TradeTimer.GetLastTradingDay(lastTradingDay.minusDays(1));
-                    }
-                    CloseData data = dataGetter.readAdjCloseData(date, ticker, 200, true);
+                    //LocalDate date = lastTradingDay;
+                    //if (filesRead) {
+                    //    date = TradeTimer.GetLastTradingDay(lastTradingDay.minusDays(1));
+                    //}
+                    CloseData data = dataGetter.readAdjCloseData(TradeTimer.GetLastTradingDay(lastTradingDay.minusDays(1)), ticker, 200, true);
                     
-                    filesRead = true;
+                    //filesRead = true;
                         
                     if (data == null) {
                         logger.warning("Hist data from " + dataGetter.getName() + " for " + ticker + " are null.");

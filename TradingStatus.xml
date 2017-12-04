@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <status>
-  <money freeCapital="49877.86" closingEquity="49877.86" fees="4.07" />
-  <held type="None" position="0" avgPrice="0.00" />
+  <money currentCash="173655.082" currentFees="851.25" />
+  <heldPositions heldStocks="1">
+    <heldStock ticker="GOOG">
+      <purchase priceForOne="1009.62" position="17" portions="1" date="2017-12-01" />
+    </heldStock>
+  </heldPositions>
 </status>

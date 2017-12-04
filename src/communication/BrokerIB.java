@@ -360,13 +360,13 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
             return;
         }
 
-        Contract contract = CreateDataContract(ticker, secType);
+        Contract contract = CreateDataContract(ticker, SecType.STK);
 
         int orderId = getNextOrderId();
 
         historicalData.CreateNew(ticker, orderId);
 
-        ibClientSocket.reqHistoricalData(orderId, contract, "", "199 D", "1 day", "ADJUSTED_LAST", 1, 1, new Vector<TagValue>());
+        ibClientSocket.reqHistoricalData(orderId, contract, "", "200 D", "1 day", "ADJUSTED_LAST", 1, 1, null);
 
         try {
             Thread.sleep(20);   //max number of commands to IB is 50/s
