@@ -67,9 +67,8 @@ public class StockDataForNinety {
             if (lastTradingDay.compareTo(TradeTimer.GetLocalDateNow()) != 0) {
                 logger.warning("Preparing data: Today " + TradeTimer.GetLocalDateNow().toString() + " is not the same as last trading day " + lastTradingDay.toString());
             }
-            
-            //IDataGetterHist dataGetterFile = new DataGetterHistFile(FilePaths.dataLogDirectory + TradeTimer.GetLocalDateNow().toString() + "/Historic/");
 
+            //IDataGetterHist dataGetterFile = new DataGetterHistFile(FilePaths.dataLogDirectory + TradeTimer.GetLocalDateNow().toString() + "/Historic/");
             logger.info("Starting to load historic data.");
             for (String ticker : tickers) {
 
@@ -80,13 +79,12 @@ public class StockDataForNinety {
                 }
 
                 boolean failedHist = false;
-               // boolean filesRead = false;
+                // boolean filesRead = false;
                 for (IDataGetterHist dataGetter : GlobalConfig.GetDataGettersHist()) {
 
                     //if (!filesRead) {
                     //    dataGetter = dataGetterFile;
                     //}
-
                     logger.finest("Loading hist data for " + ticker + " from " + dataGetter.getName());
                     if (failedHist) {
                         logger.warning("Trying to load it from " + dataGetter.getName());
@@ -97,9 +95,8 @@ public class StockDataForNinety {
                     //    date = TradeTimer.GetLastTradingDay(lastTradingDay.minusDays(1));
                     //}
                     CloseData data = dataGetter.readAdjCloseData(TradeTimer.GetLastTradingDay(lastTradingDay.minusDays(1)), ticker, 200, true);
-                    
+
                     //filesRead = true;
-                        
                     if (data == null) {
                         logger.warning("Hist data from " + dataGetter.getName() + " for " + ticker + " are null.");
                         failedHist = true;
@@ -142,15 +139,21 @@ public class StockDataForNinety {
         }
     }
 
-    public void SubscribeData(IBroker broker) {
+    public void SubscribeActData(IBroker broker) {
         if (!isRealtimeDataSubscribed) {
             for (String ticker : TickersToTrade.GetTickers()) {
                 broker.SubscribeRealtimeData(ticker);
-                broker.RequestHistoricalData(ticker);
             }
             isRealtimeDataSubscribed = true;
             logger.fine("Subscribed actual IB data.");
         }
+    }
+
+    public void SubscribeHistData(IBroker broker) {
+        for (String ticker : TickersToTrade.GetTickers()) {
+            broker.RequestHistoricalData(ticker);
+        }
+        logger.fine("Subscribed hist IB data.");
     }
 
     public void UnSubscribeRealtimeData(IBroker broker) {

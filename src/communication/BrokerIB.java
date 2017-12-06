@@ -54,6 +54,8 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
     protected CountDownLatch connectionLatch = null;
     protected List<Position> positionsList = new ArrayList<>();
     protected int nextOrderId = -1;
+    
+    protected int histDataSubsCounter = 0;
 
     protected AccountSummary accountSummary = new AccountSummary();
     protected boolean accountSummarySubscribed = false;
@@ -108,6 +110,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
         clearOrderMaps();
         realtimeData.ClearMaps();
         historicalData.ClearMaps();
+        histDataSubsCounter = 0;
         connectionLatch.countDown();    // if connection fails
     }
 
@@ -359,6 +362,14 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
             logger.severe("IB not connected. Cannot RequestRealtimeData.");
             return;
         }
+        
+        if (histDataSubsCounter == 50) {
+            histDataSubsCounter = 0;
+            try {
+                Thread.sleep(10000);   //max number of requests in IB is 50 at a time
+            } catch (InterruptedException ex) {
+            }
+        }
 
         Contract contract = CreateDataContract(ticker, SecType.STK);
 
@@ -367,11 +378,6 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
         historicalData.CreateNew(ticker, orderId);
 
         ibClientSocket.reqHistoricalData(orderId, contract, "", "200 D", "1 day", "ADJUSTED_LAST", 1, 1, null);
-
-        try {
-            Thread.sleep(20);   //max number of commands to IB is 50/s
-        } catch (InterruptedException ex) {
-        }
     }
 
     @Override
