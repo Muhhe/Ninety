@@ -49,21 +49,21 @@ public class MainWindow90 extends javax.swing.JFrame {
         });
 
         TradeLogger.getInstance().initializeTextAreas(logArea, Level.INFO, fineLogArea, Level.FINE, commArea, Level.FINEST);
-        
+
         Settings.ReadSettings();
-        
+
         IBroker broker = new BrokerIB(Settings.port, Settings.clientId, IBroker.SecType.CFD);
-        
+
         GlobalConfig.AddDataGetterAct(new DataGetterActIB(broker));
         GlobalConfig.AddDataGetterAct(new DataGetterActGoogle());
-        
+
         GlobalConfig.AddDataGetterHist(new DataGetterHistIB(broker));
         GlobalConfig.AddDataGetterHist(new DataGetterHistAlpha());
         GlobalConfig.AddDataGetterHist(new DataGetterHistQuandl());
         GlobalConfig.AddDataGetterHist(new DataGetterHistGoogle());
 
-        ninetyScheduler = new NinetyScheduler( broker );
-        
+        ninetyScheduler = new NinetyScheduler(broker);
+
         new Thread(MainWindow90::StartSocketServer).start();
     }
 
@@ -225,7 +225,7 @@ public class MainWindow90 extends javax.swing.JFrame {
         if (a == null) {
             a.purchases.add(new StockPurchase());
         }*/
-        
+
         new Thread(() -> {
             boolean connected = ninetyScheduler.broker.isConnected();
             if (!connected) {
@@ -262,7 +262,16 @@ public class MainWindow90 extends javax.swing.JFrame {
     }//GEN-LAST:event_startNowButtonActionPerformed
 
     private void ReportButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ReportButtonActionPerformed
-        Report.Generate("SPY", false);
+        IBroker broker = new BrokerIB(Settings.port, Settings.clientId, IBroker.SecType.IND);
+        broker.connect();
+        broker.RequestHistoricalData("SPY", Report.GetNrOfDaysInEquity());
+
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException ex) {
+        }
+
+        Report.Generate(new DataGetterHistIB(broker), "SPY", false);
     }//GEN-LAST:event_ReportButtonActionPerformed
 
     /**

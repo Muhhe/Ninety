@@ -357,7 +357,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
     }
 
     @Override
-    public void RequestHistoricalData(String ticker) {
+    public void RequestHistoricalData(String ticker, int count) {
         if (!connected) {
             logger.severe("IB not connected. Cannot RequestRealtimeData.");
             return;
@@ -375,9 +375,11 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
 
         int orderId = getNextOrderId();
 
-        historicalData.CreateNew(ticker, orderId);
+        historicalData.CreateNew(ticker, orderId, count);
+        
+        String days = Integer.toString(count) + " D";
 
-        ibClientSocket.reqHistoricalData(orderId, contract, "", "200 D", "1 day", "ADJUSTED_LAST", 1, 1, null);
+        ibClientSocket.reqHistoricalData(orderId, contract, "", days, "1 day", "ADJUSTED_LAST", 1, 1, null);
     }
 
     @Override

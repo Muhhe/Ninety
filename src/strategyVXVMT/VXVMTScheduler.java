@@ -7,6 +7,7 @@ package strategyVXVMT;
 
 import communication.IBroker;
 import data.getters.DataGetterActIB;
+import data.getters.DataGetterHistIB;
 import data.getters.IDataGetterAct;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -202,7 +203,14 @@ public class VXVMTScheduler {
                 status.UpdateEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue, data.indicators.actGLDvalue, signalInfo);
                 status.SaveTradingStatus();
 
-                Report.Generate("XIV", true);
+                broker.RequestHistoricalData("XIV", Report.GetNrOfDaysInEquity());
+
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException ex) {
+                }
+
+                Report.Generate(new DataGetterHistIB(broker), "XIV", true);
 
                 broker.disconnect();
 

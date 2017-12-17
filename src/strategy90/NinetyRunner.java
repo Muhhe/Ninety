@@ -37,21 +37,6 @@ public class NinetyRunner implements Runnable {
     public void run() {
         logger.info("Starting Ninety strategy");
 
-        int connectTries = 3;
-
-        while (connectTries-- > 0) {
-            if (broker.connect()) {
-                break;
-            } else {
-                logger.warning("Cannot connect to IB. Trying again.");
-            }
-        }
-
-        if (connectTries < 0) {
-            logger.warning("Failed to connect to IB. Exiting trading!");
-            return;
-        }
-
         stockData.SubscribeActData(broker);
         try {
             Thread.sleep(65000);
@@ -110,8 +95,6 @@ public class NinetyRunner implements Runnable {
         logger.info("Trading day finished");
         statusData.PrintStatus();
         logger.fine(broker.GetAccountSummary().toString());
-
-        broker.disconnect();
     }
 
     public List<TradeOrder> RunNinetySells() {

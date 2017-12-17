@@ -371,7 +371,7 @@ public class TestPlatform extends javax.swing.JFrame {
         String[] tickers = TickersToTrade.GetTickers();
         
         for (String ticker : tickers) {
-            broker.RequestHistoricalData(ticker);
+            broker.RequestHistoricalData(ticker, 200);
         }
 
         try {

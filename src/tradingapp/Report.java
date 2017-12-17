@@ -101,7 +101,31 @@ public class Report {
         }
     }
 
-    static public void Generate(String refTicker, boolean reinvest) {
+    static public int GetNrOfDaysInEquity() {
+        BufferedReader br = null;
+        int count = 0;
+        try {
+            br = new BufferedReader(new FileReader(FilePaths.equityPathFile));
+            br.readLine();
+            while (br.readLine() != null) {
+                count++;
+            }
+        } catch (FileNotFoundException ex) {
+            logger.severe("Cannot find report file: " + ex);
+        } catch (IOException ex) {
+            logger.severe("Error in generation of report: " + ex);
+        } finally {
+            try {
+                br.close();
+            } catch (IOException ex) {
+                logger.severe("Error in generation of report: " + ex);
+            }
+        }
+        
+        return count;
+    }
+
+    static public void Generate(IDataGetterHist hGetter, String refTicker, boolean reinvest) {
         BufferedReader br = null;
         BufferedWriter writer = null;
         try {
@@ -128,9 +152,11 @@ public class Report {
             line = br.readLine();
             LocalDate firstDate = LocalDate.parse(line.split(cvsSplitBy)[0], DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
-            IDataGetterHist hGetter = new DataGetterHistAlpha();
-
-            CloseData refData = hGetter.readAdjCloseData(firstDate, TradeTimer.GetLocalDateNow(), refTicker, true);
+            if (hGetter == null) {
+                hGetter = new DataGetterHistAlpha();
+            }
+            
+            CloseData refData = hGetter.readAdjCloseData(firstDate, TradeTimer.GetLastTradingDay(), refTicker, true);
             if (refData == null) {
                 logger.warning("Report failed: cannot load hist data for - " + refTicker);
                 return;
@@ -138,7 +164,7 @@ public class Report {
 
             IDataGetterAct aGetter = new DataGetterActGoogle();
             refData.adjCloses[0] = aGetter.readActualData(refTicker);
-            refData.dates[0] = TradeTimer.GetLocalDateNow();
+            refData.dates[0] = TradeTimer.GetLastTradingDay();
 
             if (refData.adjCloses[0] == 0) {
                 logger.warning("Report failed: cannot load act data for - " + refTicker);

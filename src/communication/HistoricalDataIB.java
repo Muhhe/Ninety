@@ -26,11 +26,11 @@ public class HistoricalDataIB {
     private final Map<Integer, CloseData> dataMapById = new HashMap<>(100);
     private final Map<Integer, Integer> counterMapById = new HashMap<>(100);
 
-    void CreateNew(String ticker, int orderId) {
-        CloseData data = new CloseData(200);
+    void CreateNew(String ticker, int orderId, int count) {
+        CloseData data = new CloseData(count);
         dataMapByTicker.put(ticker, data);
         dataMapById.put(orderId, data);
-        counterMapById.put(orderId, 200);
+        counterMapById.put(orderId, count);
     }
 
     public synchronized void UpdateValue(int orderID, String date, double closePrice) {

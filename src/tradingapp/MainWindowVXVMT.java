@@ -12,6 +12,7 @@ import data.getters.DataGetterActIB;
 import data.getters.DataGetterHistAlpha;
 import data.getters.DataGetterHistCBOE;
 import data.getters.DataGetterHistGoogle;
+import data.getters.DataGetterHistIB;
 import data.getters.DataGetterHistQuandl;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -248,7 +249,16 @@ public class MainWindowVXVMT extends javax.swing.JFrame {
     }//GEN-LAST:event_startNowButtonActionPerformed
 
     private void reportButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reportButtonActionPerformed
-        Report.Generate("XIV", true);
+        IBroker broker = new BrokerIB(Settings.port, Settings.clientId, IBroker.SecType.IND);
+        broker.connect();
+        broker.RequestHistoricalData("XIV", Report.GetNrOfDaysInEquity());
+
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException ex) {
+        }
+
+        Report.Generate(new DataGetterHistIB(broker), "XIV", true);
     }//GEN-LAST:event_reportButtonActionPerformed
 
     /**

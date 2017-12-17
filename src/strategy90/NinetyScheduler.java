@@ -6,6 +6,7 @@
 package strategy90;
 
 import communication.IBroker;
+import data.getters.DataGetterHistIB;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -61,7 +62,7 @@ public class NinetyScheduler {
             FilePaths.dataLogDirectory + todayString + FilePaths.indicatorsPathFile,
             FilePaths.reportPathFile
         };
-        
+
         String[] attachmentsError = {FilePaths.dataLogDirectory + todayString + FilePaths.logPathFile,
             FilePaths.dataLogDirectory + todayString + FilePaths.logCommPathFile,
             FilePaths.dataLogDirectory + todayString + FilePaths.logDetailedPathFile,
@@ -71,11 +72,11 @@ public class NinetyScheduler {
 
         MailSender.SetTradeLogAttachments(attachmentsTradeLog);
         MailSender.SetErrorAttachments(attachmentsError);
-        
+
         MailSender.SetTradeLogSubject("AOS Trade log 90");
         MailSender.SetCheckSubject("AOS Check 90");
         MailSender.SetErrorSubject("AOS Errors 90");
-        
+
         TradeLogger.getInstance().clearLogs();
         TradeLogger.getInstance().initializeFiles(LocalDate.now());
         TradeTimer.LoadSpecialTradingDays();
@@ -242,11 +243,29 @@ public class NinetyScheduler {
                 try {
                     CheckingThread checkThread = CheckingThread.StartNewCheckingThread(Duration.ofMinutes(5), "Trade run did not end properly.");
 
+                    int connectTries = 3;
+
+                    while (connectTries-- > 0) {
+                        if (broker.connect()) {
+                            break;
+                        } else {
+                            logger.warning("Cannot connect to IB. Trying again.");
+                        }
+                    }
+
+                    if (connectTries < 0) {
+                        logger.warning("Failed to connect to IB. Exiting trading!");
+                        return;
+                    }
+
                     logger.finer("Acquiring lock for trading run.");
                     dataMutex.acquire();
                     new NinetyRunner(stockData, statusData, broker).run();
                     dataMutex.release();
                     logger.finer("Released lock for trading run.");
+
+                    broker.RequestHistoricalData("SPY", Report.GetNrOfDaysInEquity());
+
                     Thread.sleep(5000);
                     statusData.UpdateEquityFile();
                     ScheduleForTomorrow();
@@ -255,12 +274,12 @@ public class NinetyScheduler {
                     stockData.SaveStockIndicatorsToFiles();
 
                     AddProfitLossToMail();
-            
-                    Report.Generate("SPY", false);
+
+                    Report.Generate(new DataGetterHistIB(broker), "SPY", false);
 
                     MailSender.AddLineToMail(broker.GetAccountSummary().toString());
                     MailSender.AddLineToMail("Saved current cash: " + TradeFormatter.toString(statusData.currentCash));
-                    
+
                     broker.disconnect();
 
                     MailSender.SendTradingLog();

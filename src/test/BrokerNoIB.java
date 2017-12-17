@@ -108,7 +108,7 @@ public class BrokerNoIB implements IBroker {
     }
 
     @Override
-    public void RequestHistoricalData(String ticker) {
+    public void RequestHistoricalData(String ticker, int count) {
     }
 
     @Override

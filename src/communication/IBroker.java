@@ -44,7 +44,7 @@ public interface IBroker {
     
     public double GetLastPrice(String ticker);
     
-    public void RequestHistoricalData(String ticker);
+    public void RequestHistoricalData(String ticker, int count);
     
     public CloseData GetCloseData(String ticker);
 

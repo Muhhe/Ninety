@@ -151,7 +151,7 @@ public class StockDataForNinety {
 
     public void SubscribeHistData(IBroker broker) {
         for (String ticker : TickersToTrade.GetTickers()) {
-            broker.RequestHistoricalData(ticker);
+            broker.RequestHistoricalData(ticker, 200);
         }
         logger.fine("Subscribed hist IB data.");
     }
