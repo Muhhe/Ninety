@@ -264,10 +264,11 @@ public class NinetyScheduler {
                     dataMutex.release();
                     logger.finer("Released lock for trading run.");
 
+                    statusData.UpdateEquityFile();
+
                     broker.RequestHistoricalData("SPY", Report.GetNrOfDaysInEquity());
 
                     Thread.sleep(5000);
-                    statusData.UpdateEquityFile();
                     ScheduleForTomorrow();
                     stockData.SaveHistDataToFiles();
                     stockData.SaveIndicatorsToCSVFile();
@@ -275,12 +276,10 @@ public class NinetyScheduler {
 
                     AddProfitLossToMail();
 
-                    Report.Generate(new DataGetterHistIB(broker), "SPY", false);
-
                     MailSender.AddLineToMail(broker.GetAccountSummary().toString());
                     MailSender.AddLineToMail("Saved current cash: " + TradeFormatter.toString(statusData.currentCash));
 
-                    broker.disconnect();
+                    Report.Generate(new DataGetterHistIB(broker), "SPY", false);
 
                     MailSender.SendTradingLog();
                     MailSender.SendErrors();
@@ -288,6 +287,8 @@ public class NinetyScheduler {
                     checkThread.SetChecked();
                 } catch (InterruptedException ex) {
                     throw new IllegalStateException("InterruptedException");
+                } finally {
+                    broker.disconnect();
                 }
             }
         };
