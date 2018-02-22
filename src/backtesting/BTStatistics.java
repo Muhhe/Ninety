@@ -194,7 +194,7 @@ public class BTStatistics {
                     + "%"*/);
 
             totalProfit += profit;
-            totalProfitProc += profitPercent / ((double) thisYearStat.days / 252.0);
+            totalProfitProc += profitPercent;
             totalDays += thisYearStat.days;
             fees += thisYearStat.fees;
 
@@ -217,8 +217,8 @@ public class BTStatistics {
                 + " | successful = " + TradeFormatter.toString((double) profitSells / (double) totalSells * 100.0)
                 + "%");
 
-        //double avgProfitPercent = profitPercent / ((double) totalDays / 252.0);
-        double avgProfitPercent = totalProfitProc / yearlyStats.size();
+        double avgProfitPercent = totalProfitProc / ((double) totalDays / 252.0);
+        //double avgProfitPercent = totalProfitProc / yearlyStats.size();
         logger.log(BTLogLvl.BT_STATS, "Average yearly profit: " + TradeFormatter.toString(avgProfitPercent) + "%");
 
         if (!eqFile.isEmpty()) {

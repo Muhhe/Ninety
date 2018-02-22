@@ -9,12 +9,11 @@ import communication.IBroker;
 import data.CloseData;
 import data.getters.IDataGetterHist;
 import data.IndicatorCalculator;
-import data.getters.DataGetterHistAlpha;
+import data.OHLCData;
 import data.getters.DataGetterHistCBOE;
 import data.getters.DataGetterHistFile;
-import data.getters.DataGetterHistGoogle;
-import data.getters.DataGetterHistQuandl;
-import data.getters.DataGetterHistYahoo;
+import data.getters.DataGetterHistOHLCFile;
+import data.getters.IDataGetterHistOHLC;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -208,10 +207,15 @@ public class BacktesterVXVMT {
 
     static public void runBacktest(BTSettings settings) {
         IDataGetterHist getterFile = new DataGetterHistFile("backtest/VolData/");
+        IDataGetterHistOHLC getterFileOHLC = new DataGetterHistOHLCFile("backtest/VolData/");
         //IDataGetterHist getterFile = new DataGetterHistGoogle();
         CloseData dataVXX = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "VXX", false);
         CloseData dataXIV = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "XIV", false);
+        CloseData dataZIV = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "ZIV", false);
         CloseData dataGLD = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "GLD", false);
+
+        OHLCData dataOHLC_XIV = getterFileOHLC.readAdjCloseData(settings.startDate, settings.endDate, "XIV_OHLC", false);
+        OHLCData dataOHLC_VXX = getterFileOHLC.readAdjCloseData(settings.startDate, settings.endDate, "VXX_OHLC", false);
 
         IDataGetterHist getterCBOE = new DataGetterHistCBOE();
         logger.info("Loading VXV");
@@ -265,12 +269,63 @@ public class BacktesterVXVMT {
 
             logger.info("Day - " + date.toString());
 
+            if (!dataVXX.dates[i].equals(date)) {
+                logger.warning("VXX date not matching - " + dataVXX.dates[i] + " vs " + date);
+            }
+            if (!dataXIV.dates[i].equals(date)) {
+                logger.warning("XIV date not matching!");
+            }
+            if (!dataOHLC_VXX.dates[i].equals(date)) {
+                logger.warning("VXX_OHLC date not matching!");
+            }
+            if (!dataOHLC_XIV.dates[i].equals(date)) {    // 2010-04-30
+                logger.warning("XIV_OHLC date not matching!");
+            }
+            if (!dataGLD.dates[i].equals(date)) {   // 2008-06-25
+                logger.warning("GLD date not matching!");
+            }
+
             VXVMTData data = GetDataForDay(i, dataVXV, dataVXMT, dataGLD);
             VXVMTDataPreparator.ComputeIndicators(data);
             data.indicators.actVXXvalue = dataVXX.adjCloses[i];
             data.indicators.actXIVvalue = dataXIV.adjCloses[i];
+            //data.indicators.actXIVvalue = (dataXIV.adjCloses[i] + dataZIV.adjCloses[i]) / 2;
             data.indicators.actGLDvalue = dataGLD.adjCloses[i];
             VXVMTChecker.CheckDataIndicators(data);
+
+            VXVMTSignal signal = VXVMTStrategy.CalculateFinalSignal(data);
+
+            // XIV Stop Loss
+            double openXIV = dataOHLC_XIV.adjCloses[i + 1];
+            double lowXIV = dataOHLC_XIV.lows[i];
+
+            double maxXIVDrop = openXIV * 0.10;
+
+            if (lowXIV < (openXIV - maxXIVDrop)) {
+                if (status.heldType == VXVMTSignal.Type.XIV) {
+                    //data.indicators.actXIVvalue = openXIV - maxXIVDrop;
+                    status.freeCapital += (openXIV - maxXIVDrop) * status.heldPosition;
+                    status.heldPosition = 0;
+                    if (data.indicators.actXIVvalue < (openXIV - maxXIVDrop)) {
+                        signal.type = VXVMTSignal.Type.None;
+                    }
+                }
+            }
+            // VXX Stop Loss
+            /*double openVXX = dataOHLC_VXX.opens[i];
+            double lowVXX = dataOHLC_VXX.lows[i];
+
+            double maxVXXDrop = openVXX * 0.10;
+
+            if (lowVXX < (openVXX - maxVXXDrop)) {
+
+                if (status.heldType == VXVMTSignal.Type.VXX) {
+                    //data.indicators.actVXXvalue = openVXX - maxVXXDrop;
+                    status.freeCapital += (openVXX - maxVXXDrop) * status.heldPosition;
+                    status.heldPosition = 0;
+                    //signal.type = VXVMTSignal.Type.None;
+                }
+            }*/
 
             switch (status.heldType) {
                 case XIV:
@@ -295,22 +350,22 @@ public class BacktesterVXVMT {
 
             double eq = status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue, data.indicators.actGLDvalue);
 
+            double profit = (eq - lastCapital) / lastCapital * 100;
             if (status.heldType == VXVMTSignal.Type.XIV) {
-                profitXIV += (eq - lastCapital) / lastCapital * 100;
+                profitXIV += profit;
+                /*if (profit > 10) {
+                    signal.type = VXVMTSignal.Type.None;
+                }*/
             }
             if (status.heldType == VXVMTSignal.Type.VXX) {
-                profitVXX += (eq - lastCapital) / lastCapital * 100;
+                profitVXX += profit;
+                /*if (profit > 10) {
+                    signal.type = VXVMTSignal.Type.XIV;
+                }*/
             }
             if (status.heldType == VXVMTSignal.Type.GLD) {
-                profitGLD += (eq - lastCapital) / lastCapital * 100;
+                profitGLD += profit;
             }
-
-            VXVMTSignal signal = VXVMTStrategy.CalculateFinalSignal(data);
-            
-            /*if (signal.type == VXVMTSignal.Type.GLD) {
-                signal.type = VXVMTSignal.Type.None;
-                signal.exposure = 0;
-            }*/
 
             if (signal.type == VXVMTSignal.Type.XIV) {
                 status.heldPosition = GetDesiredPosition(VXVMTSignal.Type.XIV, signal.exposure, data, status);
@@ -326,9 +381,8 @@ public class BacktesterVXVMT {
             if (localMaxActRatio < data.indicators.actRatio) {
                 localMaxActRatio = data.indicators.actRatio;
             }
-            
-            //VXVMTSignal newSignal = VXVMTStrategy.CalculateSignalForDay(data.indicators.ratios, data.indicators.actRatio);
 
+            //VXVMTSignal newSignal = VXVMTStrategy.CalculateSignalForDay(data.indicators.ratios, data.indicators.actRatio);
             //boolean gld = false;
             /*if ((signal.type == VXVMTSignal.Type.None || signal.type == VXVMTSignal.Type.GLD)
                     //&& IndicatorCalculator.SMA(3, data.indicators.ratios) < data.indicators.actRatio
@@ -347,14 +401,13 @@ public class BacktesterVXVMT {
                     localMaxActRatio = 0;
                 }
             }*/
-
             status.heldType = signal.type;
 
             stats.StartDay(date);
 
             stats.UpdateEquity(eq, date);
             //UpdateEquityFile(eq, "equity.csv", (status.heldType.toString() + " - " + TradeFormatter.toString(1 - (status.freeCapital / eq))));
-            UpdateEquityFile(eq, lastCapital, "equity.csv", (status.heldType.toString() + " - " + TradeFormatter.toString(signal.exposure) ));
+            UpdateEquityFile(eq, lastCapital, "equity.csv", (status.heldType.toString() + " - " + TradeFormatter.toString(signal.exposure)));
             //UpdateEquityFile(xivPos * dataXIV.adjCloses[i], "xiv.csv", null);
             //UpdateEquityFile(spyPos * dataSPY.adjCloses[i], "spy.csv", null);*/
 
@@ -375,6 +428,7 @@ public class BacktesterVXVMT {
         UpdateMonthlyStats(lastDate, monthStats);
 
         stats.LogStats(settings, "equity.csv");
+        
         stats.SaveEquityToCsv();
         double totalProfit = profitXIV + profitVXX;
         double profitXIVProc = profitXIV;// / totalProfit * 100;

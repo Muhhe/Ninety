@@ -32,7 +32,7 @@ public class VXVMTSignal {
         switch (str) {
             case "VXX":
                 return Type.VXX;
-            case "XIV":
+            case "SVXY":
                 return Type.XIV;
             case "GLD":
                 return Type.GLD;
@@ -46,7 +46,7 @@ public class VXVMTSignal {
             case VXX:
                 return "VXX";
             case XIV:
-                return "XIV";
+                return "SVXY";
             case GLD:
                 return "GLD";
             default:

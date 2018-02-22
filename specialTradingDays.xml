@@ -22,4 +22,30 @@
   <TradingDay date="2017-11-23"/>
   <TradingDay date="2017-11-24" closeTime="13:00:00"/>
   <TradingDay date="2017-12-25"/>
+  
+  <TradingDay date="2018-01-01"/>
+  <TradingDay date="2018-01-15"/>
+  <TradingDay date="2018-02-19"/>
+  <TradingDay date="2018-03-30"/>
+  <TradingDay date="2018-05-28"/>
+  <TradingDay date="2018-07-03" closeTime="13:00:00"/>
+  <TradingDay date="2018-07-04"/>
+  <TradingDay date="2018-09-03"/>
+  <TradingDay date="2018-11-22"/>
+  <TradingDay date="2018-11-23" closeTime="13:00:00"/>
+  <TradingDay date="2018-12-24" closeTime="13:00:00"/>
+  <TradingDay date="2018-12-25"/>
+  
+  <TradingDay date="2019-01-01"/>
+  <TradingDay date="2019-01-21"/>
+  <TradingDay date="2019-02-18"/>
+  <TradingDay date="2019-04-19"/>
+  <TradingDay date="2019-05-27"/>
+  <TradingDay date="2019-07-03" closeTime="13:00:00"/>
+  <TradingDay date="2019-07-04"/>
+  <TradingDay date="2019-09-02"/>
+  <TradingDay date="2019-11-28"/>
+  <TradingDay date="2019-11-29" closeTime="13:00:00"/>
+  <TradingDay date="2019-12-24" closeTime="13:00:00"/>
+  <TradingDay date="2019-12-25"/>
 </Root>

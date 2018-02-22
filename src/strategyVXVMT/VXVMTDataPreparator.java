@@ -26,9 +26,8 @@ public class VXVMTDataPreparator {
 
     static public VXVMTData LoadData(IBroker broker) {
         //logger.warning("REMOVE!");
-        //logger.warning("REMOVE!");
-        //double actVXV = 10;//LoadActData("VIX3M");
-        //double actVXMT = 11;//LoadActData("VXMT");
+        //double actVXV = 10;
+        //double actVXMT = 11;
         double actVXV = LoadActData("VIX3M");
         double actVXMT = LoadActData("VXMT");
         
@@ -152,7 +151,7 @@ public class VXVMTDataPreparator {
         
         IDataGetterAct actGetter = new DataGetterActIB(broker);
         double actVXX = actGetter.readActualData("VXX");
-        double actXIV = actGetter.readActualData("XIV");
+        double actXIV = actGetter.readActualData("SVXY");
         double actGLD = actGetter.readActualData("GLD");
 
         if (actVXX == 0 || actXIV == 0|| actGLD == 0) {

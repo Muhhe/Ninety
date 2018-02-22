@@ -203,14 +203,14 @@ public class VXVMTScheduler {
                 status.UpdateEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue, data.indicators.actGLDvalue, signalInfo);
                 status.SaveTradingStatus();
 
-                broker.RequestHistoricalData("XIV", Report.GetNrOfDaysInEquity());
+                broker.RequestHistoricalData("SVXY", Report.GetNrOfDaysInEquity());
 
                 try {
                     Thread.sleep(5000);
                 } catch (InterruptedException ex) {
                 }
 
-                Report.Generate(new DataGetterHistIB(broker), "XIV", true);
+                Report.Generate(new DataGetterHistIB(broker), "SVXY", true);
 
                 broker.disconnect();
 
@@ -248,7 +248,7 @@ public class VXVMTScheduler {
     public boolean PrepareData() {
         CheckingThread checkThread = CheckingThread.StartNewCheckingThread(Duration.ofMinutes(5), "Failed to prepare data");
         logger.info("Subscribing data (1 min wait).");
-        broker.SubscribeRealtimeData("XIV");
+        broker.SubscribeRealtimeData("SVXY");
         broker.SubscribeRealtimeData("VXX");
         broker.SubscribeRealtimeData("GLD");
         broker.SubscribeRealtimeData("VIX3M", IBroker.SecType.IND);
@@ -289,7 +289,7 @@ public class VXVMTScheduler {
         }
 
         broker.SubscribeRealtimeData("VXX");
-        broker.SubscribeRealtimeData("XIV");
+        broker.SubscribeRealtimeData("SVXY");
         broker.SubscribeRealtimeData("GLD");
 
         try {
@@ -299,7 +299,7 @@ public class VXVMTScheduler {
 
         IDataGetterAct actGetter = new DataGetterActIB(broker);
         double vxx = actGetter.readActualData("VXX");
-        double xiv = actGetter.readActualData("XIV");
+        double xiv = actGetter.readActualData("SVXY");
         double gld = actGetter.readActualData("GLD");
 
         status.PrintStatus(xiv, vxx, gld);

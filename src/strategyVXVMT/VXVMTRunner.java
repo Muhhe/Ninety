@@ -49,7 +49,7 @@ public class VXVMTRunner {
             order.tickerSymbol = "VXX";
         } else if (status.heldType == VXVMTSignal.Type.XIV) {
             order.expectedPrice = data.indicators.actXIVvalue;
-            order.tickerSymbol = "XIV";
+            order.tickerSymbol = "SVXY";
         } else if (status.heldType == VXVMTSignal.Type.GLD) {
             order.expectedPrice = data.indicators.actGLDvalue;
             order.tickerSymbol = "GLD";
@@ -73,7 +73,7 @@ public class VXVMTRunner {
             order.tickerSymbol = "VXX";
         } else if (ticker == VXVMTSignal.Type.XIV) {
             order.expectedPrice = data.indicators.actXIVvalue;
-            order.tickerSymbol = "XIV";
+            order.tickerSymbol = "SVXY";
         } else if (ticker == VXVMTSignal.Type.GLD) {
             order.expectedPrice = data.indicators.actGLDvalue;
             order.tickerSymbol = "GLD";
@@ -158,7 +158,7 @@ public class VXVMTRunner {
         logger.info("Subscribing data. (40 sec wait)");
         
         //logger.warning("REMOVE!");
-        broker.SubscribeRealtimeData("XIV");
+        broker.SubscribeRealtimeData("SVXY");
         broker.SubscribeRealtimeData("VXX");
         broker.SubscribeRealtimeData("VIX3M", IBroker.SecType.IND);
         broker.SubscribeRealtimeData("VXMT", IBroker.SecType.IND);
