@@ -251,14 +251,15 @@ public class MainWindowVXVMT extends javax.swing.JFrame {
     private void reportButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_reportButtonActionPerformed
         IBroker broker = new BrokerIB(Settings.port, Settings.clientId, IBroker.SecType.IND);
         broker.connect();
-        broker.RequestHistoricalData("XIV", Report.GetNrOfDaysInEquity());
+        broker.RequestHistoricalData("SVXY", Report.GetNrOfDaysInEquity());
+        broker.SubscribeRealtimeData("SVXY");
 
         try {
             Thread.sleep(5000);
         } catch (InterruptedException ex) {
         }
 
-        Report.Generate(new DataGetterHistIB(broker), "XIV", true);
+        Report.Generate(new DataGetterHistIB(broker), new DataGetterActIB(broker), "SVXY", true);
     }//GEN-LAST:event_reportButtonActionPerformed
 
     /**

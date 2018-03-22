@@ -125,7 +125,7 @@ public class Report {
         return count;
     }
 
-    static public void Generate(IDataGetterHist hGetter, String refTicker, boolean reinvest) {
+    static public void Generate(IDataGetterHist hGetter, IDataGetterAct aGetter, String refTicker, boolean reinvest) {
         BufferedReader br = null;
         BufferedWriter writer = null;
         try {
@@ -162,7 +162,6 @@ public class Report {
                 return;
             }
 
-            IDataGetterAct aGetter = new DataGetterActGoogle();
             refData.adjCloses[0] = aGetter.readActualData(refTicker);
             refData.dates[0] = TradeTimer.GetLastTradingDay();
 

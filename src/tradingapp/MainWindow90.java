@@ -265,13 +265,14 @@ public class MainWindow90 extends javax.swing.JFrame {
         IBroker broker = new BrokerIB(Settings.port, Settings.clientId, IBroker.SecType.IND);
         broker.connect();
         broker.RequestHistoricalData("SPY", Report.GetNrOfDaysInEquity());
+        broker.SubscribeRealtimeData("SPY");
 
         try {
             Thread.sleep(5000);
         } catch (InterruptedException ex) {
         }
 
-        Report.Generate(new DataGetterHistIB(broker), "SPY", false);
+        Report.Generate(new DataGetterHistIB(broker), new DataGetterActIB(broker), "SPY", false);
     }//GEN-LAST:event_ReportButtonActionPerformed
 
     /**

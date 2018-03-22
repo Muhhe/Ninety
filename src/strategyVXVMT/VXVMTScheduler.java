@@ -204,13 +204,14 @@ public class VXVMTScheduler {
                 status.SaveTradingStatus();
 
                 broker.RequestHistoricalData("SVXY", Report.GetNrOfDaysInEquity());
+                broker.SubscribeRealtimeData("SVXY");
 
                 try {
                     Thread.sleep(5000);
                 } catch (InterruptedException ex) {
                 }
 
-                Report.Generate(new DataGetterHistIB(broker), "SVXY", true);
+                Report.Generate(new DataGetterHistIB(broker), new DataGetterActIB(broker), "SVXY", true);
 
                 broker.disconnect();
 

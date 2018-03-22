@@ -6,6 +6,7 @@
 package strategy90;
 
 import communication.IBroker;
+import data.getters.DataGetterActIB;
 import data.getters.DataGetterHistIB;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -267,6 +268,7 @@ public class NinetyScheduler {
                     statusData.UpdateEquityFile();
 
                     broker.RequestHistoricalData("SPY", Report.GetNrOfDaysInEquity());
+                    broker.SubscribeRealtimeData("SPY");
 
                     Thread.sleep(5000);
                     ScheduleForTomorrow();
@@ -279,7 +281,7 @@ public class NinetyScheduler {
                     MailSender.AddLineToMail(broker.GetAccountSummary().toString());
                     MailSender.AddLineToMail("Saved current cash: " + TradeFormatter.toString(statusData.currentCash));
 
-                    Report.Generate(new DataGetterHistIB(broker), "SPY", false);
+                    Report.Generate(new DataGetterHistIB(broker), new DataGetterActIB(broker), "SPY", false);
 
                     MailSender.SendTradingLog();
                     MailSender.SendErrors();
