@@ -58,12 +58,12 @@ public class MainWindowVXVMT extends javax.swing.JFrame {
         //IBroker broker = new BrokerIBReadOnly(Settings.port, Settings.clientId, IBroker.SecType.STK);
 
         GlobalConfig.AddDataGetterAct(new DataGetterActIB(broker));
-        GlobalConfig.AddDataGetterAct(new DataGetterActGoogle());
+        //GlobalConfig.AddDataGetterAct(new DataGetterActGoogle());
 
         GlobalConfig.AddDataGetterHist(new DataGetterHistCBOE());
         GlobalConfig.AddDataGetterHist(new DataGetterHistGoogle());
         GlobalConfig.AddDataGetterHist(new DataGetterHistAlpha());
-        GlobalConfig.AddDataGetterHist(new DataGetterHistQuandl());
+        //GlobalConfig.AddDataGetterHist(new DataGetterHistQuandl());
 
         vxvmtScheduler = new VXVMTScheduler(broker);
 

@@ -55,12 +55,12 @@ public class MainWindow90 extends javax.swing.JFrame {
         IBroker broker = new BrokerIB(Settings.port, Settings.clientId, IBroker.SecType.CFD);
 
         GlobalConfig.AddDataGetterAct(new DataGetterActIB(broker));
-        GlobalConfig.AddDataGetterAct(new DataGetterActGoogle());
+        //GlobalConfig.AddDataGetterAct(new DataGetterActGoogle());
 
         GlobalConfig.AddDataGetterHist(new DataGetterHistIB(broker));
         GlobalConfig.AddDataGetterHist(new DataGetterHistAlpha());
         GlobalConfig.AddDataGetterHist(new DataGetterHistQuandl());
-        GlobalConfig.AddDataGetterHist(new DataGetterHistGoogle());
+        //GlobalConfig.AddDataGetterHist(new DataGetterHistGoogle());
 
         ninetyScheduler = new NinetyScheduler(broker);
 
