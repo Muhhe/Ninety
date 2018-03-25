@@ -28,7 +28,7 @@ public interface IBroker {
     
     public boolean PlaceOrder(TradeOrder tradeOrder);
     
-    public List<Position> getAllPositions();
+    public List<Position> getAllPositions(int wait);
 
     public boolean waitUntilOrdersClosed(int maxWaitSeconds);
     

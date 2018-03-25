@@ -236,7 +236,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
     }
 
     @Override
-    public List<Position> getAllPositions() {
+    public List<Position> getAllPositions(int wait) {
         positionsList.clear();
         if (!connected) {
             logger.severe("IB not connected. Cannot get positions.");
@@ -246,8 +246,9 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
         getPositionsCountdownLatch = new CountDownLatch(1);
         ibClientSocket.reqPositions();
         try {
-            if (!getPositionsCountdownLatch.await(30, TimeUnit.SECONDS)) {
+            if (!getPositionsCountdownLatch.await(wait, TimeUnit.SECONDS)) {
                 loggerComm.severe("Cannot get positions from IB");
+                return null;
             }
         } catch (InterruptedException ex) {
             loggerComm.log(Level.SEVERE, "getAllPositions", ex);

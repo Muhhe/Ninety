@@ -58,7 +58,7 @@ public class BrokerNoIB implements IBroker {
     }
 
     @Override
-    public List<Position> getAllPositions() {
+    public List<Position> getAllPositions(int wait) {
         return positionsList;
     }
 

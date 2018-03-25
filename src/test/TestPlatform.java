@@ -267,7 +267,7 @@ public class TestPlatform extends javax.swing.JFrame {
                 ninetySchedulerNoBroker.broker.connect();
             }
 
-            NinetyChecker.CheckHeldPositions(ninetySchedulerNoBroker.statusData, ninetySchedulerNoBroker.broker);
+            NinetyChecker.CheckHeldPositions(ninetySchedulerNoBroker.statusData, ninetySchedulerNoBroker.broker, 10);
 
             if (!connected) {
                 ninetySchedulerNoBroker.broker.disconnect();

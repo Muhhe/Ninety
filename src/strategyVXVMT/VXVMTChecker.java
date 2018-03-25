@@ -22,14 +22,18 @@ public class VXVMTChecker {
 
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
-    public static boolean CheckHeldPositions(VXVMTStatus statusData, IBroker broker) {
+    public static boolean CheckHeldPositions(VXVMTStatus statusData, IBroker broker, int wait) {
 
         if (!broker.isConnected()) {
             logger.severe("Broker is not connected!");
             return false;
         }
 
-        List<Position> allPositions = broker.getAllPositions();
+        List<Position> allPositions = broker.getAllPositions(wait);
+        if (allPositions == null) {
+            logger.warning("Cannot get positions from IB. Skipping position check.");
+            return true;
+        }
 
         int posSize = 0;
         for (Position position : allPositions) {

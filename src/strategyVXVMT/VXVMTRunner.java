@@ -191,7 +191,10 @@ public class VXVMTRunner {
         for (TradeOrder tradeOrder : orders) {
             broker.PlaceOrder(tradeOrder);
             // wait until sold order is filled (if there is one)
-            broker.waitUntilOrdersClosed(10);
+            broker.waitUntilOrdersClosed(15);
+            
+            ProcessSubmittedOrders();
+            broker.clearOrderMaps();
         }
 
         if (!broker.waitUntilOrdersClosed(50)) {

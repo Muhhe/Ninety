@@ -28,15 +28,19 @@ public class NinetyChecker {
     public static boolean PerformChecks(StatusDataForNinety statusData, StockDataForNinety stockData, IBroker broker) {
         boolean isOk = true;
         
-        isOk &= CheckHeldPositions(statusData, broker);
+        isOk &= CheckHeldPositions(statusData, broker, 30);
         isOk &= CheckCash(statusData, broker);
         isOk &= CheckStockData(stockData, statusData);
         
         return isOk;
     }
 
-    public static boolean CheckHeldPositions(StatusDataForNinety statusData, IBroker broker) {
-        List<Position> allPositions = broker.getAllPositions();
+    public static boolean CheckHeldPositions(StatusDataForNinety statusData, IBroker broker, int wait) {
+        List<Position> allPositions = broker.getAllPositions(wait);
+        if (allPositions == null) {
+            logger.warning("Cannot get positions from IB. Skipping position check.");
+            return true;
+        }
 
         int posSize = 0;
         for (Position position : allPositions) {

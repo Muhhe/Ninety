@@ -146,6 +146,8 @@ public class StockDataForNinety {
             }
             isRealtimeDataSubscribed = true;
             logger.fine("Subscribed actual IB data.");
+        } else {
+            logger.fine("Actual IB data already subscribed.");
         }
     }
 

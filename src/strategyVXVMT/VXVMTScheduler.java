@@ -126,7 +126,7 @@ public class VXVMTScheduler {
             return;
         }
 
-        if (!VXVMTChecker.CheckHeldPositions(status, broker)) {
+        if (!VXVMTChecker.CheckHeldPositions(status, broker, 20)) {
             logger.severe("Held position check failed! Scheduling check for next hour.");
             TradeTimer.startTaskAt(TradeTimer.GetNYTimeNow().plusHours(1), this::ScheduleRun);
             MailSender.SendErrors();
@@ -176,7 +176,7 @@ public class VXVMTScheduler {
             public void run() {
                 CheckingThread checkThread = CheckingThread.StartNewCheckingThread(Duration.ofMinutes(5), "Trade run did not end properly.");
                 broker.connect();
-                if (!VXVMTChecker.CheckHeldPositions(status, broker)) {
+                if (!VXVMTChecker.CheckHeldPositions(status, broker, 10)) {
                     logger.severe("Failed check position! Ending run.");
                     ScheduleForTomorrow();
 
@@ -196,7 +196,7 @@ public class VXVMTScheduler {
                 }
 
                 VXVMTChecker.CheckCash(status, broker);
-                VXVMTChecker.CheckHeldPositions(status, broker);
+                VXVMTChecker.CheckHeldPositions(status, broker, 10);
 
                 AddSignalInfoToMail(signal);
 
@@ -305,7 +305,7 @@ public class VXVMTScheduler {
 
         status.PrintStatus(xiv, vxx, gld);
 
-        VXVMTChecker.CheckHeldPositions(status, broker);
+        VXVMTChecker.CheckHeldPositions(status, broker, 15);
 
         if (!connected) {
             broker.disconnect();

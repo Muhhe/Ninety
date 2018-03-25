@@ -65,7 +65,7 @@ public class NinetyRunner implements Runnable {
 
         stockData.UpdateDataWithActValues();
 
-        if (!NinetyChecker.CheckHeldPositions(statusData, broker)) {
+        if (!NinetyChecker.CheckHeldPositions(statusData, broker, 10)) {
             logger.severe("Failed check positions after sell.");
         }
 
@@ -87,7 +87,7 @@ public class NinetyRunner implements Runnable {
         ProcessSubmittedOrders();
         broker.clearOrderMaps();
 
-        NinetyChecker.CheckHeldPositions(statusData, broker);
+        NinetyChecker.CheckHeldPositions(statusData, broker, 30);
         NinetyChecker.CheckCash(statusData, broker);
 
         statusData.SaveTradingStatus();

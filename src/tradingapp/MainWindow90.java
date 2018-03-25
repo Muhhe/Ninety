@@ -238,7 +238,7 @@ public class MainWindow90 extends javax.swing.JFrame {
                 Logger.getLogger(MainWindow90.class.getName()).log(Level.SEVERE, null, ex);
             }
 
-            NinetyChecker.CheckHeldPositions(ninetyScheduler.statusData, ninetyScheduler.broker);
+            NinetyChecker.CheckHeldPositions(ninetyScheduler.statusData, ninetyScheduler.broker, 10);
             NinetyChecker.CheckCash(ninetyScheduler.statusData, ninetyScheduler.broker);
 
             if (!connected) {
