@@ -188,8 +188,8 @@ public class BacktesterVXVMT {
             case VXX:
                 value = data.indicators.actVXXvalue;
                 break;
-            case XIV:
-                value = data.indicators.actXIVvalue;
+            case SVXY:
+                value = data.indicators.actSVXYvalue;
                 break;
             case GLD:
                 value = data.indicators.actGLDvalue;
@@ -200,7 +200,7 @@ public class BacktesterVXVMT {
         }
 
         // Budget is lowered by 1% for safety reasons (slipage etc.)
-        double budget = status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue, data.indicators.actGLDvalue) * 0.99;
+        double budget = status.GetEquity(data.indicators.actSVXYvalue, data.indicators.actVXXvalue, data.indicators.actGLDvalue) * 0.99;
 
         return (int) (budget / value * exposure);
     }
@@ -262,6 +262,7 @@ public class BacktesterVXVMT {
         double dokup = 0;
         double lastKup = 0;
         double localMaxActRatio = 0;
+        VXVMTSignal yestSignal = new VXVMTSignal();
         for (int i = startInx; i >= 1; i--) {
 
             LocalDate date = dataXIV.dates[i];
@@ -275,12 +276,12 @@ public class BacktesterVXVMT {
             if (!dataXIV.dates[i].equals(date)) {
                 logger.warning("XIV date not matching!");
             }
-            if (!dataOHLC_VXX.dates[i].equals(date)) {
+            /*if (!dataOHLC_VXX.dates[i].equals(date)) {
                 logger.warning("VXX_OHLC date not matching!");
             }
             if (!dataOHLC_XIV.dates[i].equals(date)) {    // 2010-04-30
                 logger.warning("XIV_OHLC date not matching!");
-            }
+            }*/
             if (!dataGLD.dates[i].equals(date)) {   // 2008-06-25
                 logger.warning("GLD date not matching!");
             }
@@ -288,22 +289,30 @@ public class BacktesterVXVMT {
             VXVMTData data = GetDataForDay(i, dataVXV, dataVXMT, dataGLD);
             VXVMTDataPreparator.ComputeIndicators(data);
             data.indicators.actVXXvalue = dataVXX.adjCloses[i];
-            data.indicators.actXIVvalue = dataXIV.adjCloses[i];
+            data.indicators.actSVXYvalue = dataXIV.adjCloses[i];
             //data.indicators.actXIVvalue = (dataXIV.adjCloses[i] + dataZIV.adjCloses[i]) / 2;
             data.indicators.actGLDvalue = dataGLD.adjCloses[i];
             VXVMTChecker.CheckDataIndicators(data);
 
             VXVMTSignal signal = VXVMTStrategy.CalculateFinalSignal(data);
-            
+            /*if (signal.type == VXVMTSignal.Type.VXX && yestSignal.type != VXVMTSignal.Type.VXX) {
+                yestSignal.type = signal.type;
+                yestSignal.exposure = signal.exposure;
+                signal.type = VXVMTSignal.Type.GLD;
+            } else {
+                yestSignal.type = signal.type;
+                yestSignal.exposure = signal.exposure;
+            }*/
+
             String addInfo = new String();
 
             // XIV Stop Loss
-            double openXIV = dataOHLC_XIV.adjCloses[i + 1];
+            /*double openXIV = dataOHLC_XIV.adjCloses[i + 1];
             double lowXIV = dataOHLC_XIV.lows[i];
 
             double maxXIVDrop = openXIV * 0.10;
             double stopLossXIV = openXIV - maxXIVDrop;
-            
+
             if (lowXIV < stopLossXIV) {
                 if (status.heldType == VXVMTSignal.Type.XIV) {
                     //data.indicators.actXIVvalue = openXIV - maxXIVDrop;
@@ -328,17 +337,17 @@ public class BacktesterVXVMT {
                     //data.indicators.actVXXvalue = openVXX - maxVXXDrop;
                     status.freeCapital += stopLossVXX * status.heldPosition;
                     status.heldPosition = 0;
-                    
+
                     if ((data.indicators.actVXXvalue < stopLossVXX) && (signal.type == VXVMTSignal.Type.VXX)) {
                         signal.type = VXVMTSignal.Type.None;
                     }
                     addInfo = " VXX SL";
                 }
-            }
+            }*/
 
             switch (status.heldType) {
-                case XIV:
-                    status.freeCapital += data.indicators.actXIVvalue * status.heldPosition;
+                case SVXY:
+                    status.freeCapital += data.indicators.actSVXYvalue * status.heldPosition;
                     status.heldPosition = 0;
                     break;
                 case VXX:
@@ -357,10 +366,10 @@ public class BacktesterVXVMT {
                     break;
             }
 
-            double eq = status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue, data.indicators.actGLDvalue);
+            double eq = status.GetEquity(data.indicators.actSVXYvalue, data.indicators.actVXXvalue, data.indicators.actGLDvalue);
 
             double profit = (eq - lastCapital) / lastCapital * 100;
-            if (status.heldType == VXVMTSignal.Type.XIV) {
+            if (status.heldType == VXVMTSignal.Type.SVXY) {
                 profitXIV += profit;
                 /*if (profit > 10) {
                     signal.type = VXVMTSignal.Type.None;
@@ -369,18 +378,18 @@ public class BacktesterVXVMT {
             }
             if (status.heldType == VXVMTSignal.Type.VXX) {
                 profitVXX += profit;
-                if (profit > 10) {
+                /*if (profit > 10) {
                     signal.type = VXVMTSignal.Type.XIV;
                     addInfo = " VXX PT";
-                }
+                }*/
             }
             if (status.heldType == VXVMTSignal.Type.GLD) {
                 profitGLD += profit;
             }
 
-            if (signal.type == VXVMTSignal.Type.XIV) {
-                status.heldPosition = GetDesiredPosition(VXVMTSignal.Type.XIV, signal.exposure, data, status);
-                status.freeCapital -= data.indicators.actXIVvalue * status.heldPosition;
+            if (signal.type == VXVMTSignal.Type.SVXY) {
+                status.heldPosition = GetDesiredPosition(VXVMTSignal.Type.SVXY, signal.exposure, data, status);
+                status.freeCapital -= data.indicators.actSVXYvalue * status.heldPosition;
             } else if (signal.type == VXVMTSignal.Type.VXX) {
                 status.heldPosition = GetDesiredPosition(VXVMTSignal.Type.VXX, signal.exposure, data, status);
                 status.freeCapital -= data.indicators.actVXXvalue * status.heldPosition;
@@ -439,7 +448,7 @@ public class BacktesterVXVMT {
         UpdateMonthlyStats(lastDate, monthStats);
 
         stats.LogStats(settings, "equity.csv");
-        
+
         stats.SaveEquityToCsv();
         double totalProfit = profitXIV + profitVXX;
         double profitXIVProc = profitXIV;// / totalProfit * 100;
@@ -501,7 +510,7 @@ public class BacktesterVXVMT {
             }
 
             double currentValue;
-            if (stat.heldType == VXVMTSignal.Type.XIV) {
+            if (stat.heldType == VXVMTSignal.Type.SVXY) {
                 currentValue = dataXIV.adjCloses[i];
             } else {
                 currentValue = dataVXX.adjCloses[i];
@@ -545,7 +554,7 @@ public class BacktesterVXVMT {
             // Sell all
             if (stat.heldType != VXVMTSignal.Type.None) {
                 double heldValue;
-                if (stat.heldType == VXVMTSignal.Type.XIV) {
+                if (stat.heldType == VXVMTSignal.Type.SVXY) {
                     heldValue = dataXIV.adjCloses[i];
                     daysXIV++;
                     monthStats.daysXIV++;
@@ -562,7 +571,7 @@ public class BacktesterVXVMT {
                 monthStats.profit += profit;
                 lastCapital = stat.capital;
 
-                if (stat.heldType == VXVMTSignal.Type.XIV) {
+                if (stat.heldType == VXVMTSignal.Type.SVXY) {
                     profitXIV += profitProc;
                     monthStats.profitXIV += profit;
                 } else {
@@ -580,7 +589,7 @@ public class BacktesterVXVMT {
             //Buy new
             if (signal.type != VXVMTSignal.Type.None) {
                 double newValue;
-                if (signal.type == VXVMTSignal.Type.XIV) {
+                if (signal.type == VXVMTSignal.Type.SVXY) {
                     newValue = dataXIV.adjCloses[i];
                 } else {
                     newValue = dataVXX.adjCloses[i];

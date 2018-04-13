@@ -16,13 +16,13 @@ public class VXVMTStrategy {
     static public VXVMTSignal CalculateSignalForDay(double[] ratioSMAs, double actRatio) {
         
         VXVMTSignal signal = new VXVMTSignal();
-        double voteForXIV = 0;
+        double voteForSVXY = 0;
         double voteForVXX = 0;
         
         for (int i = 0; i < ratioSMAs.length; i++) {
             if (actRatio < ratioSMAs[i] && actRatio < 1) {
-                voteForXIV += weights[i];
-                signal.XIVSignals[i] = true;
+                voteForSVXY += weights[i];
+                signal.SVXYSignals[i] = true;
             } else if (actRatio > ratioSMAs[i] && actRatio > 1) {
                 voteForVXX += weights[i];
                 signal.VXXSignals[i] = true;
@@ -31,16 +31,16 @@ public class VXVMTStrategy {
 
         VXVMTSignal.Type selectedSignal = VXVMTSignal.Type.None;
         double targetPortion = 0;
-        if (voteForVXX > voteForXIV) {
+        if (voteForVXX > voteForSVXY) {
             selectedSignal = VXVMTSignal.Type.VXX;
             targetPortion = voteForVXX;
             if (voteForVXX < 0.7) {
                 selectedSignal = VXVMTSignal.Type.None;
                 targetPortion = 0;
             }
-        } else if (voteForVXX < voteForXIV) {
-            selectedSignal = VXVMTSignal.Type.XIV;
-            targetPortion = voteForXIV;
+        } else if (voteForVXX < voteForSVXY) {
+            selectedSignal = VXVMTSignal.Type.SVXY;
+            targetPortion = voteForSVXY;
         }
         
         signal.type = selectedSignal;
@@ -53,7 +53,7 @@ public class VXVMTStrategy {
 
         VXVMTSignal laggedSignal = CalculateSignalForDay(data.indicators.ratiosLagged, data.indicators.actRatioLagged);
         
-        if (laggedSignal.type == VXVMTSignal.Type.XIV) {
+        if (laggedSignal.type == VXVMTSignal.Type.SVXY) {
             return laggedSignal;
         }
         

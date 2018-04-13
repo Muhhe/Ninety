@@ -47,8 +47,8 @@ public class VXVMTRunner {
         if (status.heldType == VXVMTSignal.Type.VXX) {
             order.expectedPrice = data.indicators.actVXXvalue;
             order.tickerSymbol = "VXX";
-        } else if (status.heldType == VXVMTSignal.Type.XIV) {
-            order.expectedPrice = data.indicators.actXIVvalue;
+        } else if (status.heldType == VXVMTSignal.Type.SVXY) {
+            order.expectedPrice = data.indicators.actSVXYvalue;
             order.tickerSymbol = "SVXY";
         } else if (status.heldType == VXVMTSignal.Type.GLD) {
             order.expectedPrice = data.indicators.actGLDvalue;
@@ -71,8 +71,8 @@ public class VXVMTRunner {
         if (ticker == VXVMTSignal.Type.VXX) {
             order.expectedPrice = data.indicators.actVXXvalue;
             order.tickerSymbol = "VXX";
-        } else if (ticker == VXVMTSignal.Type.XIV) {
-            order.expectedPrice = data.indicators.actXIVvalue;
+        } else if (ticker == VXVMTSignal.Type.SVXY) {
+            order.expectedPrice = data.indicators.actSVXYvalue;
             order.tickerSymbol = "SVXY";
         } else if (ticker == VXVMTSignal.Type.GLD) {
             order.expectedPrice = data.indicators.actGLDvalue;
@@ -93,14 +93,14 @@ public class VXVMTRunner {
 
         if (signalType == VXVMTSignal.Type.VXX) {
             value = data.indicators.actVXXvalue;
-        } else if (signalType == VXVMTSignal.Type.XIV) {
-            value = data.indicators.actXIVvalue;
+        } else if (signalType == VXVMTSignal.Type.SVXY) {
+            value = data.indicators.actSVXYvalue;
         } else if (signalType == VXVMTSignal.Type.GLD) {
             value = data.indicators.actGLDvalue;
         }
 
         // Budget is lowered by 1% for safety reasons (slipage etc.)
-        double budget = status.GetEquity(data.indicators.actXIVvalue, data.indicators.actVXXvalue, data.indicators.actGLDvalue) * 0.99;
+        double budget = status.GetEquity(data.indicators.actSVXYvalue, data.indicators.actVXXvalue, data.indicators.actGLDvalue) * 0.99;
 
         return (int) (budget / value * exposure);
     }
@@ -168,7 +168,7 @@ public class VXVMTRunner {
         } catch (InterruptedException ex) {
         }
 
-        status.PrintStatus(data.indicators.actXIVvalue, data.indicators.actVXXvalue, data.indicators.actGLDvalue);
+        status.PrintStatus(data.indicators.actSVXYvalue, data.indicators.actVXXvalue, data.indicators.actGLDvalue);
 
         VXVMTDataPreparator.UpdateIndicators(broker, data);
 
@@ -179,7 +179,7 @@ public class VXVMTRunner {
 
         VXVMTSignal signal = RunStrategy(data);
 
-        status.PrintStatus(data.indicators.actXIVvalue, data.indicators.actVXXvalue, data.indicators.actGLDvalue);
+        status.PrintStatus(data.indicators.actSVXYvalue, data.indicators.actVXXvalue, data.indicators.actGLDvalue);
 
         return signal;
     }

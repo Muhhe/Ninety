@@ -40,15 +40,15 @@ public class VXVMTStatus {
     public double fees = 0;
     public double avgPrice = 0;
 
-    public double GetEquity(double valueXIV, double valueVXX, double valueGLD) {
+    public double GetEquity(double valueSVXY, double valueVXX, double valueGLD) {
         double value = 0;
                 
         switch (heldType) {
             case VXX:
                 value = valueVXX;
                 break;
-            case XIV:
-                value = valueXIV;
+            case SVXY:
+                value = valueSVXY;
                 break;
             case GLD:
                 value = valueGLD;
@@ -132,9 +132,9 @@ public class VXVMTStatus {
         }
     }
 
-    public void UpdateEquity(double valueXIV, double valueVXX, double valueGLD, String signal) {
+    public void UpdateEquity(double valueSVXY, double valueVXX, double valueGLD, String signal) {
 
-        closingEquity = GetEquity(valueXIV, valueVXX, valueGLD);
+        closingEquity = GetEquity(valueSVXY, valueVXX, valueGLD);
 
         Writer writer = null;
         try {
@@ -149,7 +149,7 @@ public class VXVMTStatus {
                     + "\r\n";
             writer.append(line);
 
-            logger.fine("Updated equity file with value " + GetEquity(valueXIV, valueVXX, valueGLD));
+            logger.fine("Updated equity file with value " + GetEquity(valueSVXY, valueVXX, valueGLD));
         } catch (FileNotFoundException ex) {
             logger.severe("Cannot find equity file: " + ex);
         } catch (IOException ex) {
@@ -170,8 +170,8 @@ public class VXVMTStatus {
         logger.fine("Held " + heldType + ", position: " + heldPosition);
     }
 
-    public void PrintStatus(double XIV, double VXX, double GLD) {
-        logger.fine("Status report - currentEquity: " + GetEquity(XIV, VXX, GLD));
+    public void PrintStatus(double SVXY, double VXX, double GLD) {
+        logger.fine("Status report - currentEquity: " + GetEquity(SVXY, VXX, GLD));
         PrintStatus();
     }
 }

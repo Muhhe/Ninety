@@ -73,7 +73,7 @@ public class BacktesterTrend {
             double emaRat = IndicatorCalculator.EMA(3, smasRatio);
             
             double heldValue = 0;
-            if (status.heldType == VXVMTSignal.Type.XIV) {
+            if (status.heldType == VXVMTSignal.Type.SVXY) {
                 heldValue = dataXIV.adjCloses[i];
             } else {
                 heldValue = dataVXX.adjCloses[i];
@@ -92,7 +92,7 @@ public class BacktesterTrend {
 
                 status.freeCapital -= dataXIV.adjCloses[i] * posToBuy;
                 status.heldPosition = posToBuy;
-                status.heldType = VXVMTSignal.Type.XIV;
+                status.heldType = VXVMTSignal.Type.SVXY;
             } else {
                 int posToBuy = (int) (status.freeCapital / dataVXX.adjCloses[i]);
 

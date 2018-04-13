@@ -151,15 +151,15 @@ public class VXVMTDataPreparator {
         
         IDataGetterAct actGetter = new DataGetterActIB(broker);
         double actVXX = actGetter.readActualData("VXX");
-        double actXIV = actGetter.readActualData("SVXY");
+        double actSVXY = actGetter.readActualData("SVXY");
         double actGLD = actGetter.readActualData("GLD");
 
-        if (actVXX == 0 || actXIV == 0|| actGLD == 0) {
-            logger.warning("Failed to update act XIV/VXX/GLD value!");
+        if (actVXX == 0 || actSVXY == 0|| actGLD == 0) {
+            logger.warning("Failed to update act SVXY/VXX/GLD value!");
             return;
         }
         data.indicators.actVXXvalue = actVXX;
-        data.indicators.actXIVvalue = actXIV;
+        data.indicators.actSVXYvalue = actSVXY;
         data.indicators.actGLDvalue = actGLD;
     }
     

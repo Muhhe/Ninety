@@ -108,7 +108,7 @@ public class VXVMTChecker {
         if (!CheckNumber(data.indicators.actRatio)
                 || !CheckNumber(data.indicators.actRatioLagged)
                 || !CheckNumber(data.indicators.actVXXvalue)
-                || !CheckNumber(data.indicators.actXIVvalue)
+                || !CheckNumber(data.indicators.actSVXYvalue)
                 || !CheckNumber(data.indicators.actGLDvalue)) {
             logger.severe("Some data is not valid!");
             return false;
