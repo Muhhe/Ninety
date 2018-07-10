@@ -52,7 +52,7 @@ public class BacktesterDDN {
         CloseData dataVIX = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "VIX", false);
 
         IDataGetterHist getterCBOE = new DataGetterHistCBOE();
-        CloseData dataVXMT = getterCBOE.readAdjCloseData(settings.startDate, settings.endDate, "VXMT", false);
+        CloseData dataVXMT = getterCBOE.readAdjCloseData(settings.startDate, settings.endDate, "VIX6M", false);
         CloseData dataSPY = getterG.readAdjCloseData(settings.startDate, settings.endDate, "SPY", false);
 
         TradeTimer.LoadSpecialTradingDays();

@@ -67,6 +67,10 @@ public class DataGetterHistAlpha implements IDataGetterHist {
             String line;
             while ((line = br.readLine()) != null) {
                 String[] tokens = line.split(",");
+                
+                if (tokens.length < 6) {
+                    continue;
+                }
 
                 double adjClose = Double.parseDouble(tokens[5]);
                 LocalDate parsedDate = LocalDate.parse(tokens[0], DateTimeFormatter.ofPattern("yyyy-MM-dd"));

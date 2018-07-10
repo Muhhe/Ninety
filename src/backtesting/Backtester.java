@@ -5,7 +5,11 @@
  */
 package backtesting;
 
+import communication.BrokerIB;
+import communication.IBroker;
+import data.getters.DataGetterHistAlpha;
 import data.getters.DataGetterHistGoogle;
+import data.getters.DataGetterHistIB;
 import data.getters.DataGetterHistQuandl;
 import data.getters.DataGetterHistYahoo;
 import java.io.BufferedWriter;
@@ -22,6 +26,8 @@ import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
+import strategy90.TickersToTrade;
+import test.BrokerIBReadOnly;
 import tradingapp.FilePaths;
 import tradingapp.GlobalConfig;
 import tradingapp.TextAreaLogHandler;
@@ -50,8 +56,21 @@ public final class Backtester extends javax.swing.JFrame {
         TextAreaLogHandler textHandlerInfo = new TextAreaLogHandler(logArea, Level.INFO, Level.SEVERE, false);
         logger.addHandler(textHandlerInfo);
 
-        GlobalConfig.AddDataGetterHist(new DataGetterHistGoogle());
-        //GlobalConfig.AddDataGetterHist(new DataGetterHistQuandl());
+        IBroker broker = new BrokerIBReadOnly(4001, 1, IBroker.SecType.STK);
+
+        broker.connect();
+
+        for (String ticker : TickersToTrade.GetTickers()) {
+            broker.SubscribeRealtimeData(ticker);
+        }
+        
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(Backtester.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        //GlobalConfig.AddDataGetterHist(new DataGetterHistAlpha());
+        GlobalConfig.AddDataGetterHist(new DataGetterHistIB(broker));
 
         LoadBTSettingsFromFile();
     }
@@ -284,7 +303,7 @@ public final class Backtester extends javax.swing.JFrame {
 
         new Thread(() -> {
             BTSettings settings = GetBTSettings();
-            BackTesterNinety.RunTest(settings);
+            BacktesterNinety.RunTest(settings);
             SaveBTSettings(settings);
         }).start();
     }//GEN-LAST:event_backTest90ButtonActionPerformed
@@ -452,7 +471,7 @@ public final class Backtester extends javax.swing.JFrame {
             xmlOutput.output(doc, oFile);
 
         } catch (IOException ex) {
-            Logger.getLogger(BackTesterNinety.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(BacktesterNinety.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             if (output != null) {
                 try {

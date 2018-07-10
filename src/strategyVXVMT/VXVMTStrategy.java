@@ -61,9 +61,9 @@ public class VXVMTStrategy {
 
         if ((laggedSignal.type == VXVMTSignal.Type.VXX) && (todaysSignal.type == VXVMTSignal.Type.VXX)) {
             return todaysSignal;
-        } else if ((todaysSignal.type == VXVMTSignal.Type.None) || (todaysSignal.type == VXVMTSignal.Type.VXX)) {
+        } /*else if ((todaysSignal.type == VXVMTSignal.Type.None) || (todaysSignal.type == VXVMTSignal.Type.VXX)) {
             return new VXVMTSignal(1.0, VXVMTSignal.Type.GLD);
-        }
+        }*/
         return new VXVMTSignal();
     }
 }

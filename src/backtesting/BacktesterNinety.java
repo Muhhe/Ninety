@@ -47,7 +47,7 @@ import tradingapp.TradeTimer;
  *
  * @author Muhe
  */
-public class BackTesterNinety {
+public class BacktesterNinety {
 
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
@@ -181,7 +181,7 @@ public class BackTesterNinety {
                         file.close();
                     }
                 } catch (IOException ex) {
-                    Logger.getLogger(BackTesterNinety.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(BacktesterNinety.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }

@@ -253,7 +253,7 @@ public class VXVMTScheduler {
         broker.SubscribeRealtimeData("VXX");
         broker.SubscribeRealtimeData("GLD");
         broker.SubscribeRealtimeData("VIX3M", IBroker.SecType.IND);
-        broker.SubscribeRealtimeData("VXMT", IBroker.SecType.IND);
+        broker.SubscribeRealtimeData("VIX6M", IBroker.SecType.IND);
 
         //logger.warning("REMOVE!");
         try {
@@ -261,7 +261,7 @@ public class VXVMTScheduler {
         } catch (InterruptedException ex) {
         }
         broker.SubscribeRealtimeData("VIX3M", IBroker.SecType.IND);
-        broker.SubscribeRealtimeData("VXMT", IBroker.SecType.IND);
+        broker.SubscribeRealtimeData("VIX6M", IBroker.SecType.IND);
         try {
             Thread.sleep(30000);
         } catch (InterruptedException ex) {

@@ -424,7 +424,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
         }
 
         if (ticker.equals("VIX3M")
-                || ticker.equals("VXMT")) {
+                || ticker.equals("VIX6M")) {
             contract.m_exchange = "CBOE";
         }
 

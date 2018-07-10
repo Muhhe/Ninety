@@ -56,8 +56,8 @@ public class BacktesterVXVMT {
         //LocalDate endDate = LocalDate.of(2017, Month.APRIL, 28);
         logger.info("Loading VIX3M");
         CloseData dataVXV = getter.readAdjCloseData(settings.startDate, settings.endDate, "VIX3M", false);
-        logger.info("Loading VXMT");
-        CloseData dataVXMT = getter.readAdjCloseData(settings.startDate, settings.endDate, "VXMT", false);
+        logger.info("Loading VIX6M");
+        CloseData dataVXMT = getter.readAdjCloseData(settings.startDate, settings.endDate, "VIX6M", false);
 
         if (dataVXV.adjCloses.length != dataVXMT.adjCloses.length) {
             logger.warning("data not equal");
@@ -172,8 +172,6 @@ public class BacktesterVXVMT {
         data.dataVXMT.adjCloses = Arrays.copyOfRange(dataVXMT.adjCloses, dayInx, dayInx + 151);
         data.dataVXMT.dates = Arrays.copyOfRange(dataVXMT.dates, dayInx, dayInx + 151);
 
-        //VXVMTChecker.CheckTickerData(data.dataVXV, "VXV");
-        //VXVMTChecker.CheckTickerData(data.dataVXMT, "VXMT");
         return data;
     }
 
@@ -218,10 +216,10 @@ public class BacktesterVXVMT {
         OHLCData dataOHLC_VXX = getterFileOHLC.readAdjCloseData(settings.startDate, settings.endDate, "VXX_OHLC", false);
 
         IDataGetterHist getterCBOE = new DataGetterHistCBOE();
-        logger.info("Loading VXV");
+        logger.info("Loading VIX3M");
         CloseData dataVXV = getterCBOE.readAdjCloseData(settings.startDate, settings.endDate, "VIX3M", false);
-        logger.info("Loading VXMT");
-        CloseData dataVXMT = getterCBOE.readAdjCloseData(settings.startDate, settings.endDate, "VXMT", false);
+        logger.info("Loading VIX6M");
+        CloseData dataVXMT = getterCBOE.readAdjCloseData(settings.startDate, settings.endDate, "VIX6M", false);
 
         if (dataVXV.adjCloses.length != dataVXMT.adjCloses.length) {
             logger.warning("data not equal");

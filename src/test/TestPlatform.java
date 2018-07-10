@@ -519,7 +519,7 @@ public class TestPlatform extends javax.swing.JFrame {
         IDataGetterHist getter = new DataGetterHistCBOE();
 
         CloseData dataVXV = getter.readAdjCloseData(TradeTimer.GetLocalDateNow(), "VIX3M", 150, false);
-        CloseData dataVXMT = getter.readAdjCloseData(TradeTimer.GetLocalDateNow(), "VXMT", 150, false);
+        CloseData dataVXMT = getter.readAdjCloseData(TradeTimer.GetLocalDateNow(), "VIX6M", 150, false);
 
         if ((dataVXV.adjCloses.length != 150) || (dataVXMT.adjCloses.length != 150)) {
             logger.warning("data not 150");

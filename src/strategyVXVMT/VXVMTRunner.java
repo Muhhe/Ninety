@@ -101,6 +101,11 @@ public class VXVMTRunner {
 
         // Budget is lowered by 1% for safety reasons (slipage etc.)
         double budget = status.GetEquity(data.indicators.actSVXYvalue, data.indicators.actVXXvalue, data.indicators.actGLDvalue) * 0.99;
+        
+        // Paka na SVXY 1.2x
+        //if (signalType == VXVMTSignal.Type.SVXY) {
+        //    budget *= 1.2;
+        //}
 
         return (int) (budget / value * exposure);
     }
@@ -161,7 +166,7 @@ public class VXVMTRunner {
         broker.SubscribeRealtimeData("SVXY");
         broker.SubscribeRealtimeData("VXX");
         broker.SubscribeRealtimeData("VIX3M", IBroker.SecType.IND);
-        broker.SubscribeRealtimeData("VXMT", IBroker.SecType.IND);
+        broker.SubscribeRealtimeData("VIX6M", IBroker.SecType.IND);
 
         try {
             Thread.sleep(40000);
