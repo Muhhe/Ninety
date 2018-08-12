@@ -45,7 +45,12 @@ public class BrokerNoIB implements IBroker {
     }
 
     @Override
-    public synchronized boolean PlaceOrder(TradeOrder tradeOrder) {
+    public boolean PlaceOrder(TradeOrder tradeOrder) {
+        return PlaceOrder(tradeOrder, SecType.STK);
+    }
+
+    @Override
+    public synchronized boolean PlaceOrder(TradeOrder tradeOrder, SecType secType) {
         OrderStatus orderStatus = new OrderStatus(tradeOrder, orderId);
         orderStatus.status = OrderStatus.Status.FILLED;
         orderStatus.fillPrice = tradeOrder.expectedPrice;

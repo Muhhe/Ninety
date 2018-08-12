@@ -52,7 +52,7 @@ public class MainWindow90 extends javax.swing.JFrame {
 
         Settings.ReadSettings();
 
-        IBroker broker = new BrokerIB(Settings.port, Settings.clientId, IBroker.SecType.CFD);
+        IBroker broker = new BrokerIB(Settings.port, Settings.clientId, IBroker.SecType.STK);
 
         GlobalConfig.AddDataGetterAct(new DataGetterActIB(broker));
         //GlobalConfig.AddDataGetterAct(new DataGetterActGoogle());

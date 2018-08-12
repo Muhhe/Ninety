@@ -28,6 +28,8 @@ public interface IBroker {
     
     public boolean PlaceOrder(TradeOrder tradeOrder);
     
+    public boolean PlaceOrder(TradeOrder tradeOrder, SecType secType);
+    
     public List<Position> getAllPositions(int wait);
 
     public boolean waitUntilOrdersClosed(int maxWaitSeconds);

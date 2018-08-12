@@ -54,7 +54,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
     protected CountDownLatch connectionLatch = null;
     protected List<Position> positionsList = new ArrayList<>();
     protected int nextOrderId = -1;
-    
+
     protected int histDataSubsCounter = 0;
 
     protected AccountSummary accountSummary = new AccountSummary();
@@ -150,12 +150,17 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
 
     @Override
     public synchronized boolean PlaceOrder(TradeOrder tradeOrder) {
+        return PlaceOrder(tradeOrder, secType);
+    }
+
+    @Override
+    public synchronized boolean PlaceOrder(TradeOrder tradeOrder, SecType secType) {
         if (!connected) {
             logger.severe("IB not connected. Cannot place order.");
             return false;
         }
 
-        Contract contract = CreateOrderContract(tradeOrder.tickerSymbol);
+        Contract contract = CreateOrderContract(tradeOrder.tickerSymbol, secType);
 
         Order ibOrder = new Order();
         if (tradeOrder.orderType == TradeOrder.OrderType.BUY) {
@@ -363,7 +368,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
             logger.severe("IB not connected. Cannot RequestRealtimeData.");
             return;
         }
-        
+
         if (histDataSubsCounter == 50) {
             histDataSubsCounter = 0;
             try {
@@ -377,7 +382,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
         int orderId = getNextOrderId();
 
         historicalData.CreateNew(ticker, orderId, count);
-        
+
         String days = Integer.toString(count) + " D";
 
         ibClientSocket.reqHistoricalData(orderId, contract, "", days, "1 day", "ADJUSTED_LAST", 1, 1, null);
@@ -396,6 +401,10 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
     }
 
     protected Contract CreateOrderContract(String ticker) {
+        return CreateDataContract(ticker, secType);
+    }
+
+    protected Contract CreateOrderContract(String ticker, SecType secType) {
         Contract contract = new Contract();
         contract.m_symbol = ticker;
         contract.m_exchange = "SMART";
