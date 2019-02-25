@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 import tradingapp.MailSender;
 import tradingapp.TradeFormatter;
 import communication.TradeOrder;
+import tradingapp.Settings;
 
 /**
  *
@@ -116,18 +117,26 @@ public class NinetyRunner implements Runnable {
         logger.info("Starting computing stocks to buy");
         int remainingPortions = StatusDataForNinety.PORTIONS_NUM - statusData.GetBoughtPortions();
 
-        // Buying new stock
-        TradeOrder buyOrder = Ninety.ComputeStocksToBuy(stockData.indicatorsMap, statusData, sellOrders);
-        if (buyOrder != null) {
-            broker.PlaceOrder(buyOrder);
-            remainingPortions--;
+        if (Settings.openNew) {
+            // Buying new stock
+            TradeOrder buyOrder = Ninety.ComputeStocksToBuy(stockData.indicatorsMap, statusData, sellOrders);
+            if (buyOrder != null) {
+                broker.PlaceOrder(buyOrder);
+                remainingPortions--;
+            }
+        } else {
+            logger.info("Skipping opening new position!");
         }
 
-        // Buying more held stock
-        List<TradeOrder> buyMoreOrders = Ninety.computeStocksToBuyMore(stockData.indicatorsMap, statusData, remainingPortions);
+        if (Settings.scale) {
+            // Buying more held stock
+            List<TradeOrder> buyMoreOrders = Ninety.computeStocksToBuyMore(stockData.indicatorsMap, statusData, remainingPortions);
 
-        for (TradeOrder tradeOrder : buyMoreOrders) {
-            broker.PlaceOrder(tradeOrder);
+            for (TradeOrder tradeOrder : buyMoreOrders) {
+                broker.PlaceOrder(tradeOrder);
+            }
+        } else {
+            logger.info("Skipping scaling positions!");
         }
 
         logger.info("Finished computing stocks to buy.");

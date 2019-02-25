@@ -46,7 +46,7 @@ public class VXVMTRunner {
         order.orderType = TradeOrder.OrderType.SELL;
         if (status.heldType == VXVMTSignal.Type.VXX) {
             order.expectedPrice = data.indicators.actVXXvalue;
-            order.tickerSymbol = "VXX";
+            order.tickerSymbol = "VXXB";
         } else if (status.heldType == VXVMTSignal.Type.SVXY) {
             order.expectedPrice = data.indicators.actSVXYvalue;
             order.tickerSymbol = "SVXY";
@@ -70,7 +70,7 @@ public class VXVMTRunner {
         order.orderType = position > 0 ? TradeOrder.OrderType.BUY : TradeOrder.OrderType.SELL;
         if (ticker == VXVMTSignal.Type.VXX) {
             order.expectedPrice = data.indicators.actVXXvalue;
-            order.tickerSymbol = "VXX";
+            order.tickerSymbol = "VXXB";
         } else if (ticker == VXVMTSignal.Type.SVXY) {
             order.expectedPrice = data.indicators.actSVXYvalue;
             order.tickerSymbol = "SVXY";
@@ -164,7 +164,7 @@ public class VXVMTRunner {
         
         //logger.warning("REMOVE!");
         broker.SubscribeRealtimeData("SVXY");
-        broker.SubscribeRealtimeData("VXX");
+        broker.SubscribeRealtimeData("VXXB");
         broker.SubscribeRealtimeData("VIX3M", IBroker.SecType.IND);
         broker.SubscribeRealtimeData("VIX6M", IBroker.SecType.IND);
 

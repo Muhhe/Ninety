@@ -411,7 +411,9 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
         contract.m_secType = secType.toString();
         contract.m_currency = "USD";
 
-        if (ticker.equals("GLD")) {
+        if (ticker.equals("MSFT")
+                || ticker.equals("CSCO")
+                || ticker.equals("INTC")) {
             contract.m_exchange = "BATS";
         }
 

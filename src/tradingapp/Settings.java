@@ -28,6 +28,9 @@ public class Settings {
     public static double investCash = 0;
     public static double leverage = 0;
     
+    public static boolean openNew = true;
+    public static boolean scale = true;
+    
     public static String accountName;
     
     public static String mailAddressTradeLog = null;
@@ -73,6 +76,14 @@ public class Settings {
             attribute = moneyElement.getAttribute("leverage");
             leverage = attribute.getDoubleValue();
             
+            // money
+            Element openingElement = rootElement.getChild("opening");
+            
+            attribute = openingElement.getAttribute("new");
+            openNew = attribute.getBooleanValue();
+            attribute = openingElement.getAttribute("scale");
+            scale = attribute.getBooleanValue();
+            
             // mail
             Element mailElement = rootElement.getChild("mail");
             mailAddressTradeLog = mailElement.getAttribute("addressTradeLog").getValue();
@@ -84,6 +95,7 @@ public class Settings {
             logger.fine("Updated Settings");
             logger.fine("Loaded Connection - port: " + port + ", clientId: " + clientId);
             logger.fine("Loaded money - investCash: " + investCash + ", leverage: " + leverage);
+            logger.fine("Loaded opening - new: " + openNew + ", scale: " + scale);
             logger.fine("Loaded mail - mailAddressTradeLog: " + mailAddressTradeLog + ", mailAddressCheck: " + mailAddressCheck + 
                     ", mailAddressError: " + mailAddressError + ", mailFrom: " + mailFrom + ", mailPassword: " + mailPassword);
             
