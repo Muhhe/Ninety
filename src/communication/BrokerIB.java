@@ -311,6 +311,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
 
     @Override
     public void SubscribeRealtimeData(String ticker) {
+        loggerComm.finest("Subscribing: " + ticker);
         SubscribeRealtimeData(ticker, SecType.STK);
     }
 

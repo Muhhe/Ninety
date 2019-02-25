@@ -53,7 +53,7 @@ public class MainWindowVXVMT extends javax.swing.JFrame {
 
         Settings.ReadSettings();
 
-        IBroker broker = new BrokerIB(Settings.port, Settings.clientId, IBroker.SecType.CFD);
+        IBroker broker = new BrokerIB(Settings.port, Settings.clientId, IBroker.SecType.IND);
         //logger.severe("Delete this!");
         //IBroker broker = new BrokerIBReadOnly(Settings.port, Settings.clientId, IBroker.SecType.STK);
 
