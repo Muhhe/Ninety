@@ -182,7 +182,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
         ibOrder.m_orderType = "MKT";
         ibOrder.m_tif = "DAY";
 
-        logger.fine("Placing order - ID: " + ibOrder.m_orderId + ", Ticker: " + tradeOrder.tickerSymbol + ", " + ibOrder.m_action);
+        logger.fine("Placing order - ID: " + ibOrder.m_orderId + ", Ticker: " + tradeOrder.tickerSymbol + ", " + ibOrder.m_action + ", " + secType);
 
         synchronized (activeOrdersMap) {
             if (activeOrdersMap.isEmpty()) {

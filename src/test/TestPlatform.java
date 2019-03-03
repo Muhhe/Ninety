@@ -5,6 +5,7 @@
  */
 package test;
 
+import communication.BrokerIB;
 import communication.IBroker;
 import data.CloseData;
 import data.getters.DataGetterActGoogle;
@@ -87,6 +88,7 @@ public class TestPlatform extends javax.swing.JFrame {
         testRSIButton = new javax.swing.JButton();
         compareButton = new javax.swing.JButton();
         LoadCBOEButton = new javax.swing.JButton();
+        buyButton1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Trading app 90 - TEST PLATFORM");
@@ -178,6 +180,13 @@ public class TestPlatform extends javax.swing.JFrame {
             }
         });
 
+        buyButton1.setText("Real Buy");
+        buyButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buyButton1ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -208,7 +217,8 @@ public class TestPlatform extends javax.swing.JFrame {
                             .addComponent(testDataYahooButton)))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(LoadCBOEButton)
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(buyButton1)))
                 .addContainerGap())
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(layout.createSequentialGroup()
@@ -231,9 +241,14 @@ public class TestPlatform extends javax.swing.JFrame {
                     .addComponent(testDataYahooButton)
                     .addComponent(testRSIButton)
                     .addComponent(compareButton))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(LoadCBOEButton)
-                .addGap(0, 509, Short.MAX_VALUE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(LoadCBOEButton))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(14, 14, 14)
+                        .addComponent(buyButton1)))
+                .addGap(0, 501, Short.MAX_VALUE))
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                     .addContainerGap(95, Short.MAX_VALUE)
@@ -369,7 +384,7 @@ public class TestPlatform extends javax.swing.JFrame {
         }*/
 
         String[] tickers = TickersToTrade.GetTickers();
-        
+
         for (String ticker : tickers) {
             broker.RequestHistoricalData(ticker, 200);
         }
@@ -587,6 +602,25 @@ public class TestPlatform extends javax.swing.JFrame {
         logger.info("Final signal 150: " + selectedSignal);
     }//GEN-LAST:event_LoadCBOEButtonActionPerformed
 
+    private void buyButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buyButton1ActionPerformed
+        IBroker broker = new BrokerIB(7496, 1, IBroker.SecType.STK);
+        
+        broker.connect();
+        
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(TestPlatform.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        TradeOrder tradeOrder = new TradeOrder();
+        tradeOrder.tickerSymbol = "VXXB";
+        tradeOrder.position = 1;
+        tradeOrder.orderType = TradeOrder.OrderType.BUY;
+
+        broker.PlaceOrder(tradeOrder);
+    }//GEN-LAST:event_buyButton1ActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -625,6 +659,7 @@ public class TestPlatform extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton LoadCBOEButton;
     private javax.swing.JButton buyButton;
+    private javax.swing.JButton buyButton1;
     private javax.swing.JButton checkPositionsButton;
     private javax.swing.JTextArea commArea;
     private javax.swing.JScrollPane commScrollPane;
