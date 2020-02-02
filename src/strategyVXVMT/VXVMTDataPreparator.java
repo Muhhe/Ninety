@@ -159,7 +159,7 @@ public class VXVMTDataPreparator {
         data.dataVXV.adjCloses[0] = actVXV;
 
         IDataGetterAct actGetter = new DataGetterActIB(broker);
-        double actVXX = actGetter.readActualData("VXXB");
+        double actVXX = actGetter.readActualData("VXX");
         double actSVXY = actGetter.readActualData("SVXY");
         double actGLD = actGetter.readActualData("GLD");
 

@@ -250,7 +250,7 @@ public class VXVMTScheduler {
         CheckingThread checkThread = CheckingThread.StartNewCheckingThread(Duration.ofMinutes(5), "Failed to prepare data");
         logger.info("Subscribing data (1 min wait).");
         broker.SubscribeRealtimeData("SVXY");
-        broker.SubscribeRealtimeData("VXXB");
+        broker.SubscribeRealtimeData("VXX");
         broker.SubscribeRealtimeData("GLD");
         broker.SubscribeRealtimeData("VIX3M", IBroker.SecType.IND);
         broker.SubscribeRealtimeData("VIX6M", IBroker.SecType.IND);
@@ -289,7 +289,7 @@ public class VXVMTScheduler {
             broker.connect();
         }
 
-        broker.SubscribeRealtimeData("VXXB");
+        broker.SubscribeRealtimeData("VXX");
         broker.SubscribeRealtimeData("SVXY");
         broker.SubscribeRealtimeData("GLD");
 
@@ -299,7 +299,7 @@ public class VXVMTScheduler {
         }
 
         IDataGetterAct actGetter = new DataGetterActIB(broker);
-        double vxx = actGetter.readActualData("VXXB");
+        double vxx = actGetter.readActualData("VXX");
         double svxy = actGetter.readActualData("SVXY");
         double gld = actGetter.readActualData("GLD");
 

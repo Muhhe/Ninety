@@ -24,6 +24,7 @@ import java.io.Writer;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import strategyVXVMT.VXVMTChecker;
 import strategyVXVMT.VXVMTData;
@@ -205,15 +206,15 @@ public class BacktesterVXVMT {
 
     static public void runBacktest(BTSettings settings) {
         IDataGetterHist getterFile = new DataGetterHistFile("backtest/VolData/");
-        IDataGetterHistOHLC getterFileOHLC = new DataGetterHistOHLCFile("backtest/VolData/");
+        //IDataGetterHistOHLC getterFileOHLC = new DataGetterHistOHLCFile("backtest/VolData/");
         //IDataGetterHist getterFile = new DataGetterHistGoogle();
         CloseData dataVXX = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "VXX", false);
         CloseData dataXIV = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "XIV", false);
-        CloseData dataZIV = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "ZIV", false);
-        CloseData dataGLD = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "GLD", false);
+        //CloseData dataZIV = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "ZIV", false);
+        //CloseData dataGLD = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "GLD", false);
 
-        OHLCData dataOHLC_XIV = getterFileOHLC.readAdjCloseData(settings.startDate, settings.endDate, "XIV_OHLC", false);
-        OHLCData dataOHLC_VXX = getterFileOHLC.readAdjCloseData(settings.startDate, settings.endDate, "VXX_OHLC", false);
+        //OHLCData dataOHLC_XIV = getterFileOHLC.readAdjCloseData(settings.startDate, settings.endDate, "XIV_OHLC", false);
+        //OHLCData dataOHLC_VXX = getterFileOHLC.readAdjCloseData(settings.startDate, settings.endDate, "VXX_OHLC", false);
 
         IDataGetterHist getterCBOE = new DataGetterHistCBOE();
         logger.info("Loading VIX3M");
@@ -229,8 +230,13 @@ public class BacktesterVXVMT {
 
         BTStatistics stats = new BTStatistics(settings.capital, settings.reinvest);
 
-        File equityFile = new File("equity.csv");
+        File equityFile = new File("equity2.csv");
         equityFile.delete();
+        try {
+            equityFile.createNewFile();
+        } catch (IOException ex) {
+            Logger.getLogger(BacktesterVXVMT.class.getName()).log(Level.SEVERE, null, ex);
+        }
         File xivFile = new File("xiv.csv");
         xivFile.delete();
 
@@ -280,16 +286,16 @@ public class BacktesterVXVMT {
             if (!dataOHLC_XIV.dates[i].equals(date)) {    // 2010-04-30
                 logger.warning("XIV_OHLC date not matching!");
             }*/
-            if (!dataGLD.dates[i].equals(date)) {   // 2008-06-25
+            /*if (!dataGLD.dates[i].equals(date)) {   // 2008-06-25
                 logger.warning("GLD date not matching!");
-            }
+            }*/
 
-            VXVMTData data = GetDataForDay(i, dataVXV, dataVXMT, dataGLD);
+            VXVMTData data = GetDataForDay(i, dataVXV, dataVXMT, null);
             VXVMTDataPreparator.ComputeIndicators(data);
             data.indicators.actVXXvalue = dataVXX.adjCloses[i];
             data.indicators.actSVXYvalue = dataXIV.adjCloses[i];
             //data.indicators.actXIVvalue = (dataXIV.adjCloses[i] + dataZIV.adjCloses[i]) / 2;
-            data.indicators.actGLDvalue = dataGLD.adjCloses[i];
+            data.indicators.actGLDvalue = 1;//dataGLD.adjCloses[i];
             VXVMTChecker.CheckDataIndicators(data);
 
             VXVMTSignal signal = VXVMTStrategy.CalculateFinalSignal(data);
@@ -357,8 +363,8 @@ public class BacktesterVXVMT {
                     status.heldPosition = 0;
                     break;
                 case None:
-                    status.freeCapital += dataGLD.adjCloses[i] * status.heldPosition;
-                    status.heldPosition = 0;
+                    /*status.freeCapital += dataGLD.adjCloses[i] * status.heldPosition;
+                    status.heldPosition = 0;*/
                     break;
                 default:
                     break;
@@ -425,7 +431,7 @@ public class BacktesterVXVMT {
 
             stats.UpdateEquity(eq, date);
             //UpdateEquityFile(eq, "equity.csv", (status.heldType.toString() + " - " + TradeFormatter.toString(1 - (status.freeCapital / eq))));
-            UpdateEquityFile(eq, lastCapital, "equity.csv", (status.heldType.toString() + " - " + TradeFormatter.toString(signal.exposure) + addInfo));
+            UpdateEquityFile(eq, lastCapital, equityFile, (status.heldType.toString() + " - " + TradeFormatter.toString(signal.exposure) + addInfo));
             //UpdateEquityFile(xivPos * dataXIV.adjCloses[i], "xiv.csv", null);
             //UpdateEquityFile(spyPos * dataSPY.adjCloses[i], "spy.csv", null);*/
 
@@ -520,7 +526,7 @@ public class BacktesterVXVMT {
 
             stats.StartDay(date);
             stats.UpdateEquity(eq, date);
-            UpdateEquityFile(eq, eq, "equity.csv", (stat.heldType.toString() + " - " + TradeFormatter.toString(stat.exposure)));
+            //UpdateEquityFile(eq, eq, "equity.csv", (stat.heldType.toString() + " - " + TradeFormatter.toString(stat.exposure)));
             //UpdateEquityFile(xivPos * dataXIV.adjCloses[i], "vix.csv", null);
             //UpdateEquityFile(spyPos * dataSPY.adjCloses[i], "spy.csv", null);
 
@@ -619,11 +625,11 @@ public class BacktesterVXVMT {
                 + "%, Days in VXX: " + daysVXX + " = " + TradeFormatter.toString(daysVXXproc) + "%, Days total: " + startInx);
     }
 
-    static public void UpdateEquityFile(double currentCash, double lastCash, String path, String addInfo) {
+    static public void UpdateEquityFile(double currentCash, double lastCash, File equityFile/*String path*/, String addInfo) {
         Writer writer = null;
         try {
-            File equityFile = new File(path);
-            equityFile.createNewFile();
+            //File equityFile = new File(path);
+            //equityFile.createNewFile();
             writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(equityFile, true), "UTF-8"));
             String line = TradeTimer.GetLocalDateNow().toString() + "," + currentCash;
 

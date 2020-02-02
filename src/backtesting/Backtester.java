@@ -56,7 +56,7 @@ public final class Backtester extends javax.swing.JFrame {
         TextAreaLogHandler textHandlerInfo = new TextAreaLogHandler(logArea, Level.INFO, Level.SEVERE, false);
         logger.addHandler(textHandlerInfo);
 
-        IBroker broker = new BrokerIBReadOnly(4001, 1, IBroker.SecType.STK);
+        /*IBroker broker = new BrokerIBReadOnly(4001, 1, IBroker.SecType.STK);
 
         broker.connect();
 
@@ -70,7 +70,7 @@ public final class Backtester extends javax.swing.JFrame {
             Logger.getLogger(Backtester.class.getName()).log(Level.SEVERE, null, ex);
         }
         //GlobalConfig.AddDataGetterHist(new DataGetterHistAlpha());
-        GlobalConfig.AddDataGetterHist(new DataGetterHistIB(broker));
+        GlobalConfig.AddDataGetterHist(new DataGetterHistIB(broker));*/
 
         LoadBTSettingsFromFile();
     }

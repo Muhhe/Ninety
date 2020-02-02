@@ -30,7 +30,7 @@ public class VXVMTSignal {
     
     static VXVMTSignal.Type typeFromString(String str) {
         switch (str) {
-            case "VXXB":
+            case "VXX":
                 return Type.VXX;
             case "SVXY":
                 return Type.SVXY;
@@ -44,7 +44,7 @@ public class VXVMTSignal {
     public String typeToString() {
         switch (type) {
             case VXX:
-                return "VXXB";
+                return "VXX";
             case SVXY:
                 return "SVXY";
             case GLD:

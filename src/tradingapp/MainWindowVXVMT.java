@@ -60,6 +60,7 @@ public class MainWindowVXVMT extends javax.swing.JFrame {
         GlobalConfig.AddDataGetterAct(new DataGetterActIB(broker));
         //GlobalConfig.AddDataGetterAct(new DataGetterActGoogle());
 
+        GlobalConfig.AddDataGetterHist(new DataGetterHistIB(broker));
         GlobalConfig.AddDataGetterHist(new DataGetterHistCBOE());
         GlobalConfig.AddDataGetterHist(new DataGetterHistGoogle());
         GlobalConfig.AddDataGetterHist(new DataGetterHistAlpha());

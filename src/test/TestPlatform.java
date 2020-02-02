@@ -614,7 +614,7 @@ public class TestPlatform extends javax.swing.JFrame {
         }
         
         TradeOrder tradeOrder = new TradeOrder();
-        tradeOrder.tickerSymbol = "VXXB";
+        tradeOrder.tickerSymbol = "VXX";
         tradeOrder.position = 1;
         tradeOrder.orderType = TradeOrder.OrderType.BUY;
 
