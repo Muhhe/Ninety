@@ -6,6 +6,7 @@
 package data.getters;
 
 import data.CloseData;
+import data.OHLCData;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -115,6 +116,22 @@ public class DataGetterHistAlpha implements IDataGetterHist {
             logger.log(Level.WARNING, "Failed to read data from " + getName() + " - '" + tickerSymbol + "' " + ex);
         }
         
+        return null;
+    }
+
+    @Override
+    public OHLCData readAdjOHLCData(LocalDate startDate, LocalDate endDate, String tickerSymbol, boolean skipFirstIndex) {
+        return readAdjOHLCData(startDate, endDate, tickerSymbol, -1, skipFirstIndex);
+    }
+
+    @Override
+    public OHLCData readAdjOHLCData(LocalDate lastDate, String tickerSymbol, int daysToRead, boolean skipFirstIndex) {
+        int daysBackNecessary = (int) ((daysToRead * (7.0 / 5.0)) + 20);
+        return readAdjOHLCData(lastDate.minusDays(daysBackNecessary), lastDate, tickerSymbol, daysToRead, skipFirstIndex);
+    }
+    
+    @Override    
+    public OHLCData readAdjOHLCData(LocalDate startDate, LocalDate endDate, String tickerSymbol, int daysToRead, boolean skipFirstIndex){
         return null;
     }
 }

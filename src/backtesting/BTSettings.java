@@ -19,18 +19,21 @@ public class BTSettings {
     public double leverage;
     
     public boolean reinvest;
+    
+    public int loglvl;
 
-    public BTSettings(LocalDate startDate, LocalDate endDate, double capital, double leverage, boolean reinvest) {
+    public BTSettings(LocalDate startDate, LocalDate endDate, double capital, double leverage, boolean reinvest, int loglvl) {
         this.reinvest = reinvest;
         this.leverage = leverage;
         this.capital = capital;
         this.endDate = endDate;
         this.startDate = startDate;
+        this.loglvl = loglvl;
     }
 
     @Override
     public String toString() {
-        return "Start: " + startDate + " | End: " + endDate + " | Capital: " + capital + " | leverage: " + leverage + " | reinvest: " + reinvest;
+        return "Start: " + startDate + " | End: " + endDate + " | Capital: " + capital + " | leverage: " + leverage + " | reinvest: " + reinvest + " | loglvl: " + loglvl;
     }
     
 }

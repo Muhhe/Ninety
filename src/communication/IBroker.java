@@ -6,6 +6,7 @@
 package communication;
 
 import data.CloseData;
+import data.OHLCData;
 import java.util.List;
 import java.util.Map;
 
@@ -48,7 +49,11 @@ public interface IBroker {
     
     public void RequestHistoricalData(String ticker, int count);
     
+    public void CancelAllHistoricalData();
+    
     public CloseData GetCloseData(String ticker);
+    
+    public OHLCData GetOHLCData(String ticker);
 
     public void RequestAccountSummary();
     

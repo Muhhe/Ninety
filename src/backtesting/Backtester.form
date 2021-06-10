@@ -225,7 +225,8 @@
     </Component>
     <Component class="javax.swing.JButton" name="backTestTrend">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Run Trend"/>
+        <Property name="text" type="java.lang.String" value="Run MB"/>
+        <Property name="actionCommand" type="java.lang.String" value="Run BM"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="backTestTrendActionPerformed"/>

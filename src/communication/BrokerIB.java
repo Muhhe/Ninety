@@ -10,6 +10,7 @@ import com.ib.client.EClientSocket;
 import com.ib.client.Order;
 import com.ib.client.TagValue;
 import data.CloseData;
+import data.OHLCData;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -369,15 +370,7 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
             logger.severe("IB not connected. Cannot RequestRealtimeData.");
             return;
         }
-
-        if (histDataSubsCounter == 50) {
-            histDataSubsCounter = 0;
-            try {
-                Thread.sleep(10000);   //max number of requests in IB is 50 at a time
-            } catch (InterruptedException ex) {
-            }
-        }
-
+        
         Contract contract = CreateDataContract(ticker, SecType.STK);
 
         int orderId = getNextOrderId();
@@ -390,15 +383,33 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
     }
 
     @Override
+    public void CancelAllHistoricalData() {
+        for (Integer orderId : historicalData.GetAllOrderIds()) {
+            ibClientSocket.cancelHistoricalData(orderId);
+            TradeTimer.wait(20);
+        }
+        historicalData.ClearMaps();
+    }
+
+    @Override
     public void historicalData(int reqId, String date, double open,
             double high, double low, double close, int volume, int count,
             double WAP, boolean hasGaps) {
-        historicalData.UpdateValue(reqId, date, close);
+        boolean finished = historicalData.UpdateValue(reqId, date, open, high, low, close);
+        if (finished) {
+            ibClientSocket.cancelHistoricalData(reqId);
+            histDataSubsCounter--;
+        }
     }
 
     @Override
     public CloseData GetCloseData(String ticker) {
         return historicalData.GetCloseData(ticker);
+    }
+
+    @Override
+    public OHLCData GetOHLCData(String ticker) {
+        return historicalData.GetOHLCData(ticker);
     }
 
     protected Contract CreateOrderContract(String ticker) {

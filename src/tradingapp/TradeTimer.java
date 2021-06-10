@@ -84,6 +84,15 @@ public class TradeTimer {
         return GetLastTradingDay(TradeTimer.GetLocalDateNow());
     }
     
+    public static boolean isFirstDoW(LocalDate date) {
+        DayOfWeek lastDow = GetLastTradingDayBefore(date).getDayOfWeek();
+        return date.getDayOfWeek().getValue() < lastDow.getValue();
+    }
+    
+    public static boolean isFirstDoW() {
+        return isFirstDoW(TradeTimer.GetLocalDateNow());
+    }
+    
     public static LocalDate GetLastTradingDayBefore(LocalDate date) {
         return GetLastTradingDay(date.minusDays(1));
     }
@@ -216,6 +225,18 @@ public class TradeTimer {
         } catch (IOException ioe) {
             ioe.printStackTrace();
             logger.severe("Error in loading special days from XML: IOException.\r\n" + ioe);
+        }
+    }
+    
+    public static void wait(int milis) {
+        if (GlobalConfig.isBacktest) {
+            return;
+        }
+        
+        try {
+            Thread.sleep(milis);
+        } catch (InterruptedException ex) {
+            logger.severe("InterruptedException: " + ex);
         }
     }
 }

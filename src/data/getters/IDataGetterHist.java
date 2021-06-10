@@ -6,6 +6,7 @@
 package data.getters;
 
 import data.CloseData;
+import data.OHLCData;
 import java.time.LocalDate;
 
 /**
@@ -18,6 +19,12 @@ public interface IDataGetterHist {
     public CloseData readAdjCloseData(LocalDate startDate, LocalDate endDate, String tickerSymbol, boolean skipFirstIndex);
     
     public CloseData readAdjCloseData(LocalDate startDate, LocalDate endDate, String tickerSymbol, int daysToRead, boolean skipFirstIndex);
+    
+    public OHLCData readAdjOHLCData(LocalDate lastDate, String tickerSymbol, int daysToRead, boolean skipFirstIndex);
+    
+    public OHLCData readAdjOHLCData(LocalDate startDate, LocalDate endDate, String tickerSymbol, boolean skipFirstIndex);
+    
+    public OHLCData readAdjOHLCData(LocalDate startDate, LocalDate endDate, String tickerSymbol, int daysToRead, boolean skipFirstIndex);
     
     public String getName();
 }

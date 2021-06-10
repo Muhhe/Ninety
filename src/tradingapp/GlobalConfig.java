@@ -18,6 +18,7 @@ public class GlobalConfig {
     private static final List<IDataGetterAct> actGetters = new ArrayList<>();
     private static final List<IDataGetterHist> histGetters = new ArrayList<>();
     
+    public static boolean isBacktest = false;
     public static boolean sendMails = true;
     
     protected GlobalConfig() {

@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <status>
-  <money freeCapital="627.988" closingEquity="62480.948" fees="460.72" />
-  <held type="SVXY" position="1048" avgPrice="59.03" />
+  <money equity="20144.90" currentFees="10.00" />
+  <heldPositions heldStocks="6">
+    <heldStock ticker="ABT" price="110.48" position="23" date="2021-06-07" />
+    <heldStock ticker="BLL" price="81.33" position="30" date="2021-06-07" />
+    <heldStock ticker="AZO" price="1391.12" position="1" date="2021-06-07" />
+    <heldStock ticker="BIO" price="582.17" position="4" date="2021-06-07" />
+    <heldStock ticker="AMGN" price="235.72" position="10" date="2021-06-07" />
+    <heldStock ticker="AES" price="24.96" position="100" date="2021-06-07" />
+  </heldPositions>
 </status>

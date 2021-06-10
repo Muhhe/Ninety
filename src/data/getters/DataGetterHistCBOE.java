@@ -6,6 +6,7 @@
 package data.getters;
 
 import data.CloseData;
+import data.OHLCData;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -128,5 +129,21 @@ public class DataGetterHistCBOE implements IDataGetterHist {
         retData.dates = subListDates.toArray(retData.dates);
 
         return retData;
+    }
+    
+    @Override
+    public OHLCData readAdjOHLCData(LocalDate startDate, LocalDate endDate, String tickerSymbol, boolean skipFirstIndex) {
+        return readAdjOHLCData(startDate, endDate, tickerSymbol, -1, skipFirstIndex);
+    }
+
+    @Override
+    public OHLCData readAdjOHLCData(LocalDate lastDate, String tickerSymbol, int daysToRead, boolean skipFirstIndex) {
+        int daysBackNecessary = (int) ((daysToRead * (7.0 / 5.0)) + 20);
+        return readAdjOHLCData(lastDate.minusDays(daysBackNecessary), lastDate, tickerSymbol, daysToRead, skipFirstIndex);
+    }
+    
+    @Override
+    public OHLCData readAdjOHLCData(LocalDate startDate, LocalDate endDate, String tickerSymbol, int daysToRead, boolean skipFirstIndex){
+        return null;
     }
 }

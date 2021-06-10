@@ -56,6 +56,8 @@ public final class Backtester extends javax.swing.JFrame {
         TextAreaLogHandler textHandlerInfo = new TextAreaLogHandler(logArea, Level.INFO, Level.SEVERE, false);
         logger.addHandler(textHandlerInfo);
 
+        GlobalConfig.isBacktest = true;
+
         /*IBroker broker = new BrokerIBReadOnly(4001, 1, IBroker.SecType.STK);
 
         broker.connect();
@@ -71,7 +73,6 @@ public final class Backtester extends javax.swing.JFrame {
         }
         //GlobalConfig.AddDataGetterHist(new DataGetterHistAlpha());
         GlobalConfig.AddDataGetterHist(new DataGetterHistIB(broker));*/
-
         LoadBTSettingsFromFile();
     }
 
@@ -159,7 +160,8 @@ public final class Backtester extends javax.swing.JFrame {
             }
         });
 
-        backTestTrend.setText("Run Trend");
+        backTestTrend.setText("Run MB");
+        backTestTrend.setActionCommand("Run BM");
         backTestTrend.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 backTestTrendActionPerformed(evt);
@@ -286,6 +288,8 @@ public final class Backtester extends javax.swing.JFrame {
                 .addContainerGap())
         );
 
+        backTestTrend.getAccessibleContext().setAccessibleName("Run MB");
+
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
@@ -298,7 +302,7 @@ public final class Backtester extends javax.swing.JFrame {
         FilePaths.tradeLogDetailedPathFile = "backtest/TradeLogDetailed.txt";
         FilePaths.tradeLogPathFile = "backtest/TradeLog.csv";
 
-        FilePaths.equityPathFile = "backtest/Equity.csv";
+        FilePaths.equityPathFile = "backtest/Equity2.csv";
         FilePaths.tickerListPathFile = "backtest/tickerList.txt";
 
         new Thread(() -> {
@@ -329,7 +333,7 @@ public final class Backtester extends javax.swing.JFrame {
         UpdateLogLevel();
 
         BTSettings settings = GetBTSettings();
-        BacktesterTrend.runBacktest(settings);
+        BacktesterMB.RunTest(settings);
         SaveBTSettings(settings);
     }//GEN-LAST:event_backTestTrendActionPerformed
 
@@ -381,7 +385,7 @@ public final class Backtester extends javax.swing.JFrame {
         double capital = Double.parseDouble(capitalField.getText());
         double leverage = Double.parseDouble(leverageField.getText());
 
-        BTSettings sett = new BTSettings(start, end, capital, leverage, reinvestCheckBox.isSelected());
+        BTSettings sett = new BTSettings(start, end, capital, leverage, reinvestCheckBox.isSelected(), logLvlComboBox.getSelectedIndex());
 
         return sett;
     }
@@ -439,6 +443,12 @@ public final class Backtester extends javax.swing.JFrame {
             boolean reinvest = Boolean.parseBoolean(attReinvest.getValue());
             reinvestCheckBox.setSelected(reinvest);
 
+            Attribute attLoglvl = rootElement.getAttribute("loglvl");
+            if (attLoglvl != null) {
+                Integer loglvl = Integer.parseInt(attLoglvl.getValue());
+                logLvlComboBox.setSelectedIndex(loglvl);
+                UpdateLogLevel();
+            }
         } catch (JDOMException e) {
             e.printStackTrace();
             logger.severe("Error in loading from XML: JDOMException.\r\n" + e);
@@ -460,6 +470,8 @@ public final class Backtester extends javax.swing.JFrame {
             rootElement.setAttribute("leverage", Double.toString(settings.leverage));
 
             rootElement.setAttribute("reinvest", Boolean.toString(settings.reinvest));
+
+            rootElement.setAttribute("loglvl", Integer.toString(settings.loglvl));
 
             XMLOutputter xmlOutput = new XMLOutputter();
 

@@ -12,7 +12,10 @@ import java.time.LocalDate;
  * @author Muhe
  */
 public class CloseData {
-    
+    public CloseData(double[] adjCloses, LocalDate[] dates) {
+        this.adjCloses = adjCloses;
+        this.dates = dates;
+    }
     public CloseData(int count) {
         dates = new LocalDate[count];
         adjCloses = new double[count];

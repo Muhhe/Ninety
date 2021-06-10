@@ -15,6 +15,9 @@ public class OHLCData {
 
     public OHLCData(int count) {
         dates = new LocalDate[count];
+        opens = new double[count];
+        highs = new double[count];
+        lows = new double[count];
         adjCloses = new double[count];
 
         for (int i = 0; i < count; i++) {
@@ -23,8 +26,8 @@ public class OHLCData {
     }
 
     public LocalDate[] dates;
-    public double[] adjCloses;
     public double[] opens;
     public double[] highs;
     public double[] lows;
+    public double[] adjCloses;
 }

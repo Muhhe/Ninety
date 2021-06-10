@@ -21,11 +21,12 @@ import static tradingapp.MainWindow90.LOGGER_COMM_NAME;
  * @author Muhe
  */
 public class BaseIBConnectionImpl implements EWrapper {
+
     private final static Logger logger = Logger.getLogger(LOGGER_COMM_NAME);
 
     @Override
     public void tickPrice(int tickerId, int field, double price, int canAutoExecute) {
-        logger.fine("tickPrice - tickerId:" + tickerId + ", field :" + field + ", price :" + price+ ", canAutoExecute :" + canAutoExecute );
+        logger.fine("tickPrice - tickerId:" + tickerId + ", field :" + field + ", price :" + price + ", canAutoExecute :" + canAutoExecute);
     }
 
     @Override
@@ -240,25 +241,26 @@ public class BaseIBConnectionImpl implements EWrapper {
 
     @Override
     public void error(Exception e) {
-        logger.severe("Comm error - Exception:" + e );
+        logger.severe("Comm error - Exception:" + e);
     }
 
     @Override
     public void error(String str) {
-        logger.severe("Comm error - str:" + str );
+        logger.severe("Comm error - str:" + str);
     }
 
     @Override
     public void error(int id, int errorCode, String errorMsg) {
-        if ((errorCode == 2104)             // Market data farm connection is OK:usfarm.us
+        if ((errorCode == 2104)         // Market data farm connection is OK:usfarm.us
                 || (errorCode == 2106)
-                || (errorCode == 2119)      // Market data farm is connecting:usfarm.us
-                || (errorCode == 2107)      // Market data farm connection is inactive but should be available upon demand.usfarm.us (hist)
-                || (errorCode == 2108)      // Market data farm connection is inactive but should be available upon demand.usfarm.us (act)
+                || (errorCode == 2119)  // Market data farm is connecting:usfarm.us
+                || (errorCode == 2107)  // Market data farm connection is inactive but should be available upon demand.usfarm.us (hist)
+                || (errorCode == 2108)  // Market data farm connection is inactive but should be available upon demand.usfarm.us (act)
+                || (errorCode == 366)   // No historical data query found for ticker id:
                 ) {
-            logger.info("Comm info - id:" + id + ", errorCode: " + errorCode + ", errorMsg: " + errorMsg );
+            logger.info("Comm info - id:" + id + ", errorCode: " + errorCode + ", errorMsg: " + errorMsg);
         } else {
-            logger.severe("Comm error - id:" + id + ", errorCode: " + errorCode + ", errorMsg: " + errorMsg );
+            logger.severe("Comm error - id:" + id + ", errorCode: " + errorCode + ", errorMsg: " + errorMsg);
         }
     }
 

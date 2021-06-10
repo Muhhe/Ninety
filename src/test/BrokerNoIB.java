@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import communication.TradeOrder;
 import data.CloseData;
+import data.OHLCData;
 
 /**
  *
@@ -119,6 +120,15 @@ public class BrokerNoIB implements IBroker {
     @Override
     public CloseData GetCloseData(String ticker) {
         return null;
+    }
+
+    @Override
+    public OHLCData GetOHLCData(String ticker) {
+        return null;
+    }
+
+    @Override
+    public void CancelAllHistoricalData() {
     }
     
 }
