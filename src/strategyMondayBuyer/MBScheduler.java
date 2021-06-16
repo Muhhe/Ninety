@@ -88,6 +88,7 @@ public class MBScheduler {
         tickers = Utils.LoadTickers();
 
         status.LoadTradingStatus();
+        status.removeOldRecSold();
         status.PrintStatus();
     }
 
@@ -277,7 +278,7 @@ public class MBScheduler {
                     //data.SaveIndicatorsToCSVFile();
                     //data.SaveStockIndicatorsToFiles();
 
-                    //AddProfitLossToMail();
+                    AddProfitLossToMail();
                     MailSender.AddLineToMail(broker.GetAccountSummary().toString());
                     MailSender.AddLineToMail("Saved current equity: " + TradeFormatter.toString(status.equity));
 

@@ -9,6 +9,7 @@ import backtesting.BTLogLvl;
 import communication.IBroker;
 import communication.OrderStatus;
 import communication.TradeOrder;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -87,7 +88,7 @@ public class MBRunner implements Runnable {
             MBIndicators indicators = entry.getValue();
 
             //logger.info("Indicators for " + entry.getKey() + " :" + indicators.toString());
-            if (IsBuyable(indicators, data.spxBT50)) {
+            if (IsBuyable(indicators, data.spxBT50) && !status.recentlySold.containsKey(entry.getKey())) {
                 logger.info("BUY: " + entry.getKey() + ", RSI2: " + indicators.rsi2 + ", Vol: " + indicators.vol);
                 buys.add(entry.getKey());
             }
@@ -147,6 +148,7 @@ public class MBRunner implements Runnable {
 
         for (TradeOrder tradeOrder : sellOrders) {
             broker.PlaceOrder(tradeOrder);
+            status.recentlySold.put(tradeOrder.tickerSymbol, LocalDate.now());
         }
         logger.info("Finished computing stocks to sell.");
 
@@ -178,6 +180,8 @@ public class MBRunner implements Runnable {
 
         ProcessSubmittedOrders();
     }
+    
+    
 
     @Override
     public void run() {

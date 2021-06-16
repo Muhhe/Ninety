@@ -15,11 +15,15 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import static java.lang.Double.max;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 import org.jdom2.Attribute;
+import org.jdom2.DataConversionException;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
@@ -47,6 +51,8 @@ public class MBStatus {
     static public final int PORTIONS_NUM = 8;
 
     public Map<String, MBHeldTicker> heldTickers = new HashMap<String, MBHeldTicker>();
+
+    public Map<String, LocalDate> recentlySold = new HashMap<String, LocalDate>();
 
     public void UpdateHeldByOrderStatus(OrderStatus order) {
         MBHeldTicker held = heldTickers.get(order.order.tickerSymbol);
@@ -133,6 +139,19 @@ public class MBStatus {
                 held.AddToXml(heldPosElement);
             }
 
+            Element recentlySoldElement = new Element("recentlySold");
+            recentlySoldElement.setAttribute("num", Integer.toString(recentlySold.size()));
+            rootElement.addContent(recentlySoldElement);
+
+            for (Map.Entry<String, LocalDate> entry : recentlySold.entrySet()) {
+                String ticker = entry.getKey();
+                LocalDate date = entry.getValue();
+                Element recSoldElement = new Element("recSold");
+                recSoldElement.setAttribute(new Attribute("ticker", ticker));
+                recSoldElement.setAttribute(new Attribute("date", date.toString()));
+                recentlySoldElement.addContent(recSoldElement);
+            }
+
             XMLOutputter xmlOutput = new XMLOutputter();
 
             File statusFile = new File(FilePaths.tradingStatusPathFileOutput);
@@ -173,6 +192,17 @@ public class MBStatus {
 
                 heldTickers.put(held.ticker, held);
             }
+
+            List<Element> recentlySoldElement = rootElement.getChild("recentlySold").getChildren();
+
+            for (Element recSoldElement : recentlySoldElement) {
+                Attribute att = recSoldElement.getAttribute("ticker");
+                String ticker = att.getValue();
+                att = recSoldElement.getAttribute("date");
+                LocalDate date = LocalDate.parse(att.getValue());
+
+                recentlySold.put(ticker, date);
+            }
         } catch (JDOMException e) {
             logger.severe("Error in loading from XML: JDOMException.\r\n" + e);
         } catch (IOException ioe) {
@@ -188,20 +218,30 @@ public class MBStatus {
         }
     }
     
-    
+    public void removeOldRecSold() {
+        for (Iterator<Map.Entry<String, LocalDate>> iterator = recentlySold.entrySet().iterator(); iterator.hasNext();) {
+            Map.Entry<String, LocalDate> next = iterator.next();
+            
+            LocalDate soldDate = next.getValue();
+            if (ChronoUnit.DAYS.between(soldDate, TradeTimer.GetLocalDateNow()) > 40) {
+                iterator.remove();
+            }
+        }
+    }
+
     public void UpdateEquityFile() {
         Writer writer = null;
         try {
             File equityFile = new File(FilePaths.equityPathFile);
             equityFile.createNewFile();
             writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(equityFile, true), "UTF-8"));
-            String line = TradeTimer.GetLocalDateNow().toString() 
-                    + "," + equity 
+            String line = TradeTimer.GetLocalDateNow().toString()
+                    + "," + equity
                     + "," + Settings.investCash
                     + "," + (equity - Settings.investCash)
                     + "\r\n";
             writer.append(line);
-            
+
             logger.fine("Updated equity file with value " + equity);
         } catch (FileNotFoundException ex) {
             logger.severe("Cannot find equity file: " + ex);
@@ -217,37 +257,37 @@ public class MBStatus {
             }
         }
     }
-    
+
     static public void UpdateTradeLogs(OrderStatus order, MBHeldTicker held) {
         if (GlobalConfig.isBacktest) {
             return;
         }
-        
+
         if (order.order.orderType != TradeOrder.OrderType.SELL) {
             logger.warning("Trying to add BUY order to trade log.");
             return;
         }
-        
+
         if (held.position == 0) {
             logger.warning("Trying to add empty held stock to trade log.");
             return;
         }
-        
+
         UpdateCloseTradeLogFile(order, held);
         //UpdateDetailedTradeLogFile(order, held);
     }
-    
+
     static public void UpdateCloseTradeLogFile(OrderStatus order, MBHeldTicker held) {
-        
+
         Writer writer = null;
         try {
             File equityFile = new File(FilePaths.tradeLogPathFile);
             equityFile.createNewFile();
             writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(equityFile, true), "UTF-8"));
-            
+
             double profit = held.CalculateProfitIfSold(order.fillPrice);
             double profitPercent = held.CalculatePercentProfitIfSold(order.fillPrice);
-            
+
             writer.append(TradeTimer.GetLocalDateNow().toString() + ",");
             writer.append(held.date + ",");
             writer.append(held.ticker + ",");
@@ -257,7 +297,7 @@ public class MBStatus {
             writer.append(TradeFormatter.toString(held.position) + ",");
             double fees = GetOrderFee(held.position);
             writer.append(TradeFormatter.toString(fees) + "\r\n");
-            
+
             logger.finer("Updated close trade log file.");
         } catch (FileNotFoundException ex) {
             logger.severe("Cannot find close trade log file: " + ex);

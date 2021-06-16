@@ -204,10 +204,15 @@ public class Report {
                 if (reinvestCash == 0) {
                     reinvestCash = investCash;
                 }
+                
+                if (refData != null && indexRef >= refData.dates.length) {
+                    logger.warning("Report failed: refData out of bounds - " + indexRef);
+                    break;
+                }
 
                 if (refData != null && !refData.dates[indexRef].equals(parsedDate)) {
                     logger.warning("Report failed: Dates not matching - " + refData.dates[indexRef].toString() + " vs " + parsedDate.toString());
-                    return;
+                    break;
                 }
 
                 if (parsedDate.getMonthValue() != month) {

@@ -7,9 +7,11 @@ package strategyMondayBuyer;
 
 import java.io.File;
 import java.time.LocalDate;
+import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 import tradingapp.FilePaths;
+import tradingapp.TradeTimer;
 
 /**
  *
@@ -45,6 +47,10 @@ public class MBStatusTest {
         status.heldTickers.put(ticker2.ticker, ticker2);
         status.heldTickers.put(ticker3.ticker, ticker3);
         
+        status.recentlySold.put("APPL", LocalDate.parse("2011-11-03"));
+        status.recentlySold.put("JPM", LocalDate.parse("2012-12-02"));
+        status.recentlySold.put("C", LocalDate.parse("2013-05-23"));
+        
         FilePaths.tradingStatusPathFileInput = "TestTradingStatus.xml";
         FilePaths.tradingStatusPathFileOutput = "TestTradingStatus.xml";
         
@@ -62,6 +68,25 @@ public class MBStatusTest {
             assertEquals(tick.position, newStatus.heldTickers.get(tick.ticker).position);
             assertEquals(tick.price, newStatus.heldTickers.get(tick.ticker).price, 0.01);
             assertEquals(tick.date, newStatus.heldTickers.get(tick.ticker).date);
+        }
+        
+        assertEquals(status.recentlySold.size(), newStatus.recentlySold.size());
+        for (Map.Entry<String, LocalDate> entry : status.recentlySold.entrySet()) {
+            String ticker = entry.getKey();
+            LocalDate date = entry.getValue();
+            
+            assertEquals(date, newStatus.recentlySold.get(ticker));
+        }
+        
+        TradeTimer.SetToday(LocalDate.parse("2013-05-25"));
+        status.removeOldRecSold();
+        
+        assertEquals(status.recentlySold.size(), 1);
+        for (Map.Entry<String, LocalDate> entry : status.recentlySold.entrySet()) {
+            String ticker = entry.getKey();
+            LocalDate date = entry.getValue();
+            
+            assertEquals(date, LocalDate.parse("2013-05-23"));
         }
         
         try {
