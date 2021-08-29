@@ -381,6 +381,14 @@ public class BrokerIB extends BaseIBConnectionImpl implements IBroker {
 
         ibClientSocket.reqHistoricalData(orderId, contract, "", days, "1 day", "ADJUSTED_LAST", 1, 1, null);
     }
+    
+    @Override
+    public void RequestHistoricalData(String[] tickers, int startInx, int endInx, int count) {
+        for (int i = startInx; i < endInx; i++) {
+            RequestHistoricalData(tickers[i], count);
+            TradeTimer.wait(20);
+        }
+    }
 
     @Override
     public void CancelAllHistoricalData() {

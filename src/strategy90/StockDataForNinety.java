@@ -35,6 +35,8 @@ public class StockDataForNinety {
 
     private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
+    public static final int MAX_SUBSCRIBED = 50;
+
     public Map<String, CloseData> closeDataMap = new HashMap<>(TickersToTrade.GetTickers().length);
     public Map<String, StockIndicatorsForNinety> indicatorsMap = new HashMap<>(TickersToTrade.GetTickers().length);
 
@@ -42,7 +44,7 @@ public class StockDataForNinety {
 
     private boolean isRealtimeDataSubscribed = false;
 
-    public void PrepareData() {
+    public void PrepareData(IBroker broker) {
 
         try {
             logger.fine("PrepareHistData: Getting lock on hist data.");
@@ -70,60 +72,71 @@ public class StockDataForNinety {
 
             //IDataGetterHist dataGetterFile = new DataGetterHistFile(FilePaths.dataLogDirectory + TradeTimer.GetLocalDateNow().toString() + "/Historic/");
             logger.info("Starting to load historic data.");
-            for (String ticker : tickers) {
-
-                Double actValue = actValues.get(ticker);
-                if (actValue == null || actValue == 0) {
-                    logger.warning("Cannot load actual data for: " + ticker + "! This stock will not be used.");
-                    continue;
+            int startInx = 0;
+            while (startInx < tickers.length) {
+                int endInx = Math.min(startInx + MAX_SUBSCRIBED, tickers.length);
+                if (!GlobalConfig.isBacktest) {
+                    broker.RequestHistoricalData(tickers, startInx, endInx, 200);
+                    TradeTimer.wait(30000);
                 }
-
-                boolean failedHist = false;
-                // boolean filesRead = false;
-                for (IDataGetterHist dataGetter : GlobalConfig.GetDataGettersHist()) {
-
-                    //if (!filesRead) {
-                    //    dataGetter = dataGetterFile;
-                    //}
-                    logger.finest("Loading hist data for " + ticker + " from " + dataGetter.getName());
-                    if (failedHist) {
-                        logger.warning("Trying to load it from " + dataGetter.getName());
-                    }
-
-                    //LocalDate date = lastTradingDay;
-                    //if (filesRead) {
-                    //    date = TradeTimer.GetLastTradingDay(lastTradingDay.minusDays(1));
-                    //}
-                    CloseData data = dataGetter.readAdjCloseData(TradeTimer.GetLastTradingDay(lastTradingDay.minusDays(1)), ticker, 200, true);
-
-                    //filesRead = true;
-                    if (data == null) {
-                        logger.warning("Hist data from " + dataGetter.getName() + " for " + ticker + " are null.");
-                        failedHist = true;
+                for (int i = startInx; i < endInx; i++) {
+                    //for (String ticker : tickers) {
+                    String ticker = tickers[i];
+                    Double actValue = actValues.get(ticker);
+                    if (actValue == null || actValue == 0) {
+                        logger.warning("Cannot load actual data for: " + ticker + "! This stock will not be used.");
                         continue;
                     }
 
-                    data.adjCloses[0] = actValue;
-                    data.dates[0] = lastTradingDay;
+                    boolean failedHist = false;
+                    // boolean filesRead = false;
+                    for (IDataGetterHist dataGetter : GlobalConfig.GetDataGettersHist()) {
 
-                    if (NinetyChecker.CheckTickerData(data, ticker)) {
+                        //if (!filesRead) {
+                        //    dataGetter = dataGetterFile;
+                        //}
+                        logger.finest("Loading hist data for " + ticker + " from " + dataGetter.getName());
                         if (failedHist) {
-                            logger.warning("Hist data from " + dataGetter.getName() + " for " + ticker + " loaded successfuly.");
-                            failedHist = false;
+                            logger.warning("Trying to load it from " + dataGetter.getName());
                         }
-                        closeDataMap.put(ticker, data);
-                        SaveHistDataToFiles();
-                        break;
-                    } else {
-                        logger.warning("Failed to load " + dataGetter.getName() + " hist data for " + ticker + ".");
-                        failedHist = true;
-                        continue;
+
+                        //LocalDate date = lastTradingDay;
+                        //if (filesRead) {
+                        //    date = TradeTimer.GetLastTradingDay(lastTradingDay.minusDays(1));
+                        //}
+                        CloseData data = dataGetter.readAdjCloseData(TradeTimer.GetLastTradingDay(lastTradingDay.minusDays(1)), ticker, 200, true);
+
+                        //filesRead = true;
+                        if (data == null) {
+                            logger.warning("Hist data from " + dataGetter.getName() + " for " + ticker + " are null.");
+                            failedHist = true;
+                            continue;
+                        }
+
+                        data.adjCloses[0] = actValue;
+                        data.dates[0] = lastTradingDay;
+
+                        if (NinetyChecker.CheckTickerData(data, ticker)) {
+                            if (failedHist) {
+                                logger.warning("Hist data from " + dataGetter.getName() + " for " + ticker + " loaded successfuly.");
+                                failedHist = false;
+                            }
+                            closeDataMap.put(ticker, data);
+                            SaveHistDataToFiles();
+                            break;
+                        } else {
+                            logger.warning("Failed to load " + dataGetter.getName() + " hist data for " + ticker + ".");
+                            failedHist = true;
+                            continue;
+                        }
+                    }
+
+                    if (failedHist) {
+                        logger.warning("Hist data for " + ticker + " failed to load. Skipping this ticker.");
                     }
                 }
-
-                if (failedHist) {
-                    logger.warning("Hist data for " + ticker + " failed to load. Skipping this ticker.");
-                }
+                startInx = endInx;
+                broker.CancelAllHistoricalData();
             }
 
             logger.info("Finished loading data");
@@ -151,13 +164,12 @@ public class StockDataForNinety {
         }
     }
 
-    public void SubscribeHistData(IBroker broker) {
-        for (String ticker : TickersToTrade.GetTickers()) {
-            broker.RequestHistoricalData(ticker, 200);
-        }
-        logger.fine("Subscribed hist IB data.");
-    }
-
+//    public void SubscribeHistData(IBroker broker) {
+//        for (String ticker : TickersToTrade.GetTickers()) {
+//            broker.RequestHistoricalData(ticker, 200);
+//        }
+//        logger.fine("Subscribed hist IB data.");
+//    }
     public void UnSubscribeRealtimeData(IBroker broker) {
         if (isRealtimeDataSubscribed) {
             broker.CancelAllRealtimeData();

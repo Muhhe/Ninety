@@ -9,6 +9,7 @@ import backtesting.BTLogLvl;
 import communication.IBroker;
 import communication.OrderStatus;
 import communication.TradeOrder;
+import data.OHLCData;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,14 +44,15 @@ public class MBRunner implements Runnable {
     }
 
     public List<TradeOrder> calculateSells() {
-//        if (data.actualDataMap.isEmpty()) {
-//            return new ArrayList<>();
-//        }
-
         List<MBHeldTicker> sells = new ArrayList<>();
         for (MBHeldTicker held : status.heldTickers.values()) {
-            double high = data.ohlcDataMap.get(held.ticker).highs[offset];
-            double low = data.ohlcDataMap.get(held.ticker).lows[offset];
+            OHLCData tickerData = data.ohlcDataMap.get(held.ticker);
+            if (tickerData == null) {
+                logger.severe("Cannot check " + held.ticker + " for sale, no data loaded!");
+                continue;
+            }
+            double high = tickerData.highs[offset];
+            double low = tickerData.lows[offset];
 
             double profitTarget = held.price * 1.15;
             double stopLoss = held.price * 0.9;
@@ -60,7 +62,7 @@ public class MBRunner implements Runnable {
             }
             if (low < stopLoss) {
                 sells.add(held);
-                logger.info("Selling: " + held.ticker + ", stop loss: " + stopLoss);
+                logger.info("Selling: " + held.ticker + " at stop loss: " + stopLoss);
             }
         }
 
@@ -74,8 +76,6 @@ public class MBRunner implements Runnable {
             order.expectedPrice = data.getLastKnownPrice(held.ticker);
             tradeOrders.add(order);
 
-            //MBIndicators indicators = data.indicatorsMap.get(held.ticker);
-            //logger.fine("SELL: " + held.ticker + " " + order);
             logger.log(BTLogLvl.BT_STATS, "SELL: " + held.ticker + " profit/Loss: " + (held.position * (data.getLastKnownPrice(held.ticker) - held.price)));
         }
         return tradeOrders;
@@ -152,7 +152,7 @@ public class MBRunner implements Runnable {
         }
         logger.info("Finished computing stocks to sell.");
 
-        if (!broker.waitUntilOrdersClosed(20)) {
+        if (!broker.waitUntilOrdersClosed(30)) {
             logger.warning("Some SELL orders were not closed on time.");
         }
 
@@ -199,7 +199,7 @@ public class MBRunner implements Runnable {
         runSells();
 
         if (!MBChecker.CheckStockData(data, status)) {
-            logger.severe("Currupted stock data after sell. Exiting trading!");
+            logger.severe("Corrupted stock data after sell. Exiting trading!");
             status.SaveTradingStatus();
             broker.disconnect();
             return;

@@ -41,7 +41,7 @@ public class MBData {
     public Map<String, OHLCData> ohlcDataMap = new HashMap<>(TickersToTrade.GetTickers().length);
     public Map<String, OHLCData> actualDataMap = new HashMap<>();
     public Map<String, MBIndicators> indicatorsMap = new HashMap<>(TickersToTrade.GetTickers().length);
-    private CloseData spx;
+    private CloseData spy;
 
     public final Semaphore dataMutex = new Semaphore(1);
 
@@ -49,7 +49,7 @@ public class MBData {
     public static final int MAX_SUBSCRIBED = 50;
 
     public boolean spxBT50 = true; // TODO
-    
+
     private final int offset = 0;//GlobalConfig.isBacktest ? 0 : 1;
 
     final IBroker broker;
@@ -86,7 +86,7 @@ public class MBData {
         OHLCData data = dataGetter.readAdjOHLCData(TradeTimer.GetLastTradingDay(TradeTimer.GetLocalDateNow()), ticker, 1, true);
 
         actualDataMap.put(ticker, data);
-    }    
+    }
 
     public double getLastKnownPrice(String ticker) {
         if (actualDataMap == null || actualDataMap.isEmpty() || actualDataMap.get(ticker) == null) {
@@ -118,10 +118,16 @@ public class MBData {
         broker.RequestHistoricalData("SPY", DAYS_TO_LOAD);
         TradeTimer.wait(20000);
         IDataGetterHist dataGet = GlobalConfig.GetDataGettersHist()[0];
-        spx = dataGet.readAdjCloseData(TradeTimer.GetLastTradingDay(TradeTimer.GetLocalDateNow().minusDays(1)), "SPY", DAYS_TO_LOAD, false);
+        spy = dataGet.readAdjCloseData(TradeTimer.GetLastTradingDay(TradeTimer.GetLocalDateNow().minusDays(1)), "SPY", DAYS_TO_LOAD, false);
         broker.CancelAllHistoricalData();
 
         LocalDate firstDateToLoad = TradeTimer.GetLastTradingDay(TradeTimer.GetLocalDateNow().minusDays(1));
+        if (spy == null || !MBChecker.CheckValues(spy.adjCloses, spy.dates, "SPY") || !MBChecker.CheckDates(spy.dates, "SPY")) {
+            logger.warning("Failed to load SPY data!");
+        }
+        if (spy.dates[offset].compareTo(firstDateToLoad) != 0) {
+            logger.warning("Failed SPY, wrong first date " + spy.dates[offset] + " vs " + firstDateToLoad);
+        }
 
         try {
             logger.fine("PrepareHistData: Getting lock on hist data.");
@@ -133,7 +139,7 @@ public class MBData {
                 int endInx = Math.min(startInx + MAX_SUBSCRIBED, tickers.length);
                 if (!GlobalConfig.isBacktest) {
                     SubscribeHistData(tickers, startInx, endInx);
-                    TradeTimer.wait(90000);
+                    TradeTimer.wait(150000);
                 }
                 for (int i = startInx; i < endInx; i++) {
 
@@ -155,12 +161,12 @@ public class MBData {
 
                         //logger.info("Loaded " + tickers[i] + ", Value: " + data.adjCloses[0]);
                         if (data.adjCloses[offset] < 5.0) {
-                            logger.info("Skipped " + tickers[i] + ", Too low value: " + data.adjCloses[1]);
+                            logger.warning("Skipped " + tickers[i] + ", Too low value: " + data.adjCloses[1]);
                             failedHist = true;
                             continue;
                         }
                         if (data.dates[offset].compareTo(firstDateToLoad) != 0) {
-                            logger.info("Failed " + tickers[i] + ", wrong first date " + data.dates[offset] + " vs " + firstDateToLoad);
+                            logger.warning("Failed " + tickers[i] + ", wrong first date " + data.dates[offset] + " vs " + firstDateToLoad);
                             failedHist = true;
                             continue;
                         }
@@ -216,10 +222,10 @@ public class MBData {
             indicatorsMap.put(entry.getKey(), indicators);
         }
 
-        CloseData weeklySpx = Utils.GetLastDaysInWeek(spx, offset);
+        CloseData weeklySpx = Utils.GetLastDaysInWeek(spy, offset);
         int bt = 0;
-        for (int i = 1; i < weeklySpx.adjCloses.length; ++i) {
-            if (spx.adjCloses[offset] > weeklySpx.adjCloses[i]) {
+        for (int i = offset + 1; i < weeklySpx.adjCloses.length; ++i) {
+            if (spy.adjCloses[offset] > weeklySpx.adjCloses[i]) {
                 bt++;
             }
         }
@@ -229,7 +235,6 @@ public class MBData {
         //todo
 //        spxBT50 = true;
 //        logger.warning("spxBT50 = true");
-
         logger.log(BTLogLvl.BT_STATS, "spxBT50 - " + spxBT50);
     }
 
@@ -238,7 +243,7 @@ public class MBData {
             logger.warning("Failed to load hist data for " + ticker + " - is null.");
             return false;
         }
-        return MBChecker.CheckTickerOHLC(data, ticker);
+        return MBChecker.CheckTickerData(data, ticker);
     }
 
     public void SaveHistDataToFiles() {

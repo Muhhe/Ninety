@@ -83,8 +83,14 @@ public class DataGetterHistFile implements IDataGetterHist {
 
                 String[] tokens = line.split(",");
 
-                double adjClose = Double.parseDouble(tokens[closeIndex]);
-                LocalDate parsedDate = LocalDate.parse(tokens[0], DateTimeFormatter.ofPattern(pattern));
+                LocalDate parsedDate;
+                double adjClose;
+                try {
+                    adjClose = Double.parseDouble(tokens[closeIndex]);
+                    parsedDate = LocalDate.parse(tokens[0], DateTimeFormatter.ofPattern(pattern));
+                } catch (NumberFormatException e) {
+                    continue;
+                }
 
                 if (parsedDate.compareTo(endDate) > 0) {
                     if (ascendingDates) {
@@ -151,7 +157,7 @@ public class DataGetterHistFile implements IDataGetterHist {
         if (ascendingDates) {
             daysBackNecessary = (int) ((daysToRead * (7.0 / 5.0)) + 20);
         }
-        
+
         try (BufferedReader br = new BufferedReader(new FileReader(path + tickerSymbol + ".csv"))) {
 
             ArrayList<Double> arrOpenVals = new ArrayList<>();
@@ -176,11 +182,20 @@ public class DataGetterHistFile implements IDataGetterHist {
 
                 String[] tokens = line.split(",");
 
-                double adjOpen = Double.parseDouble(tokens[closeIndex - 3]);
-                double adjHigh = Double.parseDouble(tokens[closeIndex - 2]);
-                double adjLow = Double.parseDouble(tokens[closeIndex - 1]);
-                double adjClose = Double.parseDouble(tokens[closeIndex]);
-                LocalDate parsedDate = LocalDate.parse(tokens[0], DateTimeFormatter.ofPattern(pattern));
+                double adjOpen;
+                double adjHigh;
+                double adjLow;
+                double adjClose;
+                LocalDate parsedDate;
+                try {
+                    adjOpen = Double.parseDouble(tokens[closeIndex - 3]);
+                    adjHigh = Double.parseDouble(tokens[closeIndex - 2]);
+                    adjLow = Double.parseDouble(tokens[closeIndex - 1]);
+                    adjClose = Double.parseDouble(tokens[closeIndex]);
+                    parsedDate = LocalDate.parse(tokens[0], DateTimeFormatter.ofPattern(pattern));
+                } catch (NumberFormatException e) {
+                    continue;
+                }
 
                 if (parsedDate.compareTo(endDate) > 0) {
                     if (ascendingDates) {

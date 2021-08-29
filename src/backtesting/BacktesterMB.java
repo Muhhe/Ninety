@@ -73,7 +73,7 @@ public class BacktesterMB {
         CloseData dataSPY = getterFile.readAdjCloseData(settings.startDate, settings.endDate, "SPY", true);
 
         String[] tickers = Utils.LoadTickers();
-        
+
         MBStatus status = new MBStatus();
         status.equity = 10000;
 
@@ -86,16 +86,17 @@ public class BacktesterMB {
             MBData data = new MBData(broker);
             MBRunner runner = new MBRunner(data, status, broker);
             data.PrepareActualData(status.heldTickers);
-            data.PrepareOHLCData(status.heldTickers);
+            String[] keys = status.heldTickers.keySet().toArray(new String[status.heldTickers.keySet().size()]);
+            data.PrepareData(keys);
             runner.runSells();
 
             if (firstDayOfWeek) {
                 data.PrepareData(tickers);
                 runner.run();
             }
-            
+
             logger.log(BTLogLvl.BT_STATS, "Current equity = " + TradeFormatter.toString(status.equity) + "$");
-            
+
             stats.StartDay(date);
 
             stats.UpdateEquity(status.equity, date);

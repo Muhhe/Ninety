@@ -98,8 +98,10 @@ public class MBScheduler {
         if (!broker.connect()) {
             return;
         }
+        
+        TradeTimer.SetToday(TradeTimer.GetLastTradingDay());
 
-        data.PrepareData(tickers);
+        PrepareForTrading();
 
         new MBRunner(data, status, broker).run();
     }
@@ -182,12 +184,13 @@ public class MBScheduler {
                 ZonedDateTime startTimeZoned = now.with(TRADE_TIME);
                 ScheduleTradingRun(startTimeZoned);
             }
-
+        } catch (Exception e) {
+            logger.severe("Failed prepare for trading: " + e.toString());
         } finally {
             if (!isCheckOk) {
-                logger.severe("Check failed. Scheduling check for next hour.");
+                logger.severe("Check failed. Scheduling check for next minute.");
 
-                TradeTimer.startTaskAt(TradeTimer.GetNYTimeNow().plusHours(1), this::PrepareForTrading);
+                TradeTimer.startTaskAt(TradeTimer.GetNYTimeNow().plusMinutes(1), this::PrepareForTrading);
                 MailSender.SendErrors();
             } else {
                 MailSender.SendErrors();

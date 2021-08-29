@@ -7,7 +7,6 @@ package strategyMondayBuyer;
 
 import communication.IBroker;
 import communication.Position;
-import data.CloseData;
 import data.OHLCData;
 import static java.lang.Math.abs;
 import java.time.LocalDate;
@@ -16,7 +15,6 @@ import java.util.Map;
 import java.util.logging.Logger;
 import strategy90.TickersToTrade;
 import tradingapp.GlobalConfig;
-import tradingapp.Settings;
 import tradingapp.TradeFormatter;
 import tradingapp.TradeTimer;
 
@@ -42,7 +40,7 @@ public class MBChecker {
         if (GlobalConfig.isBacktest) {
             return true;
         }
-        
+
         List<Position> allPositions = broker.getAllPositions(wait);
         if (allPositions == null) {
             logger.warning("Cannot get positions from IB. Skipping position check.");
@@ -56,7 +54,7 @@ public class MBChecker {
             }
         }
 
-        logger.fine("Held postions on IB: " + posSize);
+        logger.fine("Held positions on IB: " + posSize);
         for (Position position : allPositions) {
             if (position.pos == 0) {    // IB keeps stock with 0 position
                 continue;
@@ -100,7 +98,7 @@ public class MBChecker {
         if (GlobalConfig.isBacktest) {
             return true;
         }
-        
+
         logger.info("Saved current equity: " + TradeFormatter.toString(statusData.equity) + ", cash on IB: " + TradeFormatter.toString(broker.GetAccountSummary().totalCashValue));
 
         double cashDiff = broker.GetAccountSummary().totalCashValue - statusData.equity;
@@ -188,23 +186,7 @@ public class MBChecker {
             return false;
         }
 
-        boolean isOk = true;
-        LocalDate checkDate = TradeTimer.GetLocalDateNow();
-
-        for (LocalDate date : data.dates) {
-            while (!TradeTimer.IsTradingDay(checkDate)) {
-                checkDate = checkDate.minusDays(1);
-            }
-
-            if (date.compareTo(checkDate) != 0) {
-                logger.warning("Failed check hist data for: " + ticker + ". Date should be " + checkDate + " but is " + date);
-                isOk = false;
-                break;
-            }
-
-            checkDate = checkDate.minusDays(1);
-        }
-
+        boolean isOk = CheckDates(data.dates, ticker);
         isOk &= CheckTickerOHLC(data, ticker);
 
         return isOk;
@@ -228,6 +210,30 @@ public class MBChecker {
         return true;
     }
 
+    public static boolean CheckDates(LocalDate[] dates, String ticker) {
+
+        LocalDate checkDate = TradeTimer.GetLocalDateNow().minusDays(1);
+
+        for (LocalDate date : dates) {
+            while (!TradeTimer.IsTradingDay(checkDate)) {
+                checkDate = checkDate.minusDays(1);
+            }
+
+            if (date.compareTo(checkDate) != 0) {
+                logger.warning("Failed check hist data for: " + ticker + ". Date should be " + checkDate + " but is " + date);
+                return false;
+            }
+
+            // backtest don't know about holidays, check only first date
+            if (GlobalConfig.isBacktest) {
+                return true;
+            }
+
+            checkDate = checkDate.minusDays(1);
+        }
+        return true;
+    }
+
     public static boolean CheckValues(double[] values, LocalDate[] dates, String ticker) {
         if (values == null) {
             logger.warning("Failed check hist data for: " + ticker + ". Data is NULL.");
@@ -237,13 +243,13 @@ public class MBChecker {
             logger.warning("Failed check hist data for: " + ticker + ". Length is " + values.length);
             return false;
         }
-        
+
         int offset = 0;//GlobalConfig.isBacktest ? 0 : 1;
-        
+
         double lastValue = 0;
         for (int i = offset; i < values.length; i++) {
             if (values[i] == 0) {
-                logger.warning("Failed check hist data for: " + ticker + ". AdjClose value is 0. Date " + dates[i]);
+                logger.warning("Failed check hist data for: " + ticker + ". AdjClose value is 0. Date " + dates[i] + ". Index: " + i);
                 return false;
             }
 

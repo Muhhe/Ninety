@@ -44,7 +44,7 @@ public class DataGetterHistIB implements IDataGetterHist {
     @Override
     public CloseData readAdjCloseData(LocalDate startDate, LocalDate endDate, String tickerSymbol, int daysToRead, boolean skipFirstIndex) {
         CloseData data = broker.GetCloseData(tickerSymbol);
-        if (data != null && data.adjCloses.length != 0) {
+        if (skipFirstIndex && data != null && data.adjCloses.length != 0) {
             data.adjCloses[0] = 0;
             data.dates[0] = LocalDate.MIN;
         }

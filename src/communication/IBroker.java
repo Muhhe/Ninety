@@ -49,6 +49,8 @@ public interface IBroker {
     
     public void RequestHistoricalData(String ticker, int count);
     
+    public void RequestHistoricalData(String[] tickers, int startInx, int endInx, int count);
+    
     public void CancelAllHistoricalData();
     
     public CloseData GetCloseData(String ticker);

@@ -118,6 +118,10 @@ public class BrokerNoIB implements IBroker {
     }
 
     @Override
+    public void RequestHistoricalData(String[] tickers, int startInx, int endInx, int count) {
+    }
+
+    @Override
     public CloseData GetCloseData(String ticker) {
         return null;
     }
